@@ -65,36 +65,39 @@ bool Node::HasProperty(const std::string &name) const
 	return false;
 }
 
-const Node &Node::GetProperty(const std::string &name) const
+Node::Return Node::GetProperty(const std::string &name) const
 {
-	for (auto &property : m_properties)
+	for (const auto &property : m_properties)
 	{
 		if (property.first == name)
 		{
-			return property.second;
+			return {this, name, &property.second};
 		}
 	}
 
-	throw std::runtime_error("Could not get property");
+	return {this, name, nullptr};
 }
 
-Node &Node::GetProperty(const std::string &name)
+Node::Return Node::GetProperty(const uint32_t &index) const
 {
-	for (auto &property : m_properties)
+	if (index < m_properties.size())
 	{
-		if (property.first == name)
-		{
-			return property.second;
-		}
+		return {this, index, &m_properties[index].second};
 	}
 
-	throw std::runtime_error("Could not get property");
+	return {this, index, nullptr};
 }
 
 Node &Node::AddProperty(const std::string &name, Node &&node)
 {
 	node.m_parent = this;
 	return m_properties.emplace_back(name, std::move(node)).second;
+}
+
+Node &Node::AddProperty(const uint32_t &index, Node &&node)
+{
+	m_properties.resize(std::max(m_properties.size(), static_cast<std::size_t>(index + 1)));
+	return (m_properties[index] = {"", std::move(node)}).second;
 }
 
 void Node::RemoveProperty(const std::string &name)
@@ -106,30 +109,14 @@ void Node::RemoveProperty(const std::string &name)
 	}), m_properties.end());
 }
 
-const Node &Node::operator[](const std::string &key) const
+Node::Return Node::operator[](const std::string &key) const
 {
 	return GetProperty(key);
 }
 
-Node &Node::operator[](const std::string &key)
+Node::Return Node::operator[](const uint32_t &index) const
 {
-	if (!HasProperty(key))
-	{
-		return AddProperty(key);
-	}
-
-	return GetProperty(key);
-}
-
-const Node &Node::operator[](const uint32_t &index) const
-{
-	return m_properties[index].second;
-}
-
-Node &Node::operator[](const uint32_t &index)
-{
-	m_properties.resize(std::max(m_properties.size(), static_cast<std::size_t>(index + 1)));
-	return m_properties[index].second;
+	return GetProperty(index);
 }
 
 bool Node::operator==(const Node &other) const

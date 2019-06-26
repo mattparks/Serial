@@ -11,7 +11,7 @@
 namespace acid
 {
 template<typename T>
-T Node::As() const
+T Node::Get() const
 {
 	T value;
 	*this >> value;
@@ -19,7 +19,34 @@ T Node::As() const
 }
 
 template<typename T>
-T Node::As(const T &fallback) const
+void Node::Get(T &dest) const
+{
+	if (!m_value.empty())
+	{
+		*this >> dest;
+	}
+}
+
+template<typename T, typename K>
+void Node::Get(T &dest, const K &fallback) const
+{
+	if (!m_value.empty())
+	{
+		*this >> dest;
+		return;
+	}
+
+	dest = fallback;
+}
+
+template<typename T>
+void Node::Set(const T &value)
+{
+	*this << value;
+}
+
+template<typename T>
+T Node::Get(const T &fallback) const
 {
 	if (m_value.empty())
 	{
@@ -58,7 +85,7 @@ Node &Node::Append(Args ...args)
 template<typename T>
 Node &Node::operator=(const T &rhs)
 {
-	*this << rhs;
+	Set(rhs);
 	return *this;
 }
 

@@ -18,17 +18,17 @@ public:
 
 		friend const Node &operator>>(const Node &node, XML &xml)
 		{
-			xml.data = node["data"].As<decltype(data)>();
-			xml.optional0 = node["optional0"].As<decltype(optional0)>(std::nullopt);
-			xml.optional1 = node["optional1"].As<decltype(optional1)>(std::nullopt);
+			node["data"]->Get(xml.data);
+			node["optional0"]->Get(xml.optional0);
+			node["optional1"]->Get(xml.optional1);
 			return node;
 		}
 
 		friend Node &operator<<(Node &node, const XML &xml)
 		{
-			node["data"] = xml.data;
-			node["optional0"] = xml.optional0;
-			node["optional1"] = xml.optional1;
+			node["data"]->Set(xml.data);
+			node["optional0"]->Set(xml.optional0);
+			node["optional1"]->Set(xml.optional1);
 			return node;
 		}
 	} xml;
@@ -41,15 +41,15 @@ public:
 
 		friend const Node &operator>>(const Node &node, Objects &objects)
 		{
-			objects.key = node["key"].As<decltype(key)>("key not found");
-			objects.values = node["values"].As<decltype(values)>();
+			node["key"]->Get(objects.key, "failed to get key");
+			node["values"]->Get(objects.values);
 			return node;
 		}
 
 		friend Node &operator<<(Node &node, const Objects &objects)
 		{
-			node["key"] = objects.key;
-			node["values"] = objects.values;
+			node["key"]->Set(objects.key);
+			node["values"]->Set(objects.values);
 			return node;
 		}
 	} objects;
@@ -65,29 +65,29 @@ public:
 
 	friend const Node &operator>>(const Node &node, Example1 &example1)
 	{
-		example1.currentPath = node["currentPath"].As<decltype(currentPath)>();
-		example1.paragraph = node["paragraph"].As<decltype(paragraph)>();
-		example1.content = node["content"].As<decltype(content)>();
-		example1.xml = node["xml"].As<decltype(xml)>();
-		example1.json = node["json"].As<decltype(json)>();
-		example1.yaml = node["yaml"].As<decltype(yaml)>();
-		example1.map = node["map"].As<decltype(map)>();
-		example1.vectorMap = node["vectorMap"].As<decltype(vectorMap)>();
-		example1.objects = node["objects"].As<decltype(objects)>();
+		node["currentPath"]->Get(example1.currentPath);
+		node["paragraph"]->Get(example1.paragraph);
+		node["content"]->Get(example1.content);
+		node["xml"]->Get(example1.xml);
+		node["json"]->Get(example1.json);
+		node["yaml"]->Get(example1.yaml);
+		node["map"]->Get(example1.map);
+		node["vectorMap"]->Get(example1.vectorMap);
+		node["objects"]->Get(example1.objects);
 		return node;
 	}
 
 	friend Node &operator<<(Node &node, const Example1 &example1)
 	{
-		node["currentPath"] = example1.currentPath;
-		node["paragraph"] = example1.paragraph;
-		node["content"] = example1.content;
-		node["xml"] = example1.xml;
-		node["json"] = example1.json;
-		node["yaml"] = example1.yaml;
-		node["map"] = example1.map;
-		node["vectorMap"] = example1.vectorMap;
-		node["objects"] = example1.objects;
+		node["currentPath"]->Set(example1.currentPath);
+		node["paragraph"]->Set(example1.paragraph);
+		node["content"]->Set(example1.content);
+		node["xml"]->Set(example1.xml);
+		node["json"]->Set(example1.json);
+		node["yaml"]->Set(example1.yaml);
+		node["map"]->Set(example1.map);
+		node["vectorMap"]->Set(example1.vectorMap);
+		node["objects"]->Set(example1.objects);
 		return node;
 	}
 };
@@ -99,25 +99,30 @@ int main(int argc, char **argv)
 	Node node;
 	node << example1;
 
-	node["array1"].Append("Hello", nullptr, 10, 4.8924f);
+	if (auto map{node["map"]}; map)
+	{
+		auto mapN2{map["-2"]->Get<std::string>()};
+	}
+
+	auto tree0{node["map0"]["val1"]["username"]};
+
+	node["array1"]->Append("Hello", nullptr, 10, 4.8924f);
 
 	// Creates a array, then appends values to the back of the array.
 	node["array2"] = std::vector{1.0f, 10.0f, -5.55f, 9.3456f};
-	node["array2"].Append(64, 32.1f, -2.0);
+	node["array2"]->Append(64, 32.1f, -2.0);
 	//node["array2"].SetName("array2_renamed");
-	//auto array2Name{node["array2"].GetName()};
-	//auto array2{node["array2"].As<std::vector<float>>()};
+	//auto array2Name{node["array2"]->GetName()};
+	//auto array2{node["array2"]->Get<std::vector<float>>()};
 
-	auto timeNow2{node["timeNow2"].As<int64_t>(123456)}; // 123456
-	node.RemoveProperty("timeNow2");
+	auto timeNow{node["timeNow"]->Get<int64_t>(123456)}; // 123456
+	node.RemoveProperty("timeNow");
 
-	auto timeNow{node["timeNow"].As<int64_t>()}; // 195998
-	auto data00{node["xml"]["data"][0][0].As<std::string>()}; // "clunky"
-	auto data10{node["xml"]["data"][1][0].As<std::string>()}; // "uses more words than necessary"
+	auto data00{node["xml"]["data"][0][0]->Get<std::string>()}; // "clunky"
+	auto data10{node["xml"]["data"][1][0]->Get<std::string>()}; // "uses more words than necessary"
 
-	auto mapN2{node["map"]["-2"].As<std::string>()}; // TODO: Can names be numbers without searching with keys?
-	auto map400{node["map"]["400"].As<std::string>()}; // TODO: Can names be numbers without searching with keys?
-
+	auto mapN2{node["map"]["-2"]->Get<std::string>()}; // TODO: Can names be numbers without searching with keys?
+	auto map400{node["map"]["400"]->Get<std::string>()}; // TODO: Can names be numbers without searching with keys?
 
 	std::cout << "Press enter to continue...";
 	std::cin.get();
