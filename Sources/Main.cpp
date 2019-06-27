@@ -128,8 +128,9 @@ int main(int argc, char **argv)
 {
 	test::Example1 example1;
 	Node node;
-	node << example1;
+	node = example1;
 
+	// Appends different types into a array.
 	node["array1"]->Append("Hello", nullptr, 10, 4.8924f);
 
 	// Creates a array, then appends values to the back of the array.
@@ -162,7 +163,7 @@ int main(int argc, char **argv)
 	Json json1{node};
 
 	Json json2;
-	json2.Load(json1.Write(Node::Format::Minified));
+	json2.Load(json1.Write(Node::Format::Beautified));
 	json2.Write(std::cout, Node::Format::Beautified);
 
 	//std::cout << "\nPress enter to continue...";

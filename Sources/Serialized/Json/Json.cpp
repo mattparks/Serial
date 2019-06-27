@@ -1,6 +1,7 @@
 #include "Json.hpp"
 
 #include "Helpers/String.hpp"
+#include <cassert>
 
 // https://github.com/amir-s/jute
 
@@ -68,134 +69,127 @@ int32_t SkipWhitespaces(const std::string &source, int32_t i)
 
 void Json::Load(std::istream &inStream)
 {
-	// TODO: Go though stream instead of string.
 	std::string tmp;
-	std::string source;
+	std::vector<std::pair<Token, std::string>> tokens;
 
 	while (std::getline(inStream, tmp))
 	{
-		source += tmp;
-	}
+		auto index{SkipWhitespaces(tmp, 0)};
 
-	std::vector<std::pair<Token, std::string>> tokens;
-
-	source += " ";
-
-	auto index{SkipWhitespaces(source, 0)};
-
-	while (index >= 0)
-	{
-		auto next{NextWhitespace(source, index)};
-		auto str{source.substr(index, next - index)};
-
-		std::size_t k{};
-
-		while (k < str.length())
+		while (index >= 0)
 		{
-			if (str[k] == '"')
-			{
-				auto tmpK{k + 1};
+			auto next{NextWhitespace(tmp, index)};
+			auto str{tmp.substr(index, next - index)};
 
-				while (tmpK < str.length() && (str[tmpK] != '"' || str[tmpK - 1] == '\\'))
+			std::size_t k{};
+
+			while (k < str.length())
+			{
+				if (str[k] == '"')
 				{
-					tmpK++;
+					auto tmpK{k + 1};
+
+					while (tmpK < str.length() && (str[tmpK] != '"' || str[tmpK - 1] == '\\'))
+					{
+						tmpK++;
+					}
+
+					tokens.emplace_back(Token::String, str.substr(k + 1, tmpK - k - 1));
+					k = tmpK + 1;
+					continue;
+				}
+				if (str[k] == '\'')
+				{
+					auto tmpK{k + 1};
+
+					while (tmpK < str.length() && (str[tmpK] != '\'' || str[tmpK - 1] == '\\'))
+					{
+						tmpK++;
+					}
+
+					tokens.emplace_back(Token::String, str.substr(k + 1, tmpK - k - 1));
+					k = tmpK + 1;
+					continue;
+				}
+				if (str[k] == '-' || (str[k] <= '9' && str[k] >= '0'))
+				{
+					auto tmpK{k};
+
+					if (str[tmpK] == '-')
+					{
+						tmpK++;
+					}
+
+					while (tmpK < str.size() && ((str[tmpK] <= '9' && str[tmpK] >= '0') || str[tmpK] == '.'))
+					{
+						tmpK++;
+					}
+
+					tokens.emplace_back(Token::Number, str.substr(k, tmpK - k));
+					k = tmpK;
+					continue;
+				}
+				if (str[k] == 't' && k + 3 < str.length() && str.substr(k, 4) == "true")
+				{
+					tokens.emplace_back(Token::Boolean, "true");
+					k += 4;
+					continue;
+				}
+				if (str[k] == 'f' && k + 4 < str.length() && str.substr(k, 5) == "false")
+				{
+					tokens.emplace_back(Token::Boolean, "false");
+					k += 5;
+					continue;
+				}
+				if (str[k] == 'n' && k + 3 < str.length() && str.substr(k, 4) == "null")
+				{
+					tokens.emplace_back(Token::Null, "null");
+					k += 4;
+					continue;
+				}
+				if (str[k] == ',')
+				{
+					tokens.emplace_back(Token::Comma, ",");
+					k++;
+					continue;
+				}
+				if (str[k] == '}')
+				{
+					tokens.emplace_back(Token::CurlyClose, "}");
+					k++;
+					continue;
+				}
+				if (str[k] == '{')
+				{
+					tokens.emplace_back(Token::CurlyOpen, "{");
+					k++;
+					continue;
+				}
+				if (str[k] == ']')
+				{
+					tokens.emplace_back(Token::SquareClose, "]");
+					k++;
+					continue;
+				}
+				if (str[k] == '[')
+				{
+					tokens.emplace_back(Token::SquareOpen, "[");
+					k++;
+					continue;
+				}
+				if (str[k] == ':')
+				{
+					tokens.emplace_back(Token::Colon, ":");
+					k++;
+					continue;
 				}
 
-				tokens.emplace_back(Token::String, str.substr(k + 1, tmpK - k - 1));
-				k = tmpK + 1;
-				continue;
-			}
-			if (str[k] == '\'')
-			{
-				auto tmpK{k + 1};
-
-				while (tmpK < str.length() && (str[tmpK] != '\'' || str[tmpK - 1] == '\\'))
-				{
-					tmpK++;
-				}
-
-				tokens.emplace_back(Token::String, str.substr(k + 1, tmpK - k - 1));
-				k = tmpK + 1;
-				continue;
-			}
-			if (str[k] == '-' || (str[k] <= '9' && str[k] >= '0'))
-			{
-				auto tmpK{k};
-
-				if (str[tmpK] == '-')
-				{
-					tmpK++;
-				}
-
-				while (tmpK < str.size() && ((str[tmpK] <= '9' && str[tmpK] >= '0') || str[tmpK] == '.'))
-				{
-					tmpK++;
-				}
-
-				tokens.emplace_back(Token::Number, str.substr(k, tmpK - k));
-				k = tmpK;
-				continue;
-			}
-			if (str[k] == 't' && k + 3 < str.length() && str.substr(k, 4) == "true")
-			{
-				tokens.emplace_back(Token::Boolean, "true");
-				k += 4;
-				continue;
-			}
-			if (str[k] == 'f' && k + 4 < str.length() && str.substr(k, 5) == "false")
-			{
-				tokens.emplace_back(Token::Boolean, "false");
-				k += 5;
-				continue;
-			}
-			if (str[k] == 'n' && k + 3 < str.length() && str.substr(k, 4) == "null")
-			{
-				tokens.emplace_back(Token::Null, "null");
-				k += 4;
-				continue;
-			}
-			if (str[k] == ',')
-			{
-				tokens.emplace_back(Token::Comma, ",");
-				k++;
-				continue;
-			}
-			if (str[k] == '}')
-			{
-				tokens.emplace_back(Token::CurlyClose, "}");
-				k++;
-				continue;
-			}
-			if (str[k] == '{')
-			{
-				tokens.emplace_back(Token::CurlyOpen, "{");
-				k++;
-				continue;
-			}
-			if (str[k] == ']')
-			{
-				tokens.emplace_back(Token::SquareClose, "]");
-				k++;
-				continue;
-			}
-			if (str[k] == '[')
-			{
-				tokens.emplace_back(Token::SquareOpen, "[");
-				k++;
-				continue;
-			}
-			if (str[k] == ':')
-			{
-				tokens.emplace_back(Token::Colon, ":");
-				k++;
-				continue;
+				tokens.emplace_back(Token::Unknown, str.substr(k));
+				k = str.length();
 			}
 
-			tokens.emplace_back(Token::Unknown, str.substr(k));
-			k = str.length();
+			index = SkipWhitespaces(tmp, next);
 		}
-
-		index = SkipWhitespaces(source, next);
 	}
 
 	int32_t k{};
@@ -285,15 +279,22 @@ void Json::Convert(Node &current, const std::vector<std::pair<Token, std::string
 	}
 }
 
-void Json::AppendData(const Node &source, std::ostream &outStream, const int32_t &indentation, const Format &format)
+std::string GetIndents(const int32_t &indentation)
 {
-	// Creates a string for the indentation level.
 	std::stringstream indents;
 
 	for (int32_t i{}; i < indentation; i++)
 	{
 		indents << "  ";
 	}
+
+	return indents.str();
+}
+
+void Json::AppendData(const Node &source, std::ostream &outStream, const int32_t &indentation, const Format &format)
+{
+	// Creates a string for the indentation level.
+	auto indents{GetIndents(indentation)};
 
 	// Only output the value if no properties exist.
 	if (source.GetProperties().empty())
@@ -336,7 +337,7 @@ void Json::AppendData(const Node &source, std::ostream &outStream, const int32_t
 			if (format != Format::Minified)
 			{
 				openString += '\n';
-				closeString.insert(0, indents.str());
+				closeString.insert(0, indents);
 			}
 		}
 
@@ -348,7 +349,7 @@ void Json::AppendData(const Node &source, std::ostream &outStream, const int32_t
 
 		if (format != Format::Minified)
 		{
-			outStream << indents.str();
+			outStream << indents;
 		}
 
 		// Output name for property if it exists.
