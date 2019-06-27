@@ -2,6 +2,7 @@
 
 #include <map>
 #include <array>
+#include <chrono>
 #include <filesystem>
 #include "Helpers/ConstExpr.hpp"
 #include "Helpers/String.hpp"

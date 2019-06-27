@@ -12,9 +12,9 @@ public:
 
 	explicit Json(const Node &node);
 
-	void Load(std::istream *inStream) override;
+	void Load(std::istream &inStream) override;
 
-	void Write(std::ostream *outStream, const Format &format = Format::Beautified) const override;
+	void Write(std::ostream &outStream, const Format &format = Format::Beautified) const override;
 
 	void Load(const std::string &string);
 
@@ -26,8 +26,8 @@ private:
 		Unknown, String, Boolean, Number, Null, CurlyOpen, CurlyClose, SquareOpen, SquareClose, Comma, Colon
 	};
 
-	static void Convert(Node &current, std::vector<std::pair<Token, std::string>> v, const int32_t &i, int32_t &r);
+	static void Convert(Node &current, const std::vector<std::pair<Token, std::string>> &v, const int32_t &i, int32_t &r);
 
-	static void AppendData(const Node &source, std::ostream *outStream, const int32_t &indentation, const Format &format);
+	static void AppendData(const Node &source, std::ostream &outStream, const int32_t &indentation, const Format &format);
 };
 }

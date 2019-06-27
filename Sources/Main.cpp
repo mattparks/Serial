@@ -92,6 +92,36 @@ public:
 		return node;
 	}
 };
+
+class User
+{
+public:
+	std::string username;
+	std::string fullname;
+	std::string description;
+	bool employed{};
+	std::string birthday;
+
+	friend const Node &operator>>(const Node &node, User &user)
+	{
+		node["username"]->Get(user.username);
+		node["fullname"]->Get(user.fullname);
+		node["description"]->Get(user.description);
+		node["employed"]->Get(user.employed);
+		node["birthday"]->Get(user.birthday);
+		return node;
+	}
+
+	friend Node &operator<<(Node &node, const User &user)
+	{
+		node["username"]->Set(user.username);
+		node["fullname"]->Set(user.fullname);
+		node["description"]->Set(user.description);
+		node["employed"]->Set(user.employed);
+		node["birthday"]->Set(user.birthday);
+		return node;
+	}
+};
 }
 
 int main(int argc, char **argv)
@@ -99,15 +129,6 @@ int main(int argc, char **argv)
 	test::Example1 example1;
 	Node node;
 	node << example1;
-
-	if (auto map{node["map"]}; map)
-	{
-		auto mapN2{map["-2"]->Get<std::string>()};
-	}
-
-	auto tree0{node["map0"]["val1"]["username"]};
-	auto tree0Valid{tree0.has_value()};
-	tree0 = "mattparks";
 
 	node["array1"]->Append("Hello", nullptr, 10, 4.8924f);
 
@@ -127,14 +148,22 @@ int main(int argc, char **argv)
 	auto mapN2{node["map"]["-2"]->Get<std::string>()}; // TODO: Can names be numbers without searching with keys?
 	auto map400{node["map"]["400"]->Get<std::string>()}; // TODO: Can names be numbers without searching with keys?
 
-	Json json{node};
-	json.Write(&std::cout, Node::Format::Minified);
-	std::cout << "\n\n";
-	auto jsonData{json.Write(Node::Format::Beautified)};
+	if (auto map{node["map"]}; map)
+	{
+		auto mapN2{map["-2"]->Get<std::string>()};
+	}
+
+	node["users"][0] = test::User{"mattparks", "Matthew Albrecht", "C++ developer", false, "12/07/2000"};
+	node["users"][1] = test::User{"nettcod", "Cody Nettesheim", "University student", true, "11/03/1999"};
+	node["users"][3] = test::User{"blockhead", "Nick Block", "Website developer", false, "11/03/1996"};
+	node["users"][6] = test::User{"aaronphal", "Aaron Phalphouvong", "High school student", true, "11/03/2002"};
+	auto users{node["users"]->Get<std::vector<test::User>>()};
+
+	Json json1{node};
 
 	Json json2;
-	json2.Load(jsonData);
-	json2.Write(&std::cout, Node::Format::Minified);
+	json2.Load(json1.Write(Node::Format::Minified));
+	json2.Write(std::cout, Node::Format::Beautified);
 	std::cout << "\n";
 
 	std::cout << "Press enter to continue...";

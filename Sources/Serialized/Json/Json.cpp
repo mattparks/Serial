@@ -1,7 +1,8 @@
 #include "Json.hpp"
 
-#include "Files/Files.hpp"
 #include "Helpers/String.hpp"
+
+// https://github.com/amir-s/jute
 
 namespace acid
 {
@@ -65,13 +66,13 @@ int32_t SkipWhitespaces(const std::string &source, int32_t i)
 	return -1;
 }
 
-void Json::Load(std::istream *inStream)
+void Json::Load(std::istream &inStream)
 {
 	// TODO: Go though stream instead of string.
 	std::string tmp;
 	std::string source;
 
-	while (std::getline(*inStream, tmp))
+	while (std::getline(inStream, tmp))
 	{
 		source += tmp;
 	}
@@ -201,7 +202,7 @@ void Json::Load(std::istream *inStream)
 	Convert(*this, tokens, 0, k);
 }
 
-void Json::Write(std::ostream *outStream, const Format &format) const
+void Json::Write(std::ostream &outStream, const Format &format) const
 {
 	// Json files are wrapped with an extra set of braces.
 	AppendData({"", {{"", *this}}}, outStream, 0, format);
@@ -210,17 +211,17 @@ void Json::Write(std::ostream *outStream, const Format &format) const
 void Json::Load(const std::string &string)
 {
 	std::stringstream stream{string};
-	Load(&stream);
+	Load(stream);
 }
 
 std::string Json::Write(const Format &format) const
 {
 	std::stringstream stream;
-	Write(&stream, format);
+	Write(stream, format);
 	return stream.str();
 }
 
-void Json::Convert(Node &current, std::vector<std::pair<Token, std::string>> v, const int32_t &i, int32_t &r)
+void Json::Convert(Node &current, const std::vector<std::pair<Token, std::string>> &v, const int32_t &i, int32_t &r)
 {
 	if (v[i].first == Token::CurlyOpen)
 	{
@@ -284,7 +285,7 @@ void Json::Convert(Node &current, std::vector<std::pair<Token, std::string>> v, 
 	}
 }
 
-void Json::AppendData(const Node &source, std::ostream *outStream, const int32_t &indentation, const Format &format)
+void Json::AppendData(const Node &source, std::ostream &outStream, const int32_t &indentation, const Format &format)
 {
 	// Creates a string for the indentation level.
 	std::stringstream indents;
@@ -301,11 +302,11 @@ void Json::AppendData(const Node &source, std::ostream *outStream, const int32_t
 
 		if (source.GetType() == Node::Type::String)
 		{
-			*outStream << '\"' << value << '\"';
+			outStream << '\"' << value << '\"';
 		}
 		else
 		{
-			*outStream << value;
+			outStream << value;
 		}
 	}
 
@@ -347,28 +348,28 @@ void Json::AppendData(const Node &source, std::ostream *outStream, const int32_t
 
 		if (format != Format::Minified)
 		{
-			*outStream << indents.str();
+			outStream << indents.str();
 		}
 
 		// Output name for property if it exists.
 		if (!it->first.empty())
 		{
-			*outStream << "\"" << it->first << "\":";
+			outStream << "\"" << it->first << "\":";
 
 			if (format != Format::Minified)
 			{
-				*outStream << ' ';
+				outStream << ' ';
 			}
 		}
 
 		// Appends the current stream with the property data.
-		*outStream << openString;
+		outStream << openString;
 		AppendData(it->second, outStream, indentation + 1, format);
-		*outStream << closeString;
+		outStream << closeString;
 
 		if (format != Format::Minified)
 		{
-			*outStream << '\n';
+			outStream << '\n';
 		}
 	}
 }

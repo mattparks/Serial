@@ -107,13 +107,15 @@ public:
 
 	Node(std::string value);
 
+	Node(std::string value, const Type &type);
+
 	Node(std::string value, std::vector<Property> &&properties);
 
 	virtual ~Node() = default;
 
-	virtual void Load(std::istream *inStream);
+	virtual void Load(std::istream &inStream);
 
-	virtual void Write(std::ostream *outStream, const Format &format = Format::Beautified) const;
+	virtual void Write(std::ostream &outStream, const Format &format = Format::Beautified) const;
 
 	template<typename T>
 	T Get() const;

@@ -7,6 +7,12 @@ Node::Node(std::string value) :
 {
 }
 
+Node::Node(std::string value, const Type &type) :
+	m_value{std::move(value)},
+	m_type{type}
+{
+}
+
 Node::Node(std::string value, std::vector<Property> &&properties) :
 	m_value{std::move(value)},
 	m_properties{std::move(properties)}
@@ -17,11 +23,11 @@ Node::Node(std::string value, std::vector<Property> &&properties) :
 	}
 }
 
-void Node::Load(std::istream *inStream)
+void Node::Load(std::istream &inStream)
 {
 }
 
-void Node::Write(std::ostream *outStream, const Format &format) const
+void Node::Write(std::ostream &outStream, const Format &format) const
 {
 }
 
@@ -105,8 +111,8 @@ Node &Node::AddProperty(const std::string &name, Node &&node)
 
 Node &Node::AddProperty(const uint32_t &index, Node &&node)
 {
-	m_properties.resize(std::max(m_properties.size(), static_cast<std::size_t>(index + 1)));
-	return (m_properties[index] = {"", std::move(node)}).second;
+	m_properties.resize(std::max(m_properties.size(), static_cast<std::size_t>(index + 1)), {"", {"null", Type::Null}});
+	return m_properties[index].second = std::move(node);
 }
 
 void Node::RemoveProperty(const std::string &name)
