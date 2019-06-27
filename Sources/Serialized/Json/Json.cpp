@@ -4,6 +4,7 @@
 #include <cassert>
 
 // https://github.com/amir-s/jute
+// TODO: Split line whitespace right away.
 
 namespace acid
 {
@@ -17,14 +18,33 @@ bool IsWhitespace(const char c)
 	return std::string{" \n\r  "}.find(c) != std::string::npos;
 }
 
+int32_t SkipWhitespaces(const std::string &source, int32_t i = 0)
+{
+	// Gets the next index of the string that is not whitespace.
+	while (i < static_cast<int32_t>(source.length()))
+	{
+		if (!IsWhitespace(source[i]))
+		{
+			return i;
+		}
+
+		i++;
+	}
+
+	// The entire string is whitespace.
+	return -1;
+}
+
 int32_t NextWhitespace(const std::string &source, int32_t i)
 {
+	// Finds the index before the next whitespace, string whitespace is ignored.
 	while (i < static_cast<int32_t>(source.length()))
 	{
 		if (source[i] == '"')
 		{
 			i++;
 
+			// Go to the end of the string.
 			while (i < static_cast<int32_t>(source.length()) && (source[i] != '"' || source[i - 1] == '\\'))
 			{
 				i++;
@@ -35,6 +55,7 @@ int32_t NextWhitespace(const std::string &source, int32_t i)
 		{
 			i++;
 
+			// Go to the end of the string.
 			while (i < static_cast<int32_t>(source.length()) && (source[i] != '\'' || source[i - 1] == '\\'))
 			{
 				i++;
@@ -49,35 +70,23 @@ int32_t NextWhitespace(const std::string &source, int32_t i)
 		i++;
 	}
 
+	// No whitespace found in the string.
 	return source.length();
-}
-
-int32_t SkipWhitespaces(const std::string &source, int32_t i)
-{
-	while (i < static_cast<int32_t>(source.length()))
-	{
-		if (!IsWhitespace(source[i]))
-		{
-			return i;
-		}
-
-		i++;
-	}
-
-	return -1;
 }
 
 void Json::Load(std::istream &inStream)
 {
 	std::string tmp;
-	std::vector<std::pair<Token, std::string>> tokens;
+	std::vector<std::string> tokens;
 
 	while (std::getline(inStream, tmp))
 	{
+		// Gets the start of the line skipping whitespace.
 		auto index{SkipWhitespaces(tmp, 0)};
 
 		while (index >= 0)
 		{
+			// The next whitespace location after the last one.
 			auto next{NextWhitespace(tmp, index)};
 			auto str{tmp.substr(index, next - index)};
 
@@ -94,7 +103,7 @@ void Json::Load(std::istream &inStream)
 						tmpK++;
 					}
 
-					tokens.emplace_back(Token::String, str.substr(k + 1, tmpK - k - 1));
+					tokens.emplace_back(str.substr(k + 1, tmpK - k - 1));
 					k = tmpK + 1;
 					continue;
 				}
@@ -107,7 +116,7 @@ void Json::Load(std::istream &inStream)
 						tmpK++;
 					}
 
-					tokens.emplace_back(Token::String, str.substr(k + 1, tmpK - k - 1));
+					tokens.emplace_back(str.substr(k + 1, tmpK - k - 1));
 					k = tmpK + 1;
 					continue;
 				}
@@ -125,66 +134,36 @@ void Json::Load(std::istream &inStream)
 						tmpK++;
 					}
 
-					tokens.emplace_back(Token::Number, str.substr(k, tmpK - k));
+					tokens.emplace_back(str.substr(k, tmpK - k));
 					k = tmpK;
 					continue;
 				}
 				if (str[k] == 't' && k + 3 < str.length() && str.substr(k, 4) == "true")
 				{
-					tokens.emplace_back(Token::Boolean, "true");
+					tokens.emplace_back("true");
 					k += 4;
 					continue;
 				}
 				if (str[k] == 'f' && k + 4 < str.length() && str.substr(k, 5) == "false")
 				{
-					tokens.emplace_back(Token::Boolean, "false");
+					tokens.emplace_back("false");
 					k += 5;
 					continue;
 				}
 				if (str[k] == 'n' && k + 3 < str.length() && str.substr(k, 4) == "null")
 				{
-					tokens.emplace_back(Token::Null, "null");
+					tokens.emplace_back("null");
 					k += 4;
 					continue;
 				}
-				if (str[k] == ',')
+				if (str[k] == ',' || str[k] == '}' || str[k] == '{' || str[k] == ']' || str[k] == '[' || str[k] == ':')
 				{
-					tokens.emplace_back(Token::Comma, ",");
-					k++;
-					continue;
-				}
-				if (str[k] == '}')
-				{
-					tokens.emplace_back(Token::CurlyClose, "}");
-					k++;
-					continue;
-				}
-				if (str[k] == '{')
-				{
-					tokens.emplace_back(Token::CurlyOpen, "{");
-					k++;
-					continue;
-				}
-				if (str[k] == ']')
-				{
-					tokens.emplace_back(Token::SquareClose, "]");
-					k++;
-					continue;
-				}
-				if (str[k] == '[')
-				{
-					tokens.emplace_back(Token::SquareOpen, "[");
-					k++;
-					continue;
-				}
-				if (str[k] == ':')
-				{
-					tokens.emplace_back(Token::Colon, ":");
+					tokens.emplace_back(str.substr(k, 1));
 					k++;
 					continue;
 				}
 
-				tokens.emplace_back(Token::Unknown, str.substr(k));
+				//tokens.emplace_back(str.substr(k));
 				k = str.length();
 			}
 
@@ -215,19 +194,19 @@ std::string Json::Write(const Format &format) const
 	return stream.str();
 }
 
-void Json::Convert(Node &current, const std::vector<std::pair<Token, std::string>> &v, const int32_t &i, int32_t &r)
+void Json::Convert(Node &current, const std::vector<std::string> &v, const int32_t &i, int32_t &r)
 {
-	if (v[i].first == Token::CurlyOpen)
+	if (v[i] == "{")
 	{
 		auto k{i + 1};
 
-		while (v[k].first != Token::CurlyClose)
+		while (v[k] != "}")
 		{
-			auto key = v[k].second;
-			k += 2; // k+1 should be ':'
+			auto key{v[k]};
+			k += 2; // k + 1 should be ':'
 			Convert(current.AddProperty(key), v, k, k);
 
-			if (v[k].first == Token::Comma)
+			if (v[k] == ",")
 			{
 				k++;
 			}
@@ -236,15 +215,15 @@ void Json::Convert(Node &current, const std::vector<std::pair<Token, std::string
 		current.SetType(Type::Object);
 		r = k + 1;
 	}
-	else if (v[i].first == Token::SquareOpen)
+	else if (v[i] == "[")
 	{
 		auto k{i + 1};
 
-		while (v[k].first != Token::SquareClose)
+		while (v[k] != "]")
 		{
 			Convert(current.AddProperty(), v, k, k);
 
-			if (v[k].first == Token::Comma)
+			if (v[k] == ",")
 			{
 				k++;
 			}
@@ -253,28 +232,24 @@ void Json::Convert(Node &current, const std::vector<std::pair<Token, std::string
 		current.SetType(Type::Array);
 		r = k + 1;
 	}
-	else if (v[i].first == Token::Number)
+	else
 	{
-		current.SetValue(v[i].second);
-		current.SetType(Type::Number);
-		r = i + 1;
-	}
-	else if (v[i].first == Token::String)
-	{
-		current.SetValue(v[i].second);
+		current.SetValue(v[i]);
 		current.SetType(Type::String);
-		r = i + 1;
-	}
-	else if (v[i].first == Token::Boolean)
-	{
-		current.SetValue(v[i].second);
-		current.SetType(Type::Boolean);
-		r = i + 1;
-	}
-	else if (v[i].first == Token::Null)
-	{
-		current.SetValue(v[i].second);
-		current.SetType(Type::Null);
+
+		if (String::IsNumber(v[i]))
+		{
+			current.SetType(Type::Number);
+		} 
+		else if (v[i] == "null")
+		{
+			current.SetType(Type::Null);
+		}
+		else if (v[i] == "true" || v[i] == "false")
+		{
+			current.SetType(Type::Boolean);
+		}
+
 		r = i + 1;
 	}
 }

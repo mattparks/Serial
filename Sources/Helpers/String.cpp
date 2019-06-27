@@ -34,15 +34,18 @@ bool String::Contains(std::string_view str, std::string_view token)
 	return str.find(token) != std::string::npos;
 }
 
-bool String::IsInteger(std::string_view str)
+bool String::IsNumber(std::string_view str)
 {
-	return str.find_first_not_of("0123456789") == std::string::npos;
+	return !str.empty() && std::find_if(str.begin(), str.end(), [](const auto c)
+	{
+		return !std::isdigit(c);
+	}) == str.end();
 }
 
-int String::FindCharPos(std::string_view str, char c)
+int32_t String::FindCharPos(std::string_view str, char c)
 {
 	auto res{str.find(c)};
-	return res == std::string::npos ? -1 : res;
+	return res == std::string::npos ? -1 : static_cast<int32_t>(res);
 }
 
 std::string String::Trim(std::string str, std::string_view whitespace)

@@ -38,11 +38,11 @@ public:
 	static bool Contains(std::string_view str, std::string_view token);
 
 	/**
-	 * Gets if a string is a integer.
+	 * Gets if a string is a number.
 	 * @param str The string.
-	 * @return If a string is a integer.
+	 * @return If a string is a number.
 	 */
-	static bool IsInteger(std::string_view str);
+	static bool IsNumber(std::string_view str);
 
 	/**
 	 * Gets the first char index in the string.
