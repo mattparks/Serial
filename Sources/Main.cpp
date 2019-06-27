@@ -157,16 +157,15 @@ int main(int argc, char **argv)
 	node["users"][1] = test::User{"nettcod", "Cody Nettesheim", "University student", true, "11/03/1999"};
 	node["users"][3] = test::User{"blockhead", "Nick Block", "Website developer", false, "11/03/1996"};
 	node["users"][6] = test::User{"aaronphal", "Aaron Phalphouvong", "High school student", true, "11/03/2002"};
-	auto users{node["users"]->Get<std::vector<test::User>>()};
+	//auto users{node["users"]->Get<std::vector<test::User>>()};
 
 	Json json1{node};
 
 	Json json2;
 	json2.Load(json1.Write(Node::Format::Minified));
 	json2.Write(std::cout, Node::Format::Beautified);
-	std::cout << "\n";
 
-	std::cout << "Press enter to continue...";
-	std::cin.get();
+	//std::cout << "\nPress enter to continue...";
+	//std::cin.get();
 	return 0;
 }

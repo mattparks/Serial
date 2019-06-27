@@ -32,9 +32,16 @@ public:
 
 		Return(Node const *parent, std::variant<std::string, int32_t> key, Node const *value) :
 			m_parent{const_cast<Node *>(parent)},
-			m_key{std::move(key)},
+			m_keys{std::move(key)},
 			m_value{const_cast<Node *>(value)}
 		{
+		}
+
+		Return(Return *parent, std::variant<std::string, int32_t> key) :
+			m_parent{parent->m_parent},
+			m_keys{parent->m_keys}
+		{
+			m_keys.emplace_back(std::move(key));
 		}
 
 		bool has_value() const noexcept
@@ -42,22 +49,31 @@ public:
 			return m_value != nullptr;
 		}
 
-		Node *get() const
+		Node *get()
 		{
 			if (!has_value())
 			{
-				if (auto name{std::get_if<std::string>(&m_key)}; name)
+				// This will build the tree of nodes from the return keys tree.
+				for (const auto &key : m_keys)
 				{
-					m_value = &m_parent->AddProperty(*name);
+					if (auto name{std::get_if<std::string>(&key)}; name)
+					{
+						m_value = &m_parent->AddProperty(*name);
+					}
+					else if (auto index{std::get_if<int32_t>(&key)}; index)
+					{
+						m_value = &m_parent->AddProperty(*index);
+					}
+					else
+					{
+						throw std::runtime_error("Key for node return is neither a int or a string");
+					}
+
+					// Because the last key will set parent to the value parent usage should be avoided.
+					m_parent = m_value;
 				}
-				else if (auto index{std::get_if<int32_t>(&m_key)}; index)
-				{
-					m_value = &m_parent->AddProperty(*index);
-				}
-				else
-				{
-					throw std::runtime_error("Could not get a node from the return");
-				}
+
+				m_keys.erase(m_keys.begin(), m_keys.end() - 1);
 			}
 
 			return m_value;
@@ -65,42 +81,42 @@ public:
 
 		explicit operator bool() const noexcept { return has_value(); }
 
-		operator Node &() const { return *get(); }
+		operator Node &() { return *get(); }
 
-		Node &operator*() const { return *get(); }
+		Node &operator*() { return *get(); }
 
-		Node *operator->() const { return get(); }
+		Node *operator->() { return get(); }
 
 		template <typename T>
-		Node &operator=(const T &rhs) const
+		Node &operator=(const T &rhs)
 		{
 			return *get() = rhs;
 		}
 
-		Return operator[](const std::string &key) const
+		Return operator[](const std::string &key)
 		{
-			/*if (!has_value())
+			if (!has_value())
 			{
-				return {this, key, nullptr};
-			}*/
+				return {this, key};
+			}
 
 			return get()->operator[](key);
 		}
 
-		Return operator[](const uint32_t &index) const
+		Return operator[](const uint32_t &index)
 		{
-			/*if (!has_value())
+			if (!has_value())
 			{
-				return {this, index, nullptr};
-			}*/
+				return {this, index};
+			}
 
 			return get()->operator[](index);
 		}
 
 	private:
 		Node *m_parent{};
-		std::variant<std::string, int32_t> m_key;
-		mutable Node *m_value{};
+		std::vector<std::variant<std::string, int32_t>> m_keys;
+		Node *m_value{};
 	};
 
 	Node() = default;
