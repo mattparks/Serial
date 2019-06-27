@@ -77,7 +77,7 @@ int32_t NextWhitespace(const std::string &source, int32_t i)
 void Json::Load(std::istream &inStream)
 {
 	std::string tmp;
-	std::vector<std::string> tokens;
+	std::vector<std::pair<Type, std::string>> tokens;
 
 	while (std::getline(inStream, tmp))
 	{
@@ -103,7 +103,7 @@ void Json::Load(std::istream &inStream)
 						tmpK++;
 					}
 
-					tokens.emplace_back(str.substr(k + 1, tmpK - k - 1));
+					tokens.emplace_back(Type::String, str.substr(k + 1, tmpK - k - 1));
 					k = tmpK + 1;
 					continue;
 				}
@@ -116,7 +116,7 @@ void Json::Load(std::istream &inStream)
 						tmpK++;
 					}
 
-					tokens.emplace_back(str.substr(k + 1, tmpK - k - 1));
+					tokens.emplace_back(Type::String, str.substr(k + 1, tmpK - k - 1));
 					k = tmpK + 1;
 					continue;
 				}
@@ -134,31 +134,31 @@ void Json::Load(std::istream &inStream)
 						tmpK++;
 					}
 
-					tokens.emplace_back(str.substr(k, tmpK - k));
+					tokens.emplace_back(Type::Number, str.substr(k, tmpK - k));
 					k = tmpK;
 					continue;
 				}
 				if (str[k] == 't' && k + 3 < str.length() && str.substr(k, 4) == "true")
 				{
-					tokens.emplace_back("true");
+					tokens.emplace_back(Type::Boolean, "true");
 					k += 4;
 					continue;
 				}
 				if (str[k] == 'f' && k + 4 < str.length() && str.substr(k, 5) == "false")
 				{
-					tokens.emplace_back("false");
+					tokens.emplace_back(Type::Boolean, "false");
 					k += 5;
 					continue;
 				}
 				if (str[k] == 'n' && k + 3 < str.length() && str.substr(k, 4) == "null")
 				{
-					tokens.emplace_back("null");
+					tokens.emplace_back(Type::Null, "null");
 					k += 4;
 					continue;
 				}
 				if (str[k] == ',' || str[k] == '}' || str[k] == '{' || str[k] == ']' || str[k] == '[' || str[k] == ':')
 				{
-					tokens.emplace_back(str.substr(k, 1));
+					tokens.emplace_back(Type::Unknown, str.substr(k, 1));
 					k++;
 					continue;
 				}
@@ -194,19 +194,19 @@ std::string Json::Write(const Format &format) const
 	return stream.str();
 }
 
-void Json::Convert(Node &current, const std::vector<std::string> &v, const int32_t &i, int32_t &r)
+void Json::Convert(Node &current, const std::vector<std::pair<Type, std::string>> &v, const int32_t &i, int32_t &r)
 {
-	if (v[i] == "{")
+	if (v[i].second == "{")
 	{
 		auto k{i + 1};
 
-		while (v[k] != "}")
+		while (v[k].second != "}")
 		{
-			auto key{v[k]};
+			auto key{v[k].second};
 			k += 2; // k + 1 should be ':'
 			Convert(current.AddProperty(key), v, k, k);
 
-			if (v[k] == ",")
+			if (v[k].second == ",")
 			{
 				k++;
 			}
@@ -215,15 +215,15 @@ void Json::Convert(Node &current, const std::vector<std::string> &v, const int32
 		current.SetType(Type::Object);
 		r = k + 1;
 	}
-	else if (v[i] == "[")
+	else if (v[i].second == "[")
 	{
 		auto k{i + 1};
 
-		while (v[k] != "]")
+		while (v[k].second != "]")
 		{
 			Convert(current.AddProperty(), v, k, k);
 
-			if (v[k] == ",")
+			if (v[k].second == ",")
 			{
 				k++;
 			}
@@ -234,22 +234,8 @@ void Json::Convert(Node &current, const std::vector<std::string> &v, const int32
 	}
 	else
 	{
-		current.SetValue(v[i]);
-		current.SetType(Type::String);
-
-		if (String::IsNumber(v[i]))
-		{
-			current.SetType(Type::Number);
-		} 
-		else if (v[i] == "null")
-		{
-			current.SetType(Type::Null);
-		}
-		else if (v[i] == "true" || v[i] == "false")
-		{
-			current.SetType(Type::Boolean);
-		}
-
+		current.SetValue(v[i].second);
+		current.SetType(v[i].first);
 		r = i + 1;
 	}
 }

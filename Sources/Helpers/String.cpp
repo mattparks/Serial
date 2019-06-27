@@ -38,7 +38,7 @@ bool String::IsNumber(std::string_view str)
 {
 	return !str.empty() && std::find_if(str.begin(), str.end(), [](const auto c)
 	{
-		return !std::isdigit(c);
+		return !(std::isdigit(c) || c == '-' || c == '.');
 	}) == str.end();
 }
 
