@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "Serialized/Node.hpp"
+#include "Serialized/Json/Json.hpp"
 
 using namespace acid;
 
@@ -105,6 +106,8 @@ int main(int argc, char **argv)
 	}
 
 	auto tree0{node["map0"]["val1"]["username"]};
+	auto tree0Valid{tree0.has_value()};
+	tree0 = "mattparks";
 
 	node["array1"]->Append("Hello", nullptr, 10, 4.8924f);
 
@@ -123,6 +126,16 @@ int main(int argc, char **argv)
 
 	auto mapN2{node["map"]["-2"]->Get<std::string>()}; // TODO: Can names be numbers without searching with keys?
 	auto map400{node["map"]["400"]->Get<std::string>()}; // TODO: Can names be numbers without searching with keys?
+
+	Json json{node};
+	json.Write(&std::cout, Node::Format::Minified);
+	std::cout << "\n\n";
+	auto jsonData{json.Write(Node::Format::Beautified)};
+
+	Json json2;
+	json2.Load(jsonData);
+	json2.Write(&std::cout, Node::Format::Minified);
+	std::cout << "\n";
 
 	std::cout << "Press enter to continue...";
 	std::cin.get();

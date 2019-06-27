@@ -17,11 +17,20 @@ Node::Node(std::string value, std::vector<Property> &&properties) :
 	}
 }
 
+void Node::Load(std::istream *inStream)
+{
+}
+
+void Node::Write(std::ostream *outStream, const Format &format) const
+{
+}
+
 std::string Node::GetName() const
 {
 	if (m_parent == nullptr)
 	{
-		throw std::runtime_error("Cannot get name if parent is null");
+		//throw std::runtime_error("Cannot get name if parent is null");
+		return "";
 	}
 
 	for (const auto &[propertyName, property] : m_parent->m_properties)

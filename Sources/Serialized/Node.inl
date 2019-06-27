@@ -100,6 +100,7 @@ template<typename T>
 Node &operator<<(Node &node, const T &object)
 {
 	node.SetValue(object);
+	node.SetType(Node::Type::Object);
 	return node;
 }
 
@@ -118,6 +119,7 @@ Node &operator<<(Node &node, const std::unique_ptr<T> &object)
 	if (object == nullptr)
 	{
 		node.SetValue("null");
+		node.SetType(Node::Type::Null);
 		return node;
 	}
 
@@ -149,6 +151,7 @@ Node &operator<<(Node &node, const std::shared_ptr<T> &object)
 	if (object == nullptr)
 	{
 		node.SetValue("null");
+		node.SetType(Node::Type::Null);
 		return node;
 	}
 
@@ -165,6 +168,7 @@ inline const Node &operator>>(const Node &node, char *&string)
 inline Node &operator<<(Node &node, const char *string)
 {
 	node.SetValue(string);
+	node.SetType(Node::Type::String);
 	return node;
 }
 
@@ -179,6 +183,7 @@ template<typename T>
 Node &operator<<(Node &node, const std::basic_string<T, std::char_traits<T>, std::allocator<T>> &string)
 {
 	node.SetValue(string);
+	node.SetType(Node::Type::String);
 	return node;
 }
 
@@ -191,6 +196,7 @@ inline const Node &operator>>(const Node &node, std::filesystem::path &object)
 inline Node &operator<<(Node &node, const std::filesystem::path &object)
 {
 	node.SetValue(object.string());
+	node.SetType(Node::Type::String);
 	return node;
 }
 
@@ -207,6 +213,7 @@ std::enable_if_t<std::is_class_v<T> || std::is_pointer_v<T>, Node &> operator<<(
 	if (ConstExpr::AsPtr(object) == nullptr)
 	{
 		node.SetValue("null");
+		node.SetType(Node::Type::Null);
 		return node;
 	}
 
@@ -219,6 +226,7 @@ const Node &operator>>(const Node &node, std::pair<T, K> &pair)
 {
 	pair.first = String::From<T>(node.GetName());
 	node >> pair.second;
+	node.SetType(Node::Type::String);
 	return node;
 }
 
@@ -227,6 +235,7 @@ Node &operator<<(Node &node, const std::pair<T, K> &pair)
 {
 	node.SetName(String::To(pair.first));
 	node << pair.second;
+	node.SetType(Node::Type::String);
 	return node;
 }
 
@@ -257,6 +266,7 @@ Node &operator<<(Node &node, const std::optional<T> &optional)
 	else
 	{
 		node.SetValue("null");
+		node.SetType(Node::Type::Null);
 	}
 
 	return node;
@@ -286,6 +296,7 @@ Node &operator<<(Node &node, const std::vector<T> &vector)
 		node.AddProperty() << x;
 	}
 
+	node.SetType(Node::Type::Array);
 	return node;
 }
 
@@ -313,6 +324,7 @@ Node &operator<<(Node &node, const std::map<T, K> &map)
 		node.AddProperty(String::To(x.first)) << x.second;
 	}
 
+	node.SetType(Node::Type::Array);
 	return node;
 }
 }

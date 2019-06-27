@@ -18,6 +18,11 @@ public:
 		String, Object, Array, Boolean, Number, Null, Unknown
 	};
 
+	enum class Format
+	{
+		Beautified, Minified
+	};
+
 	using Property = std::pair<std::string, Node>;
 
 	class Return
@@ -37,19 +42,17 @@ public:
 			return m_value != nullptr;
 		}
 
-		Node *get() const noexcept
+		Node *get() const
 		{
 			if (!has_value())
 			{
-				if (std::holds_alternative<std::string>(m_key))
+				if (auto name{std::get_if<std::string>(&m_key)}; name)
 				{
-					auto name{std::get<std::string>(m_key)};
-					m_value = &m_parent->AddProperty(name);
+					m_value = &m_parent->AddProperty(*name);
 				}
-				else if (std::holds_alternative<int32_t>(m_key))
+				else if (auto index{std::get_if<int32_t>(&m_key)}; index)
 				{
-					auto index{std::get<int32_t>(m_key)};
-					m_value = &m_parent->AddProperty(index);
+					m_value = &m_parent->AddProperty(*index);
 				}
 				else
 				{
@@ -62,11 +65,11 @@ public:
 
 		explicit operator bool() const noexcept { return has_value(); }
 
-		operator Node &() const noexcept { return *get(); }
+		operator Node &() const { return *get(); }
 
-		Node &operator*() const noexcept { return *get(); }
+		Node &operator*() const { return *get(); }
 
-		Node *operator->() const noexcept { return get(); }
+		Node *operator->() const { return get(); }
 
 		template <typename T>
 		Node &operator=(const T &rhs) const
@@ -106,6 +109,12 @@ public:
 
 	Node(std::string value, std::vector<Property> &&properties);
 
+	virtual ~Node() = default;
+
+	virtual void Load(std::istream *inStream);
+
+	virtual void Write(std::ostream *outStream, const Format &format = Format::Beautified) const;
+
 	template<typename T>
 	T Get() const;
 
@@ -127,7 +136,9 @@ public:
 	template<typename T>
 	void SetValue(const T &value);
 
-	//const Type &GetType() const { return m_type; }
+	const Type &GetType() const { return m_type; }
+
+	void SetType(const Type &type) { m_type = type; }
 
 	Node *GetParent() const { return m_parent; }
 
@@ -170,7 +181,7 @@ public:
 
 protected:
 	std::string m_value;
-	//Type m_type{};
+	Type m_type{};
 	Node *m_parent{};
 	std::vector<Property> m_properties;
 };
