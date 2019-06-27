@@ -19,17 +19,17 @@ public:
 
 		friend const Node &operator>>(const Node &node, XML &xml)
 		{
-			node["data"]->Get(xml.data);
-			node["optional0"]->Get(xml.optional0);
-			node["optional1"]->Get(xml.optional1);
+			node["data"].Get(xml.data);
+			node["optional0"].Get(xml.optional0);
+			node["optional1"].Get(xml.optional1);
 			return node;
 		}
 
 		friend Node &operator<<(Node &node, const XML &xml)
 		{
-			node["data"]->Set(xml.data);
-			node["optional0"]->Set(xml.optional0);
-			node["optional1"]->Set(xml.optional1);
+			node["data"].Set(xml.data);
+			node["optional0"].Set(xml.optional0);
+			node["optional1"].Set(xml.optional1);
 			return node;
 		}
 	} xml;
@@ -42,15 +42,15 @@ public:
 
 		friend const Node &operator>>(const Node &node, Objects &objects)
 		{
-			node["key"]->Get(objects.key, "failed to get key");
-			node["values"]->Get(objects.values);
+			node["key"].Get(objects.key, "failed to get key");
+			node["values"].Get(objects.values);
 			return node;
 		}
 
 		friend Node &operator<<(Node &node, const Objects &objects)
 		{
-			node["key"]->Set(objects.key);
-			node["values"]->Set(objects.values);
+			node["key"].Set(objects.key);
+			node["values"].Set(objects.values);
 			return node;
 		}
 	} objects;
@@ -66,29 +66,29 @@ public:
 
 	friend const Node &operator>>(const Node &node, Example1 &example1)
 	{
-		node["currentPath"]->Get(example1.currentPath);
-		node["paragraph"]->Get(example1.paragraph);
-		node["content"]->Get(example1.content);
-		node["xml"]->Get(example1.xml);
-		node["json"]->Get(example1.json);
-		node["yaml"]->Get(example1.yaml);
-		node["map"]->Get(example1.map);
-		node["vectorMap"]->Get(example1.vectorMap);
-		node["objects"]->Get(example1.objects);
+		node["currentPath"].Get(example1.currentPath);
+		node["paragraph"].Get(example1.paragraph);
+		node["content"].Get(example1.content);
+		node["xml"].Get(example1.xml);
+		node["json"].Get(example1.json);
+		node["yaml"].Get(example1.yaml);
+		node["map"].Get(example1.map);
+		node["vectorMap"].Get(example1.vectorMap);
+		node["objects"].Get(example1.objects);
 		return node;
 	}
 
 	friend Node &operator<<(Node &node, const Example1 &example1)
 	{
-		node["currentPath"]->Set(example1.currentPath);
-		node["paragraph"]->Set(example1.paragraph);
-		node["content"]->Set(example1.content);
-		node["xml"]->Set(example1.xml);
-		node["json"]->Set(example1.json);
-		node["yaml"]->Set(example1.yaml);
-		node["map"]->Set(example1.map);
-		node["vectorMap"]->Set(example1.vectorMap);
-		node["objects"]->Set(example1.objects);
+		node["currentPath"].Set(example1.currentPath);
+		node["paragraph"].Set(example1.paragraph);
+		node["content"].Set(example1.content);
+		node["xml"].Set(example1.xml);
+		node["json"].Set(example1.json);
+		node["yaml"].Set(example1.yaml);
+		node["map"].Set(example1.map);
+		node["vectorMap"].Set(example1.vectorMap);
+		node["objects"].Set(example1.objects);
 		return node;
 	}
 };
@@ -104,21 +104,21 @@ public:
 
 	friend const Node &operator>>(const Node &node, User &user)
 	{
-		node["username"]->Get(user.username);
-		node["fullname"]->Get(user.fullname);
-		node["description"]->Get(user.description);
-		node["employed"]->Get(user.employed);
-		node["birthday"]->Get(user.birthday);
+		node["username"].Get(user.username);
+		node["fullname"].Get(user.fullname);
+		node["description"].Get(user.description);
+		node["employed"].Get(user.employed);
+		node["birthday"].Get(user.birthday);
 		return node;
 	}
 
 	friend Node &operator<<(Node &node, const User &user)
 	{
-		node["username"]->Set(user.username);
-		node["fullname"]->Set(user.fullname);
-		node["description"]->Set(user.description);
-		node["employed"]->Set(user.employed);
-		node["birthday"]->Set(user.birthday);
+		node["username"].Set(user.username);
+		node["fullname"].Set(user.fullname);
+		node["description"].Set(user.description);
+		node["employed"].Set(user.employed);
+		node["birthday"].Set(user.birthday);
 		return node;
 	}
 };
@@ -136,28 +136,28 @@ int main(int argc, char **argv)
 	node["array2"] = std::vector{1.0f, 10.0f, -5.55f, 9.3456f};
 	node["array2"]->Append(64, 32.1f, -2.0);
 	//node["array2"].SetName("array2_renamed");
-	//auto array2Name{node["array2"]->GetName()};
-	//auto array2{node["array2"]->Get<std::vector<float>>()};
+	//auto array2Name{node["array2"].GetName()};
+	//auto array2{node["array2"].Get<std::vector<float>>()};
 
-	auto timeNow{node["timeNow"]->Get<int64_t>(123456)}; // 123456
+	auto timeNow{node["timeNow"].Get<int64_t>(123456)}; // 123456
 	node.RemoveProperty("timeNow");
 
-	auto data00{node["xml"]["data"][0][0]->Get<std::string>()}; // "clunky"
-	auto data10{node["xml"]["data"][1][0]->Get<std::string>()}; // "uses more words than necessary"
+	auto data00{node["xml"]["data"][0][0].Get<std::string>()}; // "clunky"
+	auto data10{node["xml"]["data"][1][0].Get<std::string>()}; // "uses more words than necessary"
 
-	auto mapN2{node["map"]["-2"]->Get<std::string>()}; // TODO: Can names be numbers without searching with keys?
-	auto map400{node["map"]["400"]->Get<std::string>()}; // TODO: Can names be numbers without searching with keys?
+	auto mapN2{node["map"]["-2"].Get<std::string>()}; // TODO: Can names be numbers without searching with keys?
+	auto map400{node["map"]["400"].Get<std::string>()}; // TODO: Can names be numbers without searching with keys?
 
 	if (auto map{node["map"]}; map)
 	{
-		auto mapN2{map["-2"]->Get<std::string>()};
+		auto mapN2{map["-2"].Get<std::string>()};
 	}
 
 	node["users"][0] = test::User{"mattparks", "Matthew Albrecht", "C++ developer", false, "12/07/2000"};
 	node["users"][1] = test::User{"nettcod", "Cody Nettesheim", "University student", true, "11/03/1999"};
 	node["users"][3] = test::User{"blockhead", "Nick Block", "Website developer", false, "11/03/1996"};
 	node["users"][6] = test::User{"aaronphal", "Aaron Phalphouvong", "High school student", true, "11/03/2002"};
-	//auto users{node["users"]->Get<std::vector<test::User>>()};
+	auto users{node["users"].Get<std::vector<test::User>>()};
 
 	Json json1{node};
 

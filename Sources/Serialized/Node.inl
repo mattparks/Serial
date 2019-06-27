@@ -227,7 +227,6 @@ const Node &operator>>(const Node &node, std::pair<T, K> &pair)
 {
 	pair.first = String::From<T>(node.GetName());
 	node >> pair.second;
-	node.SetType(Node::Type::String);
 	return node;
 }
 
@@ -236,7 +235,6 @@ Node &operator<<(Node &node, const std::pair<T, K> &pair)
 {
 	node.SetName(String::To(pair.first));
 	node << pair.second;
-	node.SetType(Node::Type::String);
 	return node;
 }
 

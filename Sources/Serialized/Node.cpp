@@ -80,7 +80,7 @@ bool Node::HasProperty(const std::string &name) const
 	return false;
 }
 
-Node::Return Node::GetProperty(const std::string &name) const
+NodeReturn Node::GetProperty(const std::string &name) const
 {
 	for (const auto &property : m_properties)
 	{
@@ -93,7 +93,7 @@ Node::Return Node::GetProperty(const std::string &name) const
 	return {this, name, nullptr};
 }
 
-Node::Return Node::GetProperty(const uint32_t &index) const
+NodeReturn Node::GetProperty(const uint32_t &index) const
 {
 	if (index < m_properties.size())
 	{
@@ -124,12 +124,12 @@ void Node::RemoveProperty(const std::string &name)
 	}), m_properties.end());
 }
 
-Node::Return Node::operator[](const std::string &key) const
+NodeReturn Node::operator[](const std::string &key) const
 {
 	return GetProperty(key);
 }
 
-Node::Return Node::operator[](const uint32_t &index) const
+NodeReturn Node::operator[](const uint32_t &index) const
 {
 	return GetProperty(index);
 }
