@@ -34,6 +34,11 @@ bool String::Contains(std::string_view str, std::string_view token)
 	return str.find(token) != std::string::npos;
 }
 
+bool String::IsWhitespace(const char &c)
+{
+	return std::string{" \n\r  "}.find(c) != std::string::npos;
+}
+
 bool String::IsNumber(std::string_view str)
 {
 	return !str.empty() && std::find_if(str.begin(), str.end(), [](const auto c)

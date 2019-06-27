@@ -37,6 +37,8 @@ public:
 	 */
 	static bool Contains(std::string_view str, std::string_view token);
 
+	static bool IsWhitespace(const char &c);
+
 	/**
 	 * Gets if a string is a number.
 	 * @param str The string.

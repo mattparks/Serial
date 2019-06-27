@@ -1,10 +1,7 @@
 #include "Json.hpp"
 
 #include "Helpers/String.hpp"
-#include <cassert>
-
-// https://github.com/amir-s/jute
-// TODO: Split line whitespace right away.
+#include <iostream>
 
 namespace acid
 {
@@ -13,164 +10,77 @@ Json::Json(const Node &node) :
 {
 }
 
-bool IsWhitespace(const char c)
+void AddToken(std::vector<std::pair<Node::Type, std::string>> &tokens, std::stringstream &current)
 {
-	return std::string{" \n\r  "}.find(c) != std::string::npos;
-}
-
-int32_t SkipWhitespaces(const std::string &source, int32_t i = 0)
-{
-	// Gets the next index of the string that is not whitespace.
-	while (i < static_cast<int32_t>(source.length()))
+	if (auto str{current.str()}; !str.empty())
 	{
-		if (!IsWhitespace(source[i]))
+		// Finds the node value type of the string and adds it to the tokens vector.
+		if (String::IsNumber(str))
 		{
-			return i;
+			tokens.emplace_back(Node::Type::Number, str);
 		}
-
-		i++;
+		else if (str == "null")
+		{
+			tokens.emplace_back(Node::Type::Null, str);
+		}
+		else if (str == "true" || str == "false")
+		{
+			tokens.emplace_back(Node::Type::Boolean, str);
+		}
+		else
+		{
+			tokens.emplace_back(Node::Type::String, str);
+		}
 	}
 
-	// The entire string is whitespace.
-	return -1;
-}
-
-int32_t NextWhitespace(const std::string &source, int32_t i)
-{
-	// Finds the index before the next whitespace, string whitespace is ignored.
-	while (i < static_cast<int32_t>(source.length()))
-	{
-		if (source[i] == '"')
-		{
-			i++;
-
-			// Go to the end of the string.
-			while (i < static_cast<int32_t>(source.length()) && (source[i] != '"' || source[i - 1] == '\\'))
-			{
-				i++;
-			}
-		}
-
-		if (source[i] == '\'')
-		{
-			i++;
-
-			// Go to the end of the string.
-			while (i < static_cast<int32_t>(source.length()) && (source[i] != '\'' || source[i - 1] == '\\'))
-			{
-				i++;
-			}
-		}
-
-		if (IsWhitespace(source[i]))
-		{
-			return i;
-		}
-
-		i++;
-	}
-
-	// No whitespace found in the string.
-	return source.length();
+	// Clears the current summation stream.
+	current.str({});
 }
 
 void Json::Load(std::istream &inStream)
 {
-	std::string tmp;
 	std::vector<std::pair<Type, std::string>> tokens;
 
-	while (std::getline(inStream, tmp))
+	char c;
+	std::stringstream current;
+	bool inString{};
+
+	// Read stream until end of file.
+	while (!inStream.eof())
 	{
-		// Gets the start of the line skipping whitespace.
-		auto index{SkipWhitespaces(tmp, 0)};
+		inStream.get(c);
 
-		while (index >= 0)
+		// On start of string switch in/out of stream space and ignore this char.
+		if (c == '"' || c == '\'')
+		{			 
+			inString ^= 1;
+			continue;
+		}
+
+		// When not reading a string tokens can be found.
+		if (!inString)
 		{
-			// The next whitespace location after the last one.
-			auto next{NextWhitespace(tmp, index)};
-			auto str{tmp.substr(index, next - index)};
-
-			std::size_t k{};
-
-			while (k < str.length())
+			// Tokens used to read json nodes.
+			if (std::string{",{}[]:"}.find(c) != std::string::npos)
 			{
-				if (str[k] == '"')
-				{
-					auto tmpK{k + 1};
-
-					while (tmpK < str.length() && (str[tmpK] != '"' || str[tmpK - 1] == '\\'))
-					{
-						tmpK++;
-					}
-
-					tokens.emplace_back(Type::String, str.substr(k + 1, tmpK - k - 1));
-					k = tmpK + 1;
-					continue;
-				}
-				if (str[k] == '\'')
-				{
-					auto tmpK{k + 1};
-
-					while (tmpK < str.length() && (str[tmpK] != '\'' || str[tmpK - 1] == '\\'))
-					{
-						tmpK++;
-					}
-
-					tokens.emplace_back(Type::String, str.substr(k + 1, tmpK - k - 1));
-					k = tmpK + 1;
-					continue;
-				}
-				if (str[k] == '-' || (str[k] <= '9' && str[k] >= '0'))
-				{
-					auto tmpK{k};
-
-					if (str[tmpK] == '-')
-					{
-						tmpK++;
-					}
-
-					while (tmpK < str.size() && ((str[tmpK] <= '9' && str[tmpK] >= '0') || str[tmpK] == '.'))
-					{
-						tmpK++;
-					}
-
-					tokens.emplace_back(Type::Number, str.substr(k, tmpK - k));
-					k = tmpK;
-					continue;
-				}
-				if (str[k] == 't' && k + 3 < str.length() && str.substr(k, 4) == "true")
-				{
-					tokens.emplace_back(Type::Boolean, "true");
-					k += 4;
-					continue;
-				}
-				if (str[k] == 'f' && k + 4 < str.length() && str.substr(k, 5) == "false")
-				{
-					tokens.emplace_back(Type::Boolean, "false");
-					k += 5;
-					continue;
-				}
-				if (str[k] == 'n' && k + 3 < str.length() && str.substr(k, 4) == "null")
-				{
-					tokens.emplace_back(Type::Null, "null");
-					k += 4;
-					continue;
-				}
-				if (str[k] == ',' || str[k] == '}' || str[k] == '{' || str[k] == ']' || str[k] == '[' || str[k] == ':')
-				{
-					tokens.emplace_back(Type::Unknown, str.substr(k, 1));
-					k++;
-					continue;
-				}
-
-				//tokens.emplace_back(str.substr(k));
-				k = str.length();
+				AddToken(tokens, current);
+				tokens.emplace_back(Type::Unknown, std::string{c});
+				continue;
 			}
 
-			index = SkipWhitespaces(tmp, next);
+			// On whitespace save current as a string.
+			if (String::IsWhitespace(c))
+			{
+				AddToken(tokens, current);
+				continue;
+			}
 		}
+
+		// Add this char to the current builder stream.
+		current << c;
 	}
 
+	// Converts the list of tokens into nodes.
 	int32_t k{};
 	Convert(*this, tokens, 0, k);
 }
@@ -262,7 +172,7 @@ void Json::AppendData(const Node &source, std::ostream &outStream, const int32_t
 	{
 		auto value{String::FixReturnTokens(source.GetValue<std::string>())};
 
-		if (source.GetType() == Node::Type::String)
+		if (source.GetType() == Type::String)
 		{
 			outStream << '\"' << value << '\"';
 		}
