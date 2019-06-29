@@ -1,7 +1,9 @@
 #include <iostream>
 
+#include <fstream>
 #include "Serialized/Node.hpp"
 #include "Serialized/Json/Json.hpp"
+#include "Serialized/Yaml/Yaml.hpp"
 
 using namespace acid;
 
@@ -57,6 +59,7 @@ public:
 
 	std::string paragraph{"Lorem ipsum dolor sit amet,\nconsectetur adipiscing elit,\nsed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\n"};
 	std::unique_ptr<std::string> content{std::make_unique<std::string>("Ut enim ad minim veniam,\nquis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.")};
+	//std::string google{"\"https://google.com\""};
 
 	std::filesystem::path currentPath{std::filesystem::current_path()};
 	std::vector<std::string> json{"rigid", "better for data interchange"};
@@ -68,6 +71,7 @@ public:
 	{
 		node["currentPath"].Get(example1.currentPath);
 		node["paragraph"].Get(example1.paragraph);
+		//node["google"].Get(example1.google);
 		node["content"].Get(example1.content);
 		node["xml"].Get(example1.xml);
 		node["json"].Get(example1.json);
@@ -82,6 +86,7 @@ public:
 	{
 		node["currentPath"].Set(example1.currentPath);
 		node["paragraph"].Set(example1.paragraph);
+		//node["google"].Set(example1.google);
 		node["content"].Set(example1.content);
 		node["xml"].Set(example1.xml);
 		node["json"].Set(example1.json);
@@ -126,6 +131,32 @@ public:
 
 int main(int argc, char **argv)
 {
+	/*Json canada;
+	Json catalog;
+	Json twitter;
+
+	{
+		auto start{std::chrono::high_resolution_clock::now()};
+
+		canada.Load(std::ifstream{"canada.json"});
+		catalog.Load(std::ifstream{"citm_catalog.json"});
+		twitter.Load(std::ifstream{"twitter.json"});
+
+		auto length{std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start)};
+		std::cout << "Loaded in " << length.count() << "ms\n";
+	}
+
+	{
+		auto start{std::chrono::high_resolution_clock::now()};
+
+		canada.Write(std::ofstream{"canada.1.json"});
+		catalog.Write(std::ofstream{"citm_catalog.1.json"});
+		twitter.Write(std::ofstream{"twitter.1.json"});
+
+		auto length{std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start)};
+		std::cout << "Written in " << length.count() << "ms\n";
+	}*/
+
 	test::Example1 example1;
 	Node node;
 	node = example1;
@@ -163,8 +194,13 @@ int main(int argc, char **argv)
 	Json json1{node};
 
 	Json json2;
-	json2.Load(json1.Write(Node::Format::Beautified));
-	json2.Write(std::cout, Node::Format::Beautified);
+	json2.Load(json1.Write(Node::Format::Minified));
+	//json2.Write(std::cout, Node::Format::Beautified);
+	json2.Write(std::ofstream{"Test.json"});
+
+	Yaml yaml2{node};
+	//yaml2.Write(std::cout, Node::Format::Beautified);
+	yaml2.Write(std::ofstream{"Test.yml"});
 
 	//std::cout << "\nPress enter to continue...";
 	//std::cin.get();

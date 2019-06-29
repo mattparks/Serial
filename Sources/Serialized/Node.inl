@@ -101,7 +101,7 @@ template<typename T>
 Node &operator<<(Node &node, const T &object)
 {
 	node.SetValue(object);
-	node.SetType(Node::Type::Object);
+	node.SetType(Node::Type::String);
 	return node;
 }
 
@@ -196,7 +196,9 @@ inline const Node &operator>>(const Node &node, std::filesystem::path &object)
 
 inline Node &operator<<(Node &node, const std::filesystem::path &object)
 {
-	node.SetValue(object.string());
+	auto str{object.string()};
+	std::replace(str.begin(), str.end(), '\\', '/');
+	node.SetValue(str);
 	node.SetType(Node::Type::String);
 	return node;
 }

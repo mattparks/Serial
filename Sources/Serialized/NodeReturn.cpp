@@ -55,7 +55,12 @@ Node *NodeReturn::get()
 
 std::string NodeReturn::GetName() const
 {
-	return *std::get_if<std::string>(&m_keys.back());
+	if (!has_value())
+	{
+		return *std::get_if<std::string>(&m_keys.back());
+	}
+
+	return m_value->GetName();
 }
 
 void NodeReturn::SetName(const std::string &name)

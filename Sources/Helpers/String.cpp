@@ -2,6 +2,8 @@
 
 #include <sstream>
 #include <algorithm>
+#include <iterator>
+#include <iostream>
 
 namespace acid
 {
@@ -43,7 +45,7 @@ bool String::IsNumber(std::string_view str)
 {
 	return !str.empty() && std::find_if(str.begin(), str.end(), [](const auto c)
 	{
-		return !(std::isdigit(c) || c == '-' || c == '.');
+		return std::string{"0123456789.-"}.find(c) == std::string::npos;
 	}) == str.end();
 }
 
@@ -120,6 +122,12 @@ std::string String::FixReturnTokens(const std::string &str)
 {
 	// TODO: Optimize.
 	return ReplaceAll(ReplaceAll(str, "\n", "\\n"), "\r", "\\r");
+}
+
+std::string String::UnfixReturnTokens(const std::string &str)
+{
+	// TODO: Optimize.
+	return ReplaceAll(ReplaceAll(str, "\\n", "\n"), "\\r", "\r");
 }
 
 std::string String::Lowercase(std::string str)

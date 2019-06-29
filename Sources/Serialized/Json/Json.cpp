@@ -1,53 +1,28 @@
 #include "Json.hpp"
 
 #include "Helpers/String.hpp"
-#include <iostream>
+
+// TODO: Fix loading and writing chars like /n, /", ... \"http://google.com\"
 
 namespace acid
 {
 Json::Json(const Node &node) :
 	Node{node}
 {
-}
-
-void AddToken(std::vector<std::pair<Node::Type, std::string>> &tokens, std::stringstream &current)
-{
-	if (auto str{current.str()}; !str.empty())
-	{
-		// Finds the node value type of the string and adds it to the tokens vector.
-		if (String::IsNumber(str))
-		{
-			tokens.emplace_back(Node::Type::Number, str);
-		}
-		else if (str == "null")
-		{
-			tokens.emplace_back(Node::Type::Null, str);
-		}
-		else if (str == "true" || str == "false")
-		{
-			tokens.emplace_back(Node::Type::Boolean, str);
-		}
-		else
-		{
-			tokens.emplace_back(Node::Type::String, str);
-		}
-	}
-
-	// Clears the current summation stream.
-	current.str({});
+	SetType(Type::Object);
 }
 
 void Json::Load(std::istream &inStream)
 {
 	std::vector<std::pair<Type, std::string>> tokens;
 
-	char c;
 	std::stringstream current;
 	bool inString{};
 
 	// Read stream until end of file.
 	while (!inStream.eof())
 	{
+		char c;
 		inStream.get(c);
 
 		// On start of string switch in/out of stream space and ignore this char.
@@ -61,7 +36,7 @@ void Json::Load(std::istream &inStream)
 		if (!inString)
 		{
 			// Tokens used to read json nodes.
-			if (std::string{",{}[]:"}.find(c) != std::string::npos)
+			if (std::string{":{},[]"}.find(c) != std::string::npos)
 			{
 				AddToken(tokens, current);
 				tokens.emplace_back(Type::Unknown, std::string{c});
@@ -104,6 +79,33 @@ std::string Json::Write(const Format &format) const
 	return stream.str();
 }
 
+void Json::AddToken(std::vector<std::pair<Type, std::string>> &tokens, std::stringstream &current)
+{
+	if (auto str{current.str()}; !str.empty())
+	{
+		// Finds the node value type of the string and adds it to the tokens vector.
+		if (String::IsNumber(str))
+		{
+			tokens.emplace_back(Type::Number, str);
+		}
+		else if (str == "null")
+		{
+			tokens.emplace_back(Type::Null, str);
+		}
+		else if (str == "true" || str == "false")
+		{
+			tokens.emplace_back(Type::Boolean, str);
+		}
+		else
+		{
+			tokens.emplace_back(Type::String, str);
+		}
+	}
+
+	// Clears the current summation stream.
+	current.str({});
+}
+
 void Json::Convert(Node &current, const std::vector<std::pair<Type, std::string>> &v, const int32_t &i, int32_t &r)
 {
 	if (v[i].second == "{")
@@ -144,13 +146,13 @@ void Json::Convert(Node &current, const std::vector<std::pair<Type, std::string>
 	}
 	else
 	{
-		current.SetValue(v[i].second);
+		current.SetValue(String::UnfixReturnTokens(v[i].second));
 		current.SetType(v[i].first);
 		r = i + 1;
 	}
 }
 
-std::string GetIndents(const int32_t &indentation)
+std::string Json::GetIndents(const int32_t &indentation)
 {
 	std::stringstream indents;
 
@@ -210,6 +212,16 @@ void Json::AppendData(const Node &source, std::ostream &outStream, const int32_t
 				openString += '\n';
 				closeString.insert(0, indents);
 			}
+		}
+		else if (it->second.GetType() == Type::Object)
+		{
+			openString = "{";
+			closeString = "}";
+		}
+		else if (it->second.GetType() == Type::Array)
+		{
+			openString = "[";
+			closeString = "]";
 		}
 
 		// Separate properties by comma.
