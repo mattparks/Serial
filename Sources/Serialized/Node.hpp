@@ -32,9 +32,9 @@ public:
 
 	virtual ~Node() = default;
 
-	virtual void Load(std::istream &inStream);
+	virtual void Load(std::istream &stream);
 
-	virtual void Write(std::ostream &outStream, const Format &format = Format::Beautified) const;
+	virtual void Write(std::ostream &stream, const Format &format = Format::Beautified) const;
 
 	template<typename T>
 	T Get() const;

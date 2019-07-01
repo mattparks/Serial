@@ -9,14 +9,14 @@ Yaml::Yaml(const Node &node) :
 {
 }
 
-void Yaml::Load(std::istream &inStream)
+void Yaml::Load(std::istream &stream)
 {
 }
 
-void Yaml::Write(std::ostream &outStream, const Format &format) const
+void Yaml::Write(std::ostream &stream, const Format &format) const
 {
-	outStream << "---\n";
-	AppendData(*this, outStream, 0, format);
+	stream << "---\n";
+	AppendData(*this, stream, 0, format);
 }
 
 void Yaml::Load(const std::string &string)
@@ -32,22 +32,10 @@ std::string Yaml::Write(const Format &format) const
 	return stream.str();
 }
 
-std::string Yaml::GetIndents(const int32_t &indentation)
-{
-	std::stringstream indents;
-
-	for (int32_t i{}; i < indentation; i++)
-	{
-		indents << "  ";
-	}
-
-	return indents.str();
-}
-
-void Yaml::AppendData(const Node &source, std::ostream &outStream, const int32_t &indentation, const Format &format)
+void Yaml::AppendData(const Node &source, std::ostream &stream, const int32_t &indentation, const Format &format)
 {
 	// Creates a string for the indentation level.
-	auto indents{GetIndents(indentation)};
+	std::string indents(2 * indentation, ' ');
 
 	// Only output the value if no properties exist.
 	if (source.GetProperties().empty())
@@ -57,40 +45,40 @@ void Yaml::AppendData(const Node &source, std::ostream &outStream, const int32_t
 
 		if (lines.size() > 1)
 		{
-			outStream << "|\n";
+			stream << "|\n";
 		}
 
 		for (const auto &line : lines)
 		{
 			if (lines.size() > 1)
 			{
-				outStream << indents;
+				stream << indents;
 			}
 
-			outStream << line << "\n";
+			stream << line << "\n";
 		}
 	}
 
 	// Output each property.
 	for (auto it{source.GetProperties().begin()}; it < source.GetProperties().end(); ++it)
 	{
-		outStream << indents;
+		stream << indents;
 
 		// Output name for property if it exists.
 		if (!it->first.empty())
 		{
 			if (String::IsNumber(it->first))
 			{
-				outStream << "\"" << it->first << "\": ";
+				stream << "\"" << it->first << "\": ";
 			}
 			else
 			{
-				outStream << it->first << ": ";
+				stream << it->first << ": ";
 			}
 		}
 
 		// Appends the current stream with the property data.
-		AppendData(it->second, outStream, indentation + 1, format);
+		AppendData(it->second, stream, indentation + 1, format);
 	}
 }
 }

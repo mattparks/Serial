@@ -12,7 +12,7 @@ Json::Json(const Node &node) :
 	SetType(Type::Object);
 }
 
-void Json::Load(std::istream &inStream)
+void Json::Load(std::istream &stream)
 {
 	std::vector<std::pair<Type, std::string>> tokens;
 
@@ -20,10 +20,10 @@ void Json::Load(std::istream &inStream)
 	bool inString{};
 
 	// Read stream until end of file.
-	while (!inStream.eof())
+	while (!stream.eof())
 	{
 		char c;
-		inStream.get(c);
+		stream.get(c);
 
 		// On start of string switch in/out of stream space and ignore this char.
 		if (c == '"' || c == '\'')
@@ -60,10 +60,10 @@ void Json::Load(std::istream &inStream)
 	Convert(*this, tokens, 0, k);
 }
 
-void Json::Write(std::ostream &outStream, const Format &format) const
+void Json::Write(std::ostream &stream, const Format &format) const
 {
 	// Json files are wrapped with an extra set of braces.
-	AppendData({"", {{"", *this}}}, outStream, 0, format);
+	AppendData({"", {{"", *this}}}, stream, 0, format);
 }
 
 void Json::Load(const std::string &string)
@@ -152,22 +152,10 @@ void Json::Convert(Node &current, const std::vector<std::pair<Type, std::string>
 	}
 }
 
-std::string Json::GetIndents(const int32_t &indentation)
-{
-	std::stringstream indents;
-
-	for (int32_t i{}; i < indentation; i++)
-	{
-		indents << "  ";
-	}
-
-	return indents.str();
-}
-
-void Json::AppendData(const Node &source, std::ostream &outStream, const int32_t &indentation, const Format &format)
+void Json::AppendData(const Node &source, std::ostream &stream, const int32_t &indentation, const Format &format)
 {
 	// Creates a string for the indentation level.
-	auto indents{GetIndents(indentation)};
+	std::string indents(2 * indentation, ' ');
 
 	// Only output the value if no properties exist.
 	if (source.GetProperties().empty())
@@ -176,11 +164,11 @@ void Json::AppendData(const Node &source, std::ostream &outStream, const int32_t
 
 		if (source.GetType() == Type::String)
 		{
-			outStream << '\"' << value << '\"';
+			stream << '\"' << value << '\"';
 		}
 		else
 		{
-			outStream << value;
+			stream << value;
 		}
 	}
 
@@ -232,28 +220,28 @@ void Json::AppendData(const Node &source, std::ostream &outStream, const int32_t
 
 		if (format != Format::Minified)
 		{
-			outStream << indents;
+			stream << indents;
 		}
 
 		// Output name for property if it exists.
 		if (!it->first.empty())
 		{
-			outStream << "\"" << it->first << "\":";
+			stream << "\"" << it->first << "\":";
 
 			if (format != Format::Minified)
 			{
-				outStream << ' ';
+				stream << ' ';
 			}
 		}
 
 		// Appends the current stream with the property data.
-		outStream << openString;
-		AppendData(it->second, outStream, indentation + 1, format);
-		outStream << closeString;
+		stream << openString;
+		AppendData(it->second, stream, indentation + 1, format);
+		stream << closeString;
 
 		if (format != Format::Minified)
 		{
-			outStream << '\n';
+			stream << '\n';
 		}
 	}
 }

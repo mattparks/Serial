@@ -23,11 +23,11 @@ Node::Node(std::string value, std::vector<Property> &&properties) :
 	}
 }
 
-void Node::Load(std::istream &inStream)
+void Node::Load(std::istream &stream)
 {
 }
 
-void Node::Write(std::ostream &outStream, const Format &format) const
+void Node::Write(std::ostream &stream, const Format &format) const
 {
 }
 
