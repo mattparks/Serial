@@ -24,9 +24,7 @@ public:
 
 	Node() = default;
 
-	Node(std::string value);
-
-	Node(std::string value, const Type &type);
+	explicit Node(std::string value, const Type &type = Type::String);
 
 	Node(std::string value, std::vector<Property> &&properties);
 
@@ -35,6 +33,10 @@ public:
 	virtual void Load(std::istream &stream);
 
 	virtual void Write(std::ostream &stream, const Format &format = Format::Beautified) const;
+
+	Node *GetParent() const { return m_parent; }
+
+	void Remove();
 
 	template<typename T>
 	T Get() const;
@@ -61,8 +63,6 @@ public:
 
 	void SetType(const Type &type) { m_type = type; }
 
-	Node *GetParent() const { return m_parent; }
-
 	std::string GetName() const;
 
 	void SetName(const std::string &name);
@@ -85,6 +85,8 @@ public:
 
 	void RemoveProperty(const std::string &name);
 
+	void RemoveProperty(const Node &node);
+
 	const std::vector<Property> &GetProperties() const { return m_properties; };
 
 	template <typename T>
@@ -101,9 +103,10 @@ public:
 	bool operator<(const Node &other) const;
 
 protected:
+	Node *m_parent{};
+
 	std::string m_value;
 	Type m_type{};
-	Node *m_parent{};
 	std::vector<Property> m_properties;
 };
 }

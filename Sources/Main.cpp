@@ -180,9 +180,9 @@ int main(int argc, char **argv)
 	auto mapN2{node["map"]["-2"].Get<std::string>()}; // TODO: Can names be numbers without searching with keys?
 	auto map400{node["map"]["400"].Get<std::string>()}; // TODO: Can names be numbers without searching with keys?
 
-	if (auto map{node["map"]}; map)
+	if (auto mapN2{node["map"]["-2"]}; mapN2)
 	{
-		auto mapN2{map["-2"].Get<std::string>()};
+		auto value{mapN2.Get<std::string>()};
 	}
 
 	node["users"][0] = test::User{"mattparks", "Matthew Albrecht", "C++ developer", false, "12/07/2000"};

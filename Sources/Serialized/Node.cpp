@@ -2,11 +2,6 @@
 
 namespace acid
 {
-Node::Node(std::string value) :
-	m_value{std::move(value)}
-{
-}
-
 Node::Node(std::string value, const Type &type) :
 	m_value{std::move(value)},
 	m_type{type}
@@ -31,12 +26,21 @@ void Node::Write(std::ostream &stream, const Format &format) const
 {
 }
 
+void Node::Remove()
+{
+	if (m_parent == nullptr)
+	{
+		throw std::runtime_error("Cannot remove from parent properties if parent is null");
+	}
+
+	m_parent->RemoveProperty(*this);
+}
+
 std::string Node::GetName() const
 {
 	if (m_parent == nullptr)
 	{
-		//throw std::runtime_error("Cannot get name if parent is null");
-		return "";
+		throw std::runtime_error("Cannot get name if parent is null");
 	}
 
 	for (const auto &[propertyName, property] : m_parent->m_properties)
@@ -111,8 +115,8 @@ Node &Node::AddProperty(const std::string &name, Node &&node)
 
 Node &Node::AddProperty(const uint32_t &index, Node &&node)
 {
-	m_properties.resize(std::max(m_properties.size(), static_cast<std::size_t>(index + 1)), {"", {"null", Type::Null}});
-	return m_properties[index].second = std::move(node);
+	m_properties.resize(std::max(m_properties.size(), static_cast<std::size_t>(index + 1)), {"", Node{"null", Type::Null}});
+	return m_properties[index].second = node;
 }
 
 void Node::RemoveProperty(const std::string &name)
@@ -121,6 +125,15 @@ void Node::RemoveProperty(const std::string &name)
 	m_properties.erase(std::remove_if(m_properties.begin(), m_properties.end(), [name](const auto &n)
 	{
 		return n.first == name;
+	}), m_properties.end());
+}
+
+void Node::RemoveProperty(const Node &node)
+{
+	//node.m_parent = nullptr;
+	m_properties.erase(std::remove_if(m_properties.begin(), m_properties.end(), [node](const auto &n)
+	{
+		return n.second == node;
 	}), m_properties.end());
 }
 
