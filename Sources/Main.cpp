@@ -127,6 +127,55 @@ public:
 		return node;
 	}
 };
+
+/*class Resource
+{
+	template<typename T>
+	friend std::enable_if_t<std::is_base_of_v<Resource, T>, const Node &> operator>>(const Node &node, std::shared_ptr<T> &object)
+	{
+		object = T::Create(node);
+		std::cout << "Created Resource from Node\n";
+		return node;
+	}
+};
+
+class ResourceImage :
+	public Resource
+{
+public:
+	static std::shared_ptr<ResourceImage> Create(const std::filesystem::path &path)
+	{
+		return std::make_shared<ResourceImage>(path);
+	}
+
+	static std::shared_ptr<ResourceImage> Create(const Node &node)
+	{
+		auto result{std::make_shared<ResourceImage>()};
+		node >> *result;
+		return result;
+	}
+
+	ResourceImage() = default;
+
+	ResourceImage(std::filesystem::path path) :
+		m_path{std::move(path)}
+	{
+	}
+
+	friend const Node &operator>>(const Node &node, ResourceImage &image)
+	{
+		node["path"].Get(image.m_path);
+		return node;
+	}
+
+	friend Node &operator<<(Node &node, const ResourceImage &image)
+	{
+		node["path"].Set(image.m_path);
+		return node;
+	}
+
+	std::filesystem::path m_path;
+};*/
 }
 
 int main(int argc, char **argv)
@@ -189,7 +238,7 @@ int main(int argc, char **argv)
 	node["users"][1] = test::User{"nettcod", "Cody Nettesheim", "University student", true, "11/03/1999"};
 	node["users"][3] = test::User{"blockhead", "Nick Block", "Website developer", false, "11/03/1996"};
 	node["users"][6] = test::User{"aaronphal", "Aaron Phalphouvong", "High school student", true, "11/03/2002"};
-	auto users{node["users"].Get<std::vector<test::User>>()};
+	auto users{node["users"].Get<std::vector<std::optional<test::User>>>()};
 
 	Json json1{node};
 
@@ -198,9 +247,20 @@ int main(int argc, char **argv)
 	//json2.Write(std::cout, Node::Format::Beautified);
 	json2.Write(std::ofstream{"Test.json"});
 
-	Yaml yaml2{node};
+	/*Yaml yaml2{node};
 	//yaml2.Write(std::cout, Node::Format::Beautified);
-	yaml2.Write(std::ofstream{"Test.yml"});
+	yaml2.Write(std::ofstream{"Test.yml"});*/
+
+	/*{
+		Node node0;
+		auto i0{test::ResourceImage::Create(std::filesystem::current_path() / "Example0")};
+		auto i1{test::ResourceImage::Create(std::filesystem::current_path() / "Example1")};
+		node0.Append(i0, i1);
+		Json json{node0};
+		json.Write(std::ofstream{"Resource.json"});
+		auto o0{node0[0].Get<std::shared_ptr<test::ResourceImage>>()};
+		std::cout << o0->m_path << '\n';
+	}*/
 
 	//std::cout << "\nPress enter to continue...";
 	//std::cin.get();

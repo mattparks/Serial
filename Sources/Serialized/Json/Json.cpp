@@ -116,7 +116,7 @@ void Json::Convert(Node &current, const std::vector<std::pair<Type, std::string>
 		{
 			auto key{v[k].second};
 			k += 2; // k + 1 should be ':'
-			Convert(current.AddProperty(key), v, k, k);
+			Convert(current.AddProperty(key, {}), v, k, k);
 
 			if (v[k].second == ",")
 			{
@@ -160,7 +160,7 @@ void Json::AppendData(const Node &source, std::ostream &stream, const int32_t &i
 	// Only output the value if no properties exist.
 	if (source.GetProperties().empty())
 	{
-		auto value{String::FixReturnTokens(source.GetValue<std::string>())};
+		auto value{String::FixReturnTokens(source.GetValue())};
 
 		if (source.GetType() == Type::String)
 		{

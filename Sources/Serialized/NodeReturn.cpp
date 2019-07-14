@@ -32,13 +32,13 @@ Node *NodeReturn::get()
 		{
 			if (std::holds_alternative<std::string>(key))
 			{
-				auto name{std::get<std::string>(key)};
-				m_value = &m_parent->AddProperty(name);
+				const auto &name{std::get<std::string>(key)};
+				m_value = &m_parent->AddProperty(name, {});
 			}
 			else if (std::holds_alternative<int32_t>(key))
 			{
-				auto index{std::get<std::int32_t>(key)};
-				m_value = &m_parent->AddProperty(index);
+				const auto &index{std::get<std::int32_t>(key)};
+				m_value = &m_parent->AddProperty(index, {});
 			}
 			else
 			{

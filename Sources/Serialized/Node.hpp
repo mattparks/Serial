@@ -12,8 +12,10 @@ class Node
 public:
 	enum class Type
 	{
-		String, Object, Array, Boolean, Number, Null, Unknown
+		Object, Array, String, Boolean, Number, Null, Unknown
 	};
+
+	//using Value = std::variant<std::string, bool, int, double, std::nullptr_t>;
 
 	enum class Format
 	{
@@ -53,11 +55,23 @@ public:
 	template<typename T>
 	void Set(const T &value);
 
-	template<typename T>
-	T GetValue() const;
+	/**
+	 * Gets if the node has a value, or has properties that have values.
+	 * @return If the node is internally valid.
+	 **/
+	bool IsValid() const;
 
-	template<typename T>
-	void SetValue(const T &value);
+	/**
+	 * Gets the internally stored value.
+	 * @return The value.
+	 **/
+	std::string GetValue() const { return m_value; }
+
+	/**
+	 * Sets the internally stored value.
+	 * @param value The new value.
+	 **/
+	void SetValue(const std::string &value) { m_value = value; }
 
 	const Type &GetType() const { return m_type; }
 
@@ -79,15 +93,19 @@ public:
 
 	NodeReturn GetProperty(const uint32_t &index) const;
 
-	Node &AddProperty(const std::string &name = "", Node &&node = {});
+	Node &AddProperty();
 
-	Node &AddProperty(const uint32_t &index, Node &&node = {});
+	Node &AddProperty(const std::string &name, Node &&node);
+
+	Node &AddProperty(const uint32_t &index, Node &&node);
 
 	void RemoveProperty(const std::string &name);
 
 	void RemoveProperty(const Node &node);
 
 	const std::vector<Property> &GetProperties() const { return m_properties; };
+
+	void ClearProperties() { m_properties.clear(); }
 
 	template <typename T>
 	Node &operator=(const T &rhs);
@@ -106,9 +124,10 @@ protected:
 	Node *m_parent{};
 
 	std::string m_value;
-	Type m_type{};
+	Type m_type{Type::Object};
 	std::vector<Property> m_properties;
 };
 }
 
 #include "Node.inl"
+#include "NodeReturn.inl"

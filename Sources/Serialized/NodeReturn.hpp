@@ -66,5 +66,3 @@ private:
 	Node *m_value{};
 };
 }
-
-#include "NodeReturn.inl"

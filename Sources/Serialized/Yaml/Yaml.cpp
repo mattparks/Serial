@@ -40,7 +40,7 @@ void Yaml::AppendData(const Node &source, std::ostream &stream, const int32_t &i
 	// Only output the value if no properties exist.
 	if (source.GetProperties().empty())
 	{
-		auto value{source.GetValue<std::string>()};
+		auto value{source.GetValue()};
 		auto lines{String::Split(value, '\n')};
 
 		if (lines.size() > 1)
