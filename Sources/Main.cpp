@@ -245,7 +245,10 @@ int main(int argc, char **argv)
 	Json json2;
 	json2.Load(json1.Write(Node::Format::Minified));
 	//json2.Write(std::cout, Node::Format::Beautified);
-	json2.Write(std::ofstream{"Test.json"});
+	{
+		std::ofstream testStream{"Test.json"};
+		json2.Write(testStream);
+	}
 
 	/*Yaml yaml2{node};
 	//yaml2.Write(std::cout, Node::Format::Beautified);
@@ -257,7 +260,8 @@ int main(int argc, char **argv)
 		auto i1{test::ResourceImage::Create(std::filesystem::current_path() / "Example1")};
 		node0.Append(i0, i1);
 		Json json{node0};
-		json.Write(std::ofstream{"Resource.json"});
+		std::ofstream resourceStream{"Resource.json"};
+		json.Write(resourceStream);
 		auto o0{node0[0].Get<std::shared_ptr<test::ResourceImage>>()};
 		std::cout << o0->m_path << '\n';
 	}*/

@@ -15,8 +15,6 @@ public:
 		Object, Array, String, Boolean, Number, Null, Unknown
 	};
 
-	//using Value = std::variant<std::string, bool, int, double, std::nullptr_t>;
-
 	enum class Format
 	{
 		Beautified, Minified

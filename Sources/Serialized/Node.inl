@@ -2,6 +2,7 @@
 
 #include <map>
 #include <filesystem>
+#include <algorithm>
 #include "Node.hpp"
 #include "Helpers/ConstExpr.hpp"
 #include "Helpers/String.hpp"
@@ -76,7 +77,13 @@ Node &Node::operator=(const T &rhs)
 	return *this;
 }
 
-inline Node &operator<<(Node &node, const nullptr_t &object)
+/*const Node &operator>>(const Node &node, std::nullptr_t &object)
+{
+	object = nullptr;
+	return node;
+}*/
+
+inline Node &operator<<(Node &node, const std::nullptr_t &object)
 {
 	node.SetValue("null");
 	node.SetType(Node::Type::Null);
@@ -85,54 +92,38 @@ inline Node &operator<<(Node &node, const nullptr_t &object)
 
 inline const Node &operator>>(const Node &node, bool &object)
 {
-	const auto &value{node.GetValue()};
-	object = String::From<bool>(value);
+	object = String::From<bool>(node.GetValue());
 	return node;
 }
 
 inline Node &operator<<(Node &node, const bool &object)
 {
-	node.SetValue(object ? "true" : "false");
+	node.SetValue(String::To(object));
 	node.SetType(Node::Type::Boolean);
 	return node;
 }
 
 template<typename T>
-std::enable_if_t<std::is_arithmetic_v<T>, const Node &> operator>>(const Node &node, T &object)
+std::enable_if_t<std::is_arithmetic_v<T> || std::is_enum_v<T>, const Node &> operator>>(const Node &node, T &object)
 {
 	object = String::From<T>(node.GetValue());
 	return node;
 }
 
 template<typename T>
-std::enable_if_t<std::is_arithmetic_v<T>, Node &> operator<<(Node &node, const T &object)
+std::enable_if_t<std::is_arithmetic_v<T> || std::is_enum_v<T>, Node &> operator<<(Node &node, const T &object)
 {
 	node.SetValue(String::To(object));
 	node.SetType(Node::Type::Number);
 	return node;
 }
 
-template<typename T>
-std::enable_if_t<std::is_enum_v<T>, const Node &> operator>>(const Node &node, T &object)
-{
-	object = String::From<T>(node.GetValue());
-	return node;
-}
-
-template<typename T>
-std::enable_if_t<std::is_enum_v<T>, Node &> operator<<(Node &node, const T &object)
-{
-	node.SetValue(String::To(object));
-	node.SetType(Node::Type::Number);
-	return node;
-}
-
-template<typename T>
+/*template<typename T>
 std::enable_if_t<std::is_class_v<T> || std::is_pointer_v<T>, const Node &> operator>>(const Node &node, T &object)
 {
 	node >> ConstExpr::AsRef(object);
 	return node;
-}
+}*/
 
 template<typename T>
 std::enable_if_t<std::is_class_v<T> || std::is_pointer_v<T>, Node &> operator<<(Node &node, const T &object)
