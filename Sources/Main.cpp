@@ -4,11 +4,106 @@
 #include "Serialized/Node.hpp"
 #include "Serialized/Json/Json.hpp"
 #include "Serialized/Yaml/Yaml.hpp"
+#include <unordered_map>
 
 using namespace acid;
 
 namespace test
 {
+/*class NonCopyable
+{
+protected:
+	NonCopyable() = default;
+
+	virtual ~NonCopyable() = default;
+
+public:
+	NonCopyable(const NonCopyable &) = delete;
+
+	NonCopyable(NonCopyable &&) = default;
+
+	NonCopyable &operator=(const NonCopyable &) = delete;
+
+	NonCopyable &operator=(NonCopyable &&) = default;
+};
+
+class ModuleDetail
+{
+public:
+	enum class Stage
+	{
+		Always, Pre, Normal, Post, Render
+	};
+
+	virtual ~ModuleDetail() = default;
+
+	virtual void Update() = 0;
+};
+
+template<typename T>
+class Module :
+	public NonCopyable,
+	public ModuleDetail
+{
+public:
+	static T *Get()
+	{
+		//if (Instance == nullptr)
+		//{
+		//	Instance = new T;
+		//}
+
+		return Instance;
+	}
+
+	virtual void Update() = 0;
+
+private:
+	friend class ModuleHolder;
+	static inline T *Instance = nullptr;
+};
+
+class Display :
+	public Module<Display>
+{
+public:
+	~Display()
+	{
+		std::cout << "Deleted Display\n";
+	}
+
+	void Update() override
+	{
+	}
+
+	float w{1080.0f};
+	float h{720.0f};
+};
+
+class ModuleHolder
+{
+public:
+	ModuleHolder()
+	{
+		Display::Instance = new Display;
+		m_modules[0] = reinterpret_cast<ModuleDetail **>(&Display::Instance);
+	}
+
+	~ModuleHolder()
+	{
+		// TODO: Why no rbegin or rend methods in std::unordered_map?
+		for (auto &[id, module] : m_modules)
+		{
+			delete *module;
+			module = nullptr;
+		}
+
+		std::cout << "Deleted ModuleHolder\n";
+	}
+
+	std::unordered_map<uint32_t, ModuleDetail **> m_modules;
+};*/
+
 class Example1
 {
 public:
@@ -204,6 +299,11 @@ int main(int argc, char **argv)
 
 		auto length{std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start)};
 		std::cout << "Written in " << length.count() << "ms\n";
+	}*/
+
+	/*{
+		test::ModuleHolder moduleHolder;
+		auto display{test::Display::Get()};
 	}*/
 
 	test::Example1 example1;

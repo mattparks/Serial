@@ -29,7 +29,7 @@ void Json::Load(std::istream &stream)
 		if (c == '"' || c == '\'')
 		{			 
 			inString ^= 1;
-			continue;
+			//continue;
 		}
 
 		// When not reading a string tokens can be found.
@@ -98,7 +98,7 @@ void Json::AddToken(std::vector<std::pair<Type, std::string>> &tokens, std::stri
 		}
 		else
 		{
-			tokens.emplace_back(Type::String, current);
+			tokens.emplace_back(Type::String, current.substr(1, current.size() - 2));
 		}
 	}
 
