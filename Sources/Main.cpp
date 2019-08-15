@@ -306,41 +306,48 @@ int main(int argc, char **argv)
 		auto display{test::Display::Get()};
 	}*/
 
-	test::Example1 example1;
-	Node node;
-	node = example1;
-
-	// Appends different types into a array.
-	node["array1"]->Append("Hello", nullptr, 10, 4.8924f);
-
-	// Creates a array, then appends values to the back of the array.
-	node["array2"] = std::vector{1.0f, 10.0f, -5.55f, 9.3456f};
-	node["array2"]->Append(64, 32.1f, -2.0);
-	//node["array2"].SetName("array2_renamed");
-	//auto array2Name{node["array2"].GetName()};
-	//auto array2{node["array2"].Get<std::vector<float>>()};
-
-	auto timeNow{node["timeNow"].Get<int64_t>(123456)}; // 123456
-	node.RemoveProperty("timeNow");
-
-	auto data00{node["xml"]["data"][0][0].Get<std::string>()}; // "clunky"
-	auto data10{node["xml"]["data"][1][0].Get<std::string>()}; // "uses more words than necessary"
-
-	auto mapN2{node["map"]["-2"].Get<std::string>()}; // TODO: Can names be numbers without searching with keys?
-	auto map400{node["map"]["400"].Get<std::string>()}; // TODO: Can names be numbers without searching with keys?
-
-	if (auto mapN2{node["map"]["-2"]}; mapN2)
+	Node nodeCopy;
 	{
-		auto value{mapN2.Get<std::string>()};
+		test::Example1 example1;
+		Node node;
+		node = example1;
+
+		// Appends different types into a array.
+		node["array1"]->Append("Hello", nullptr, 10, 4.8924f);
+
+		// Creates a array, then appends values to the back of the array.
+		node["array2"] = std::vector{1.0f, 10.0f, -5.55f, 9.3456f};
+		node["array2"]->Append(64, 32.1f, -2.0);
+		//node["array2"].SetName("array2_renamed");
+		//auto array2Name{node["array2"].GetName()};
+		//auto array2{node["array2"].Get<std::vector<float>>()};
+
+		auto timeNow{node["timeNow"].Get<int64_t>(123456)}; // 123456
+		node.RemoveProperty("timeNow");
+
+		auto data00{node["xml"]["data"][0][0].Get<std::string>()}; // "clunky"
+		auto data10{node["xml"]["data"][1][0].Get<std::string>()}; // "uses more words than necessary"
+
+		auto mapN2{node["map"]["-2"].Get<std::string>()}; // TODO: Can names be numbers without searching with keys?
+		auto map400{node["map"]["400"].Get<std::string>()}; // TODO: Can names be numbers without searching with keys?
+
+		if (auto mapN2{node["map"]["-2"]}; mapN2)
+		{
+			auto value{mapN2.Get<std::string>()};
+		}
+
+		node["users"][0] = test::User{"mattparks", "Matthew Albrecht", "C++ developer", false, "12/07/2000"};
+		node["users"][1] = test::User{"nettcod", "Cody Nettesheim", "University student", true, "11/03/1999"};
+		node["users"][3] = test::User{"blockhead", "Nick Block", "Website developer", false, "11/03/1996"};
+		node["users"][6] = test::User{"aaronphal", "Aaron Phalphouvong", "High school student", true, "11/03/2002"};
+		auto users{node["users"].Get<std::vector<std::optional<test::User>>>()};
+
+		std::cout << node["users"]->GetParent() << "." << node["users"].get() << ": " << node["users"]->GetProperties().size() << '\n';
+		nodeCopy = node;
 	}
 
-	node["users"][0] = test::User{"mattparks", "Matthew Albrecht", "C++ developer", false, "12/07/2000"};
-	node["users"][1] = test::User{"nettcod", "Cody Nettesheim", "University student", true, "11/03/1999"};
-	node["users"][3] = test::User{"blockhead", "Nick Block", "Website developer", false, "11/03/1996"};
-	node["users"][6] = test::User{"aaronphal", "Aaron Phalphouvong", "High school student", true, "11/03/2002"};
-	auto users{node["users"].Get<std::vector<std::optional<test::User>>>()};
-
-	Json json1{node};
+	std::cout << nodeCopy["users"]->GetParent() << "." << nodeCopy["users"].get() << ": " << nodeCopy["users"]->GetProperties().size() << '\n';
+	Json json1{nodeCopy};
 
 	Json json2;
 	json2.Load(json1.Write(Node::Format::Minified));

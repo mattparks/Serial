@@ -3,10 +3,10 @@
 #include <map>
 #include <filesystem>
 #include <algorithm>
-#include "Node.hpp"
 #include "Helpers/ConstExpr.hpp"
 #include "Helpers/String.hpp"
-//#include "Resources/Resource.hpp"
+#include "Resources/Resource.hpp"
+#include "Node.hpp"
 
 namespace acid
 {
@@ -57,14 +57,14 @@ void Node::Set(const T &value)
 }
 
 template<typename T>
-Node &Node::Append(T value)
+Node &Node::Append(const T &value)
 {
 	AddProperty() << value;
 	return *this;
 }
 
 template<typename ...Args>
-Node &Node::Append(Args ...args)
+Node &Node::Append(const Args &...args)
 {
 	(Append(args), ...);
 	return *this;
@@ -161,17 +161,17 @@ template<typename T>
 const Node &operator>>(const Node &node, std::shared_ptr<T> &object)
 {
 	// TODO: Abstract Resource streams out from shared_ptr.
-	//if constexpr (std::is_base_of_v<Resource, T>)
-	//{
-	//	object = T::Create(node);
-	//	return node;
-	//}
-	//else
-	//{
+	if constexpr (std::is_base_of_v<Resource, T>)
+	{
+		object = T::Create(node);
+		return node;
+	}
+	else
+	{
 		object = std::make_shared<T>();
 		node >> *object;
 		return node;
-	//}
+	}
 }
 
 template<typename T>

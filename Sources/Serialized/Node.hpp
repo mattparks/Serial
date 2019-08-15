@@ -24,6 +24,8 @@ public:
 
 	Node() = default;
 
+	//Node(const Node &node);
+
 	explicit Node(std::string value, const Type &type = Type::String);
 
 	Node(std::string value, std::vector<Property> &&properties);
@@ -63,7 +65,7 @@ public:
 	 * Gets the internally stored value.
 	 * @return The value.
 	 **/
-	std::string GetValue() const { return m_value; }
+	const std::string &GetValue() const { return m_value; }
 
 	/**
 	 * Sets the internally stored value.
@@ -80,10 +82,10 @@ public:
 	void SetName(const std::string &name);
 
 	template<typename T>
-	Node &Append(T value);
+	Node &Append(const T &value);
 
 	template<typename ...Args>
-	Node &Append(Args ... args);
+	Node &Append(const Args &...args);
 
 	bool HasProperty(const std::string &name) const;
 
@@ -104,6 +106,8 @@ public:
 	const std::vector<Property> &GetProperties() const { return m_properties; };
 
 	void ClearProperties() { m_properties.clear(); }
+
+	//Node &operator=(const Node &node);
 
 	template <typename T>
 	Node &operator=(const T &rhs);
