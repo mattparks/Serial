@@ -275,16 +275,28 @@ public:
 
 int main(int argc, char **argv)
 {
+	// https://github.com/miloyip/nativejson-benchmark/tree/master/data
 	/*Json canada;
 	Json catalog;
 	Json twitter;
 
+#define STRINGIFY_FILE 1
+
+#if STRINGIFY_FILE == 1
+	std::filesystem::remove("canada.1.json");
+	std::filesystem::remove("citm_catalog.1.json");
+	std::filesystem::remove("twitter.1.json");
+#endif
+
 	{
 		auto start{std::chrono::high_resolution_clock::now()};
 
-		canada.Load(std::ifstream{"canada.json"});
-		catalog.Load(std::ifstream{"citm_catalog.json"});
-		twitter.Load(std::ifstream{"twitter.json"});
+		std::ifstream canadaFile{"canada.json"};
+		canada.Load(canadaFile);
+		std::ifstream catalogFile{"citm_catalog.json"};
+		catalog.Load(catalogFile);
+		std::ifstream twitterFile{"twitter.json"};
+		twitter.Load(twitterFile);
 
 		auto length{std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start)};
 		std::cout << "Loaded in " << length.count() << "ms\n";
@@ -293,61 +305,65 @@ int main(int argc, char **argv)
 	{
 		auto start{std::chrono::high_resolution_clock::now()};
 
-		canada.Write(std::ofstream{"canada.1.json"});
-		catalog.Write(std::ofstream{"citm_catalog.1.json"});
-		twitter.Write(std::ofstream{"twitter.1.json"});
+#if STRINGIFY_FILE == 1
+		std::ofstream canadaFile{"canada.1.json"};
+		canada.Write(canadaFile);
+		std::ofstream catalogFile{"citm_catalog.1.json"};
+		catalog.Write(catalogFile);
+		std::ofstream twitterFile{"twitter.1.json"};
+		twitter.Write(twitterFile);
+#else
+		auto canadaString{canada.Write()};
+		auto catalogString{catalog.Write()};
+		auto twitterString{twitter.Write()};
+#endif
 
 		auto length{std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start)};
 		std::cout << "Written in " << length.count() << "ms\n";
+
+		std::size_t size{};
+		canada.AddSize(size);
+		catalog.AddSize(size);
+		twitter.AddSize(size);
+		std::cout << "Size " << size << "bytes\n";
 	}*/
 
-	/*{
-		test::ModuleHolder moduleHolder;
-		auto display{test::Display::Get()};
-	}*/
+	test::Example1 example1;
+	Node node;
+	node = example1;
 
-	Node nodeCopy;
+	// Appends different types into a array.
+	node["array1"]->Append("Hello", nullptr, 10, 4.8924f);
+
+	// Creates a array, then appends values to the back of the array.
+	node["array2"] = std::vector{1.0f, 10.0f, -5.55f, 9.3456f};
+	node["array2"]->Append(64, 32.1f, -2.0);
+	//node["array2"].SetName("array2_renamed");
+	//auto array2Name{node["array2"].GetName()};
+	//auto array2{node["array2"].Get<std::vector<float>>()};
+
+	auto timeNow{node["timeNow"].Get<int64_t>(123456)}; // 123456
+	node.RemoveProperty("timeNow");
+
+	auto data00{node["xml"]["data"][0][0].Get<std::string>()}; // "clunky"
+	auto data10{node["xml"]["data"][1][0].Get<std::string>()}; // "uses more words than necessary"
+
+	auto mapN2{node["map"]["-2"].Get<std::string>()}; // TODO: Can names be numbers without searching with keys?
+	auto map400{node["map"]["400"].Get<std::string>()}; // TODO: Can names be numbers without searching with keys?
+
+	if (auto mapN2{node["map"]["-2"]}; mapN2)
 	{
-		test::Example1 example1;
-		Node node;
-		node = example1;
-
-		// Appends different types into a array.
-		node["array1"]->Append("Hello", nullptr, 10, 4.8924f);
-
-		// Creates a array, then appends values to the back of the array.
-		node["array2"] = std::vector{1.0f, 10.0f, -5.55f, 9.3456f};
-		node["array2"]->Append(64, 32.1f, -2.0);
-		//node["array2"].SetName("array2_renamed");
-		//auto array2Name{node["array2"].GetName()};
-		//auto array2{node["array2"].Get<std::vector<float>>()};
-
-		auto timeNow{node["timeNow"].Get<int64_t>(123456)}; // 123456
-		node.RemoveProperty("timeNow");
-
-		auto data00{node["xml"]["data"][0][0].Get<std::string>()}; // "clunky"
-		auto data10{node["xml"]["data"][1][0].Get<std::string>()}; // "uses more words than necessary"
-
-		auto mapN2{node["map"]["-2"].Get<std::string>()}; // TODO: Can names be numbers without searching with keys?
-		auto map400{node["map"]["400"].Get<std::string>()}; // TODO: Can names be numbers without searching with keys?
-
-		if (auto mapN2{node["map"]["-2"]}; mapN2)
-		{
-			auto value{mapN2.Get<std::string>()};
-		}
-
-		node["users"][0] = test::User{"mattparks", "Matthew Albrecht", "C++ developer", false, "12/07/2000"};
-		node["users"][1] = test::User{"nettcod", "Cody Nettesheim", "University student", true, "11/03/1999"};
-		node["users"][3] = test::User{"blockhead", "Nick Block", "Website developer", false, "11/03/1996"};
-		node["users"][6] = test::User{"aaronphal", "Aaron Phalphouvong", "High school student", true, "11/03/2002"};
-		auto users{node["users"].Get<std::vector<std::optional<test::User>>>()};
-
-		std::cout << node["users"]->GetParent() << "." << node["users"].get() << ": " << node["users"]->GetProperties().size() << '\n';
-		nodeCopy = node;
+		auto value{mapN2.Get<std::string>()};
 	}
 
-	std::cout << nodeCopy["users"]->GetParent() << "." << nodeCopy["users"].get() << ": " << nodeCopy["users"]->GetProperties().size() << '\n';
-	Json json1{nodeCopy};
+	node["users"][0] = test::User{"mattparks", "Matthew Albrecht", "C++ developer", false, "12/07/2000"};
+	node["users"][1] = test::User{"nettcod", "Cody Nettesheim", "University student", true, "11/03/1999"};
+	node["users"][3] = test::User{"blockhead", "Nick Block", "Website developer", false, "11/03/1996"};
+	node["users"][6] = test::User{"aaronphal", "Aaron Phalphouvong", "High school student", true, "11/03/2002"};
+	//node["users"][7] = test::User{"köln", "'Etat de São Paulo", R"(\"Hello World\")", true, "01/00/2000"};
+	auto users{node["users"].Get<std::vector<std::optional<test::User>>>()};
+
+	Json json1{std::move(node)};
 
 	Json json2;
 	json2.Load(json1.Write(Node::Format::Minified));

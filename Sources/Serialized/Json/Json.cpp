@@ -1,5 +1,6 @@
 #include "Json.hpp"
 
+#include <string_view>
 #include "Helpers/String.hpp"
 
 // TODO: Fix loading and writing chars like /n, /", ... \"http://google.com\"
@@ -8,6 +9,12 @@ namespace acid
 {
 Json::Json(const Node &node) :
 	Node{node}
+{
+	SetType(Type::Object);
+}
+
+Json::Json(Node &&node) :
+	Node{std::move(node)}
 {
 	SetType(Type::Object);
 }
@@ -36,7 +43,7 @@ void Json::Load(std::istream &stream)
 		if (!inString)
 		{
 			// Tokens used to read json nodes.
-			if (std::string{":{},[]"}.find(c) != std::string::npos)
+			if (std::string_view{":{},[]"}.find(c) != std::string::npos)
 			{
 				AddToken(tokens, current);
 				tokens.emplace_back(Type::Unknown, std::string{c});
@@ -62,8 +69,17 @@ void Json::Load(std::istream &stream)
 
 void Json::Write(std::ostream &stream, const Format &format) const
 {
-	// Json files are wrapped with an extra set of braces.
-	AppendData({"", {{"", *this}}}, stream, 0, format);
+	if (format == Format::Minified)
+	{
+		stream << '{';
+	}
+	else
+	{
+		stream << "{\n";
+	}
+	
+	AppendData(*this, stream, 1, format);
+	stream << '}';
 }
 
 void Json::Load(const std::string &string)

@@ -23,8 +23,8 @@ public:
 	using Property = std::pair<std::string, Node>;
 
 	Node() = default;
-
-	//Node(const Node &node);
+	Node(const Node &node);
+	Node(Node &&node) = default;
 
 	explicit Node(std::string value, const Type &type = Type::String);
 
@@ -90,44 +90,39 @@ public:
 	bool HasProperty(const std::string &name) const;
 
 	NodeReturn GetProperty(const std::string &name) const;
-
 	NodeReturn GetProperty(const uint32_t &index) const;
 
 	Node &AddProperty();
-
 	Node &AddProperty(const std::string &name, Node &&node);
-
 	Node &AddProperty(const uint32_t &index, Node &&node);
 
 	void RemoveProperty(const std::string &name);
-
 	void RemoveProperty(const Node &node);
 
 	const std::vector<Property> &GetProperties() const { return m_properties; };
-
 	void ClearProperties() { m_properties.clear(); }
 
-	//Node &operator=(const Node &node);
+	void AddSize(std::size_t &size) const;
+
+	Node &operator=(const Node &node);
+	Node &operator=(Node &&node) = default;
 
 	template <typename T>
 	Node &operator=(const T &rhs);
 
 	NodeReturn operator[](const std::string &key) const;
-
 	NodeReturn operator[](const uint32_t &index) const;
 
 	bool operator==(const Node &other) const;
-
 	bool operator!=(const Node &other) const;
 
 	bool operator<(const Node &other) const;
 
 protected:
-	Node *m_parent{};
-
+	std::vector<Property> m_properties;
 	std::string m_value;
 	Type m_type{Type::Object};
-	std::vector<Property> m_properties;
+	Node *m_parent{};
 };
 }
 

@@ -3,14 +3,15 @@
 
 namespace acid
 {
-/*Node::Node(const Node &node) :
-	m_parent{node.m_parent},
+static const Node::Property NULL_NODE_PROPERTY{"", Node{"null", Node::Type::Null}};
+
+Node::Node(const Node &node) :
+	m_properties{node.m_properties},
 	m_value{node.m_value},
 	m_type{node.m_type},
-	m_properties{node.m_properties}
+	m_parent{node.m_parent}
 {
-	std::cout << "Copy constructor called on: " << node.m_parent << '\n';
-}*/
+}
 
 Node::Node(std::string value, const Type &type) :
 	m_value{std::move(value)},
@@ -145,8 +146,8 @@ Node &Node::AddProperty(const std::string &name, Node &&node)
 Node &Node::AddProperty(const uint32_t &index, Node &&node)
 {
 	node.m_parent = this;
-	m_properties.resize(std::max(m_properties.size(), static_cast<std::size_t>(index + 1)), {"", Node{"null", Type::Null}});
-	return m_properties[index].second = node;
+	m_properties.resize(std::max(m_properties.size(), static_cast<std::size_t>(index + 1)), NULL_NODE_PROPERTY);
+	return m_properties[index].second = std::move(node);
 }
 
 void Node::RemoveProperty(const std::string &name)
@@ -167,15 +168,23 @@ void Node::RemoveProperty(const Node &node)
 	}), m_properties.end());
 }
 
-/*Node &Node::operator=(const Node &node)
+void Node::AddSize(std::size_t &size) const
 {
-	m_parent = node.m_parent;
-	m_value = node.m_value;
-	m_type = node.m_type;
+	size += sizeof(*this);
+	for (const auto &property : m_properties)
+	{
+		property.second.AddSize(size);
+	}
+}
+
+Node &Node::operator=(const Node &node)
+{
 	m_properties = node.m_properties;
-	std::cout << "Copy assignment operator called on: " << node.m_parent << '\n';
+	m_type = node.m_type;
+	m_value = node.m_value;
+	m_parent = node.m_parent;
 	return *this;
-}*/
+}
 
 NodeReturn Node::operator[](const std::string &key) const
 {

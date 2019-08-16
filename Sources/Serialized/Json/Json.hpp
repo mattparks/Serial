@@ -12,6 +12,8 @@ public:
 
 	explicit Json(const Node &node);
 
+	explicit Json(Node &&node);
+
 	void Load(std::istream &stream) override;
 
 	void Write(std::ostream &stream, const Format &format = Format::Beautified) const override;
