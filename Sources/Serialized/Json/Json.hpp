@@ -2,31 +2,31 @@
 
 #include "Serialized/Node.hpp"
 
-namespace acid
-{
+namespace acid {
 class Json :
-	public Node
-{
+	public Node {
 public:
 	Json() = default;
-
 	explicit Json(const Node &node);
-
 	explicit Json(Node &&node);
 
-	void Load(std::istream &stream) override;
+	template<typename _Elem>
+	void Load(std::basic_istream<_Elem> &stream);
+	template<typename _Elem>
+	void Load(const std::basic_string<_Elem> &string);
 
-	void Write(std::ostream &stream, const Format &format = Format::Beautified) const override;
-
-	void Load(const std::string &string);
-
-	std::string Write(const Format &format = Format::Beautified) const;
+	template<typename _Elem>
+	void Write(std::basic_ostream<_Elem> &stream, Format format = Format::Beautified) const;
+	template<typename _Elem = char>
+	std::basic_string<_Elem> Write(Format format = Format::Beautified) const;
 
 private:
 	static void AddToken(std::vector<std::pair<Type, std::string>> &tokens, std::string &current);
+	static void Convert(Node &current, const std::vector<std::pair<Type, std::string>> &v, int32_t i, int32_t &r);
 
-	static void Convert(Node &current, const std::vector<std::pair<Type, std::string>> &v, const int32_t &i, int32_t &r);
-
-	static void AppendData(const Node &source, std::ostream &outStream, const int32_t &indentation, const Format &format);
+	template<typename _Elem>
+	static void AppendData(const Node &source, std::basic_ostream<_Elem> &stream, int32_t indentation, Format format);
 };
 }
+
+#include "Json.inl"
