@@ -3,17 +3,15 @@
 #include "Serialized/Node.hpp"
 
 namespace acid {
-class Yaml :
-	public Node {
+class ACID_EXPORT Yaml : public Node {
 public:
 	Yaml() = default;
 	explicit Yaml(const Node &node);
+	explicit Yaml(Yaml &&node);
 
-	void Load(std::istream &stream);
-	void Load(const std::string &string);
-	
-	void Write(std::ostream &stream, Format format = Format::Beautified) const;
-	std::string Write(Format format = Format::Beautified) const;
+protected:
+	void LoadStructure(const std::string &string) override;
+	void WriteStructure(std::ostream &stream, Format format) const override;
 
 private:
 	static void AppendData(const Node &source, std::ostream &stream, int32_t indentation, Format format);

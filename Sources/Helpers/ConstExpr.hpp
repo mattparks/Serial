@@ -1,8 +1,6 @@
 #pragma once
 
-#include <optional>
-#include <vector>
-#include <memory>
+#include "StdAfx.hpp"
 
 namespace acid {
 template<typename T>
@@ -88,7 +86,7 @@ inline constexpr bool is_ptr_access_v = std::is_pointer_v<T> || is_unique_ptr_v<
 /**
  * @brief Helper header that contains constant expressions.
  */
-class ConstExpr {
+class ACID_EXPORT ConstExpr {
 public:
 	// TODO C++20: std::to_address
 	template<typename T>
@@ -115,5 +113,4 @@ public:
 	template<typename T>
 	static const T &AsRef(const std::unique_ptr<T> &obj) { return *obj.get(); }
 };
-
 }

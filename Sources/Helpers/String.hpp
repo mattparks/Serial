@@ -1,14 +1,12 @@
 #pragma once
 
 #include "ConstExpr.hpp"
-#include <sstream>
-#include <string_view>
 
 namespace acid {
 /**
  * @brief Helper class for C++ strings.
  */
-class String {
+class ACID_EXPORT String {
 public:
 	/**
 	 * Splits a string by a separator.

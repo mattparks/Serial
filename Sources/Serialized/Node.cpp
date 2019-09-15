@@ -1,8 +1,7 @@
 #include "Node.hpp"
-#include <iostream>
 
 namespace acid {
-static const Node::Property NULL_NODE_PROPERTY = {"", Node{"null", Node::Type::Null}};
+static const Node::Property NullNodeProperty = {"", Node{"null", Node::Type::Null}};
 
 Node::Node(const Node &node) :
 	m_properties(node.m_properties),
@@ -30,6 +29,11 @@ void Node::Remove() {
 	}
 
 	m_parent->RemoveProperty(*this);
+	m_parent = nullptr;
+}
+
+void Node::Clear() {
+	m_properties.clear();
 }
 
 bool Node::IsValid() const {
@@ -83,7 +87,7 @@ Node &Node::AddProperty(const std::string &name, Node &&node) {
 
 Node &Node::AddProperty(uint32_t index, Node &&node) {
 	node.m_parent = this;
-	m_properties.resize(std::max(m_properties.size(), static_cast<std::size_t>(index + 1)), NULL_NODE_PROPERTY);
+	m_properties.resize(std::max(m_properties.size(), static_cast<std::size_t>(index + 1)), NullNodeProperty);
 	return m_properties[index].second = std::move(node);
 }
 
@@ -164,5 +168,11 @@ void Node::SetName(const std::string &name) {
 			return;
 		}
 	}
+}
+
+void Node::LoadStructure(const std::string &string) {
+}
+
+void Node::WriteStructure(std::ostream &stream, Format format) const {
 }
 }

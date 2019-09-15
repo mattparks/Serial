@@ -151,14 +151,14 @@ int main(int argc, char **argv) {
 		auto start = std::chrono::high_resolution_clock::now();
 
 #ifdef TEST_STRINGIFY_FILE
-		std::ofstream canadaFile("canada.1.json");
-		canada.Write(canadaFile);
-		std::ofstream catalogFile("citm_catalog.1.json");
+		std::ofstream canadaFile("canada.1.json", std::ios_base::binary | std::ios_base::out);
+		canada.Write(canadaFile, Node::Format::Minified);
+		std::ofstream catalogFile("citm_catalog.1.json", std::ios_base::binary | std::ios_base::out);
 		catalog.Write(catalogFile);
-		std::ofstream twitterFile("twitter.1.json");
+		std::ofstream twitterFile("twitter.1.json", std::ios_base::binary | std::ios_base::out);
 		twitter.Write(twitterFile);
 #else
-		auto canadaString = canada.Write();
+		auto canadaString = canada.Write(Node::Format::Minified);
 		auto catalogString = catalog.Write();
 		auto twitterString = twitter.Write();
 #endif

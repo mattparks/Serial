@@ -7,23 +7,17 @@ Yaml::Yaml(const Node &node) :
 	Node{node} {
 }
 
-void Yaml::Load(std::istream &stream) {
+Yaml::Yaml(Yaml &&node) :
+	Node(std::move(node)) {
+	SetType(Type::Object);
 }
 
-void Yaml::Load(const std::string &string) {
-	std::stringstream stream{string};
-	Load(stream);
+void Yaml::LoadStructure(const std::string &string) {
 }
 
-void Yaml::Write(std::ostream &stream, Format format) const {
+void Yaml::WriteStructure(std::ostream &stream, Format format) const {
 	stream << "---\n";
 	AppendData(*this, stream, 0, format);
-}
-
-std::string Yaml::Write(Format format) const {
-	std::stringstream stream;
-	Write(stream, format);
-	return stream.str();
 }
 
 void Yaml::AppendData(const Node &source, std::ostream &stream, int32_t indentation, Format format) {

@@ -6,7 +6,7 @@ namespace acid {
 /**
  * @brief Class that is used to represent a tree of values, used in serialization.
  */
-class Node {
+class ACID_EXPORT Node {
 public:
 	enum class Type {
 		Object,
@@ -33,7 +33,14 @@ public:
 
 	virtual ~Node() = default;
 
-	void Remove();
+	template<typename _Elem = char>
+	void Load(std::basic_istream<_Elem> &stream);
+	template<typename _Elem = char>
+	void Load(const std::basic_string<_Elem> &string);
+	template<typename _Elem = char>
+	void Write(std::basic_ostream<_Elem> &stream, Format format = Format::Beautified) const;
+	template<typename _Elem = char>
+	std::basic_string<_Elem> Write(Format format = Format::Beautified) const;
 
 	template<typename T>
 	T Get() const;
@@ -45,6 +52,16 @@ public:
 	void Get(T &dest, const K &fallback) const;
 	template<typename T>
 	void Set(const T &value);
+
+	/**
+	 * Removes this node from it's parent.
+	 **/
+	void Remove();
+
+	/**
+	 * Clears all properties from this node.
+	 **/
+	void Clear();
 
 	/**
 	 * Gets if the node has a value, or has properties that have values.
@@ -81,8 +98,8 @@ public:
 	bool operator!=(const Node &other) const;
 	bool operator<(const Node &other) const;
 
-	const std::vector<Property> &GetProperties() const { return m_properties; };
-	void ClearProperties() { m_properties.clear(); }
+	const std::vector<Property> &GetProperties() const { return m_properties; }
+	std::vector<Property> &GetProperties() { return m_properties; }
 
 	std::string GetName() const;
 	void SetName(const std::string &name);
@@ -96,6 +113,9 @@ public:
 	Node *GetParent() const { return m_parent; }
 
 protected:
+	virtual void LoadStructure(const std::string &string);
+	virtual void WriteStructure(std::ostream &stream, Format format) const;
+	
 	std::vector<Property> m_properties;
 	std::string m_value;
 	Type m_type = Type::Object;
