@@ -28,12 +28,12 @@ bool String::Contains(std::string_view str, std::string_view token) {
 }
 
 bool String::IsWhitespace(char c) {
-	return std::string(" \n\r  ").find(c) != std::string::npos;
+	return std::string_view(" \n\r  ").find(c) != std::string::npos;
 }
 
 bool String::IsNumber(std::string_view str) {
 	return !str.empty() && std::find_if(str.begin(), str.end(), [](const auto c) {
-		return std::string("0123456789.-").find(c) == std::string::npos;
+		return std::string_view("0123456789.-").find(c) == std::string::npos;
 	}) == str.end();
 }
 

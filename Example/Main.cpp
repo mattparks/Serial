@@ -162,7 +162,7 @@ int main(int argc, char **argv) {
 	//json2.Write(std::cout, Node::Format::Beautified);
 	{
 		std::ofstream testStream("Test.json");
-		json2.Write(testStream);
+		json2.Write(testStream, Node::Format::Beautified);
 	}
 
 	/*Yaml yaml2(node);

@@ -8,7 +8,7 @@ namespace acid {
  */
 class ACID_EXPORT Node {
 public:
-	enum class Type {
+	enum class Type : uint8_t {
 		Object,
 		Array,
 		String,
@@ -18,7 +18,7 @@ public:
 		Unknown
 	};
 
-	enum class Format {
+	enum class Format : uint8_t {
 		Beautified,
 		Minified
 	};
