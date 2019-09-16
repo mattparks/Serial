@@ -14,7 +14,7 @@ namespace acid {
 template<typename _Elem>
 void Node::Load(std::basic_istream<_Elem> &stream) {
 	// We must read into a UTF8 char.
-	stream.imbue(std::locale(std::locale::empty(), new std::codecvt_utf8<char>));
+	stream.imbue(std::locale(std::locale(), new std::codecvt_utf8<char>));
 	
 	// Reading into a string before iterating is much faster.
 	std::string s(std::istreambuf_iterator<_Elem>(stream), {});
@@ -217,7 +217,7 @@ inline const Node &operator>>(const Node &node, std::filesystem::path &object) {
 }
 
 inline Node &operator<<(Node &node, const std::filesystem::path &object) {
-	auto str{object.string()};
+	auto str = object.string();
 	std::replace(str.begin(), str.end(), '\\', '/');
 	node.SetValue(str);
 	node.SetType(Node::Type::String);

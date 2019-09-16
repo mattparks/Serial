@@ -34,16 +34,19 @@ public:
 
 	class Objects {
 	public:
+		std::string url = "https://equilibrium.games/";
 		std::string key = "value";
 		std::vector<float> values = {190.0f, 11.0f, -0.001f};
 
 		friend const Node &operator>>(const Node &node, Objects &objects) {
+			node["url"].Get(objects.url);
 			node["key"].Get(objects.key, "failed to get key");
 			node["values"].Get(objects.values);
 			return node;
 		}
 
 		friend Node &operator<<(Node &node, const Objects &objects) {
+			node["url"].Set(objects.url);
 			node["key"].Set(objects.key);
 			node["values"].Set(objects.values);
 			return node;
@@ -117,8 +120,10 @@ public:
 };
 }
 
+#ifndef _DEBUG
 #define TEST_RUN
-#define TEST_STRINGIFY_FILE
+//#define TEST_STRINGIFY_FILE
+#endif
 
 int main(int argc, char **argv) {
 #ifdef TEST_RUN
@@ -134,44 +139,69 @@ int main(int argc, char **argv) {
 #endif
 
 	{
+		std::wifstream canadaStream("canada.json");
+		canadaStream.imbue(std::locale(std::locale::empty(), new std::codecvt_utf8<char>));
+		std::string canadaString(std::istreambuf_iterator<wchar_t>(canadaStream), {});
+
+		std::wifstream catalogStream("citm_catalog.json");
+		catalogStream.imbue(std::locale(std::locale::empty(), new std::codecvt_utf8<char>));
+		std::string catalogString(std::istreambuf_iterator<wchar_t>(catalogStream), {});
+
+		std::wifstream twitterStream("twitter.json");
+		twitterStream.imbue(std::locale(std::locale::empty(), new std::codecvt_utf8<char>));
+		std::string twitterString(std::istreambuf_iterator<wchar_t>(twitterStream), {});
+		
 		auto start = std::chrono::high_resolution_clock::now();
 
-		std::wifstream canadaFile("canada.json");
-		canada.Load(canadaFile);
-		std::wifstream catalogFile("citm_catalog.json");
-		catalog.Load(catalogFile);
-		std::wifstream twitterFile("twitter.json");
-		twitter.Load(twitterFile);
+		canada.Load(canadaString);
+		catalog.Load(catalogString);
+		twitter.Load(twitterString);
 
 		auto length = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
-		std::cout << "Loaded in " << length.count() << "ms\n";
-	}
-
-	{
-		auto start = std::chrono::high_resolution_clock::now();
-
-#ifdef TEST_STRINGIFY_FILE
-		std::ofstream canadaFile("canada.1.json", std::ios_base::binary | std::ios_base::out);
-		canada.Write(canadaFile, Node::Format::Minified);
-		std::ofstream catalogFile("citm_catalog.1.json", std::ios_base::binary | std::ios_base::out);
-		catalog.Write(catalogFile);
-		std::ofstream twitterFile("twitter.1.json", std::ios_base::binary | std::ios_base::out);
-		twitter.Write(twitterFile);
-#else
-		auto canadaString = canada.Write(Node::Format::Minified);
-		auto catalogString = catalog.Write();
-		auto twitterString = twitter.Write();
-#endif
-
-		auto length = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
-		std::cout << "Written in " << length.count() << "ms\n";
+		std::cout << "Parse: " << length.count() << "ms\n"; // Parse in-memory JSON into DOM (tree structure).
 
 		std::size_t size = 0;
 		canada.AddSize(size);
 		catalog.AddSize(size);
 		twitter.AddSize(size);
-		std::cout << "Size " << size << "bytes\n";
+		std::cout << "Memory: " << size << " bytes\n";
 	}
+	{
+#ifdef TEST_STRINGIFY_FILE
+		auto start = std::chrono::high_resolution_clock::now();
+
+		std::ofstream canadaFile("canada.1.json", std::ios_base::binary | std::ios_base::out);
+		canada.Write(canadaFile);
+		std::ofstream catalogFile("citm_catalog.1.json", std::ios_base::binary | std::ios_base::out);
+		catalog.Write(catalogFile, Node::Format::Beautified);
+		std::ofstream twitterFile("twitter.1.json", std::ios_base::binary | std::ios_base::out);
+		twitter.Write(twitterFile, Node::Format::Beautified);
+
+		auto length = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
+		std::cout << "Write: " << length.count() << "ms\n";
+#endif
+	}
+	{
+		auto start = std::chrono::high_resolution_clock::now();
+
+		auto canadaString = canada.Write();
+		auto catalogString = catalog.Write();
+		auto twitterString = twitter.Write();
+
+		auto length = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
+		std::cout << "Stringify: " << length.count() << "ms\n";
+	}
+	{
+		auto start = std::chrono::high_resolution_clock::now();
+
+		auto canadaString = canada.Write(Node::Format::Beautified);
+		auto catalogString = catalog.Write(Node::Format::Beautified);
+		auto twitterString = twitter.Write(Node::Format::Beautified);
+
+		auto length = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
+		std::cout << "Prettify: " << length.count() << "ms\n";
+	}
+	std::cout << "Code size: 967 lines\n";
 #endif
 
 	test::Example1 example1;

@@ -23,11 +23,13 @@ void Json::LoadStructure(const std::string &string) {
 	// Read stream until end of file.
 	for (auto c : string) {
 		// On start of string switch in/out of stream space and ignore this char.
-		if ((c == '"' || c == '\'') && !lastEscape)
-			inString ^= 1;
+		if (!lastEscape) {
+			if ((c == '"' || c == '\''))
+				inString ^= 1;
+			if (c == '\\')
+				lastEscape = true;
+		}
 		lastEscape = false;
-		if (c == '\\')
-			lastEscape = true;
 
 		// When not reading a string tokens can be found.
 		if (!inString) {
