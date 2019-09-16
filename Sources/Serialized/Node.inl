@@ -18,7 +18,7 @@ void Node::Load(std::basic_istream<_Elem> &stream) {
 	
 	// Reading into a string before iterating is much faster.
 	std::string s(std::istreambuf_iterator<_Elem>(stream), {});
-
+	
 	LoadStructure(s);
 }
 
@@ -189,14 +189,12 @@ Node &operator<<(Node &node, const std::shared_ptr<T> &object) {
 	return node;
 }
 
-/*inline const Node &operator>>(const Node &node, char *&string)
-{
+/*inline const Node &operator>>(const Node &node, char *&string) {
 	std::strcpy(string, node.GetValue().c_str());
 	return node;
 }
 
-inline Node &operator<<(Node &node, const char *string)
-{
+inline Node &operator<<(Node &node, const char *string) {
 	node.SetValue(string);
 	node.SetType(Node::Type::String);
 	return node;
@@ -267,7 +265,7 @@ const Node &operator>>(const Node &node, std::vector<T> &vector) {
 	vector = {};
 	vector.reserve(node.GetProperties().size());
 
-	for (const auto &[propertyName, property] : node.GetProperties()) {
+	for (const auto &property : node.GetProperties()) {
 		T x;
 		property >> x;
 		vector.emplace_back(std::move(x));
@@ -290,10 +288,9 @@ template<typename T, typename K>
 const Node &operator>>(const Node &node, std::map<T, K> &map) {
 	map = {};
 
-	for (const auto &[propertyName, property] : node.GetProperties()) {
+	for (const auto &property : node.GetProperties()) {
 		std::pair<T, K> pair;
-		pair.first = String::From<T>(propertyName);
-		property >> pair.second;
+		property >> pair;
 		map.emplace(std::move(pair));
 	}
 

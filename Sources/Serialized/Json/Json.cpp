@@ -25,7 +25,6 @@ void Json::LoadStructure(const std::string &string) {
 		// On start of string switch in/out of stream space and ignore this char.
 		if ((c == '"' || c == '\'') && !lastEscape)
 			inString ^= 1;
-
 		lastEscape = false;
 		if (c == '\\')
 			lastEscape = true;
@@ -87,13 +86,13 @@ void Json::AppendData(const Node &source, std::ostream &stream, int32_t indentat
 		std::string closeString;
 
 		// Gets array or object type braces.
-		if (!it->second.GetProperties().empty()) {
+		if (!it->GetProperties().empty()) {
 			openString = "{";
 			closeString = "}";
 
 			// Sets the braces to an array style if all properties have no names.
-			for (const auto &[propertyName2, property2] : it->second.GetProperties()) {
-				if (propertyName2.empty()) {
+			for (const auto &property2 : it->GetProperties()) {
+				if (property2.GetName().empty()) {
 					openString = "[";
 					closeString = "]";
 					break;
@@ -104,10 +103,10 @@ void Json::AppendData(const Node &source, std::ostream &stream, int32_t indentat
 				openString += '\n';
 				closeString.insert(0, indents);
 			}
-		} else if (it->second.GetType() == Type::Object) {
+		} else if (it->GetType() == Type::Object) {
 			openString = "{";
 			closeString = "}";
-		} else if (it->second.GetType() == Type::Array) {
+		} else if (it->GetType() == Type::Array) {
 			openString = "[";
 			closeString = "]";
 		}
@@ -122,8 +121,8 @@ void Json::AppendData(const Node &source, std::ostream &stream, int32_t indentat
 		}
 
 		// Output name for property if it exists.
-		if (!it->first.empty()) {
-			stream << "\"" << it->first << "\":";
+		if (!it->GetName().empty()) {
+			stream << "\"" << it->GetName() << "\":";
 
 			if (format != Format::Minified) {
 				stream << ' ';
@@ -132,7 +131,7 @@ void Json::AppendData(const Node &source, std::ostream &stream, int32_t indentat
 
 		// Appends the current stream with the property data.
 		stream << openString;
-		AppendData(it->second, stream, indentation + 1, format);
+		AppendData(*it, stream, indentation + 1, format);
 		stream << closeString;
 
 		if (format != Format::Minified) {

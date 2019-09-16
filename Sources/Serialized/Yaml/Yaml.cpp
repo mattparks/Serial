@@ -47,16 +47,16 @@ void Yaml::AppendData(const Node &source, std::ostream &stream, int32_t indentat
 		stream << indents;
 
 		// Output name for property if it exists.
-		if (!it->first.empty()) {
-			if (String::IsNumber(it->first)) {
-				stream << "\"" << it->first << "\": ";
+		if (!it->GetName().empty()) {
+			if (String::IsNumber(it->GetName())) {
+				stream << "\"" << it->GetName() << "\": ";
 			} else {
-				stream << it->first << ": ";
+				stream << it->GetName() << ": ";
 			}
 		}
 
 		// Appends the current stream with the property data.
-		AppendData(it->second, stream, indentation + 1, format);
+		AppendData(*it, stream, indentation + 1, format);
 	}
 }
 }
