@@ -83,13 +83,6 @@ void Node::RemoveProperty(const Node &node) {
 	}), m_properties.end());
 }
 
-void Node::AddSize(std::size_t &size) const {
-	size += sizeof(*this);
-	for (const auto &property : m_properties) {
-		property.AddSize(size);
-	}
-}
-
 NodeReturn Node::operator[](const std::string &key) const {
 	return GetProperty(key);
 }

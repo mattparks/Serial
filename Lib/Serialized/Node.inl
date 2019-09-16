@@ -14,7 +14,7 @@ namespace acid {
 template<typename _Elem>
 void Node::Load(std::basic_istream<_Elem> &stream) {
 	// We must read into a UTF8 char.
-	stream.imbue(std::locale(std::locale(), new std::codecvt_utf8<char>));
+	stream.imbue(std::locale(stream.getloc(), new std::codecvt_utf8<char>));
 	
 	// Reading into a string before iterating is much faster.
 	std::string s(std::istreambuf_iterator<_Elem>(stream), {});
@@ -24,8 +24,9 @@ void Node::Load(std::basic_istream<_Elem> &stream) {
 
 template<typename _Elem>
 void Node::Load(const std::basic_string<_Elem> &string) {
-	std::basic_stringstream<_Elem> stream(string);
-	Load<_Elem>(stream);
+	//std::basic_stringstream<_Elem> stream(string);
+	//Load<_Elem>(stream);
+	LoadStructure(string);
 }
 
 template<typename _Elem>

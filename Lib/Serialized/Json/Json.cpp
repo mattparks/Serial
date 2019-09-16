@@ -18,18 +18,20 @@ void Json::LoadStructure(const std::string &string) {
 
 	std::string current;
 	bool inString = false;
-	bool lastEscape = false;
+	bool inEscape = false;
 
 	// Read stream until end of file.
 	for (auto c : string) {
+		bool lastEscape = inEscape;
 		// On start of string switch in/out of stream space and ignore this char.
-		if (!lastEscape) {
+		if (!inEscape) {
 			if ((c == '"' || c == '\''))
 				inString ^= 1;
 			if (c == '\\')
-				lastEscape = true;
+				inEscape = true;
 		}
-		lastEscape = false;
+		if (lastEscape)
+			inEscape = false;
 
 		// When not reading a string tokens can be found.
 		if (!inString) {
@@ -163,10 +165,10 @@ void Json::AddToken(std::vector<std::pair<Type, std::string>> &tokens, std::stri
 
 void Json::Convert(Node &current, const std::vector<std::pair<Type, std::string>> &v, int32_t i, int32_t &r) {
 	if (v[i].second == "{") {
-		auto k{i + 1};
+		auto k = i + 1;
 
 		while (v[k].second != "}") {
-			auto key{v[k].second};
+			auto key = v[k].second;
 			k += 2; // k + 1 should be ':'
 			Convert(current.AddProperty(key, {}), v, k, k);
 
@@ -178,7 +180,7 @@ void Json::Convert(Node &current, const std::vector<std::pair<Type, std::string>
 		current.SetType(Type::Object);
 		r = k + 1;
 	} else if (v[i].second == "[") {
-		auto k{i + 1};
+		auto k = i + 1;
 
 		while (v[k].second != "]") {
 			Convert(current.AddProperty(), v, k, k);

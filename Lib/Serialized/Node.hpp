@@ -36,9 +36,9 @@ public:
 	template<typename _Elem>
 	void Load(const std::basic_string<_Elem> &string);
 	template<typename _Elem>
-	void Write(std::basic_ostream<_Elem> &stream, Format format = Format::Beautified) const;
+	void Write(std::basic_ostream<_Elem> &stream, Format format = Format::Minified) const;
 	template<typename _Elem = char>
-	std::basic_string<_Elem> Write(Format format = Format::Beautified) const;
+	std::basic_string<_Elem> Write(Format format = Format::Minified) const;
 
 	template<typename T>
 	T Get() const;
@@ -75,9 +75,6 @@ public:
 	Node &AddProperty(uint32_t index, Node &&node);
 	void RemoveProperty(const std::string &name);
 	void RemoveProperty(const Node &node);
-
-	// TODO: Remove before flight
-	void AddSize(std::size_t &size) const;
 
 	NodeReturn operator[](const std::string &key) const;
 	NodeReturn operator[](uint32_t index) const;
