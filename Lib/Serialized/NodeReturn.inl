@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Document.hpp"
+#include "Node.hpp"
 
 namespace acid {
 template<typename T>
-T DocumentReturn::Get() {
+T NodeReturn::Get() {
 	if (!has_value()) {
 		return {};
 	}
@@ -13,7 +13,7 @@ T DocumentReturn::Get() {
 }
 
 template<typename T>
-T DocumentReturn::Get(const T &fallback) {
+T NodeReturn::Get(const T &fallback) {
 	if (!has_value()) {
 		return {};
 	}
@@ -22,7 +22,7 @@ T DocumentReturn::Get(const T &fallback) {
 }
 
 template<typename T>
-void DocumentReturn::Get(T &dest) {
+void NodeReturn::Get(T &dest) {
 	if (!has_value()) {
 		return;
 	}
@@ -31,7 +31,7 @@ void DocumentReturn::Get(T &dest) {
 }
 
 template<typename T, typename K>
-void DocumentReturn::Get(T &dest, const K &fallback) {
+void NodeReturn::Get(T &dest, const K &fallback) {
 	if (!has_value()) {
 		return;
 	}
@@ -40,12 +40,12 @@ void DocumentReturn::Get(T &dest, const K &fallback) {
 }
 
 template<typename T>
-void DocumentReturn::Set(const T &value) {
+void NodeReturn::Set(const T &value) {
 	return get()->Set<T>(value);
 }
 
 template<typename T>
-Document &DocumentReturn::operator=(const T &rhs) {
+Node &NodeReturn::operator=(const T &rhs) {
 	return *get() = rhs;
 }
 }

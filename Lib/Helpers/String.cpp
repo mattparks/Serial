@@ -16,9 +16,8 @@ std::vector<std::string> String::Split(const std::string &str, char sep) {
 }
 
 bool String::StartsWith(std::string_view str, std::string_view token) {
-	if (str.length() < token.length()) {
+	if (str.length() < token.length()) 
 		return false;
-	}
 
 	return str.compare(0, token.length(), token) == 0;
 }
@@ -28,7 +27,7 @@ bool String::Contains(std::string_view str, std::string_view token) {
 }
 
 bool String::IsWhitespace(char c) {
-	//return std::string_view(" \n\r  ").find(c) != std::string::npos;
+	//return std::string_view(" \n\r\t").find(c) != std::string::npos;
 	return c == ' ' || c == '\r' || c == '\n' || c == '\t';
 }
 

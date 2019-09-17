@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 
-#include <Serialized/Document.hpp>
 #include <Serialized/Json/Json.hpp>
 
 #include "MemoryData.hpp"
@@ -25,16 +24,16 @@ TEST(acid, stringify) {
 }
 
 TEST(acid, prettify) {
-	auto canadaString = acidData.canada.WriteString(acid::Document::Format::Beautified);
-	auto catalogString = acidData.catalog.WriteString(acid::Document::Format::Beautified);
-	auto twitterString = acidData.twitter.WriteString(acid::Document::Format::Beautified);
+	auto canadaString = acidData.canada.WriteString(acid::Json::Format::Beautified);
+	auto catalogString = acidData.catalog.WriteString(acid::Json::Format::Beautified);
+	auto twitterString = acidData.twitter.WriteString(acid::Json::Format::Beautified);
 }
 
 TEST(acid, writeToFiles) {
 	std::ofstream canadaFile("Tests/canada.acid.json", std::ios_base::binary | std::ios_base::out);
 	acidData.canada.WriteStream(canadaFile);
 	std::ofstream catalogFile("Tests/citm_catalog.acid.json", std::ios_base::binary | std::ios_base::out);
-	acidData.catalog.WriteStream(catalogFile, acid::Document::Format::Beautified);
+	acidData.catalog.WriteStream(catalogFile, acid::Json::Format::Beautified);
 	std::ofstream twitterFile("Tests/twitter.acid.json", std::ios_base::binary | std::ios_base::out);
-	acidData.twitter.WriteStream(twitterFile, acid::Document::Format::Beautified);
+	acidData.twitter.WriteStream(twitterFile, acid::Json::Format::Beautified);
 }

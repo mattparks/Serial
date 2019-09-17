@@ -3,19 +3,17 @@
 #include "Helpers/String.hpp"
 
 namespace acid {
-Json::Json(const Document &document) :
-	Document(document) {
+Json::Json(const Node &node) :
+	Node(node) {
 	SetType(Type::Object);
 }
 
-Json::Json(Document &&document) :
-	Document(std::move(document)) {
+Json::Json(Node &&node) :
+	Node(std::move(node)) {
 	SetType(Type::Object);
 }
 
 void Json::LoadString(std::string_view string) {
-	auto startTime = std::chrono::high_resolution_clock::now();
-	
 	std::vector<Token> tokens;
 
 	auto tokenStart = string.data();
@@ -47,21 +45,9 @@ void Json::LoadString(std::string_view string) {
 		}
 	}
 
-	auto lengthTime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - startTime);
-	std::cout << "Tokenized in " << lengthTime.count() << "us\n";
-	startTime = std::chrono::high_resolution_clock::now();
-	
 	// Converts the list of tokens into nodes.
 	int32_t k = 0;
 	Convert(*this, tokens, 0, k);
-
-	//std::vector<std::pair<Type, std::string>> debugTokens;
-	//for (const auto &token : tokens) {
-	//	debugTokens.emplace_back(token.type, token.GetString());
-	//}
-
-	lengthTime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - startTime);
-	std::cout << "Lexed in " << lengthTime.count() << "us\n";
 }
 
 void Json::WriteStream(std::ostream &stream, Format format) const {
@@ -77,6 +63,16 @@ void Json::WriteStream(std::ostream &stream, Format format) const {
 
 std::string_view GetString(const char *start, const char *end) {
 	return std::string_view(start, end - start);
+}
+
+std::string FixReturnTokens(const std::string &str) {
+	// TODO: Optimize.
+	return String::ReplaceAll(String::ReplaceAll(str, "\n", "\\n"), "\r", "\\r");
+}
+
+std::string UnfixReturnTokens(const std::string &str) {
+	// TODO: Optimize.
+	return String::ReplaceAll(String::ReplaceAll(str, "\\n", "\n"), "\\r", "\r");
 }
 
 void Json::AddToken(const char *start, const char *end, std::vector<Token> &tokens) {
@@ -95,7 +91,7 @@ void Json::AddToken(const char *start, const char *end, std::vector<Token> &toke
 	}
 }
 
-void Json::Convert(Document &current, const std::vector<Token> &v, int32_t i, int32_t &r) {
+void Json::Convert(Node &current, const std::vector<Token> &v, int32_t i, int32_t &r) {
 	if (v[i].GetChar() == '{') {
 		auto k = i + 1;
 
@@ -125,20 +121,20 @@ void Json::Convert(Document &current, const std::vector<Token> &v, int32_t i, in
 		current.SetType(Type::Array);
 		r = k + 1;
 	} else {
-		current.SetValue(v[i].GetString());
+		current.SetValue(UnfixReturnTokens(v[i].GetString()));
 		current.SetType(v[i].type);
 		r = i + 1;
 	}
 }
 
-void Json::AppendData(const Document &source, std::ostream &stream, int32_t indentation, Format format) {
+void Json::AppendData(const Node &source, std::ostream &stream, int32_t indentation, Format format) {
 	// Creates a string for the indentation level.
 	std::string indents(2 * indentation, ' ');
 
 	// Only output the value if no properties exist.
 	if (source.GetProperties().empty()) {
 		if (source.GetType() == Type::String)
-			stream << std::quoted(source.GetValue());
+			stream << '\"' << FixReturnTokens(source.GetValue()) << '\"';
 		else
 			stream << source.GetValue();
 	}
@@ -150,7 +146,7 @@ void Json::AppendData(const Document &source, std::ostream &stream, int32_t inde
 
 		// Output name for property if it exists.
 		if (!it->GetName().empty()) {
-			stream << std::quoted(it->GetName()) << ':';
+			stream << '\"' << it->GetName() << "\":";
 			if (format != Format::Minified)
 				stream << ' ';
 		}
