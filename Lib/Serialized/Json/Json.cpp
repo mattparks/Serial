@@ -65,16 +65,6 @@ std::string_view GetString(const char *start, const char *end) {
 	return std::string_view(start, end - start);
 }
 
-std::string FixReturnTokens(const std::string &str) {
-	// TODO: Optimize.
-	return String::ReplaceAll(String::ReplaceAll(str, "\n", "\\n"), "\r", "\\r");
-}
-
-std::string UnfixReturnTokens(const std::string &str) {
-	// TODO: Optimize.
-	return String::ReplaceAll(String::ReplaceAll(str, "\\n", "\n"), "\\r", "\r");
-}
-
 void Json::AddToken(const char *start, const char *end, std::vector<Token> &tokens) {
 	if (start != end) {
 		auto view = GetString(start, end);
@@ -121,7 +111,7 @@ void Json::Convert(Node &current, const std::vector<Token> &v, int32_t i, int32_
 		current.SetType(Type::Array);
 		r = k + 1;
 	} else {
-		current.SetValue(UnfixReturnTokens(v[i].GetString()));
+		current.SetValue(String::UnfixReturnTokens(v[i].GetString()));
 		current.SetType(v[i].type);
 		r = i + 1;
 	}
@@ -134,7 +124,7 @@ void Json::AppendData(const Node &source, std::ostream &stream, int32_t indentat
 	// Only output the value if no properties exist.
 	if (source.GetProperties().empty()) {
 		if (source.GetType() == Type::String)
-			stream << '\"' << FixReturnTokens(source.GetValue()) << '\"';
+			stream << '\"' << String::FixReturnTokens(source.GetValue()) << '\"';
 		else
 			stream << source.GetValue();
 	}

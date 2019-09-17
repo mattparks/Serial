@@ -105,6 +105,10 @@ public:
 	 */
 	static std::string Uppercase(std::string str);
 
+	// TODO: Remove.
+	static std::string FixReturnTokens(const std::string &str);
+	static std::string UnfixReturnTokens(const std::string &str);
+
 	/**
 	 * Converts a type to a string.
 	 * @tparam T The type to convert from.

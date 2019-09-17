@@ -112,6 +112,32 @@ public:
 	void SetType(Type type) { m_type = type; }
 
 protected:
+	class Token {
+	public:
+		Token(const char *start, const char *end, Type type) :
+			start(start),
+			end(end),
+			type(type) {
+		}
+
+		char GetChar() const {
+			if (end - start != 1) return '\0';
+			return *start;
+		}
+
+		std::string_view GetView() const {
+			return std::string_view(start, end - start);
+		}
+
+		std::string GetString() const {
+			return std::string(start, end - start);
+		}
+
+		const char *start;
+		const char *end;
+		Type type;
+	};
+
 	std::vector<Node> m_properties;
 	std::string m_name;
 	std::string m_value;

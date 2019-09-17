@@ -102,4 +102,14 @@ std::string String::Uppercase(std::string str) {
 	std::transform(str.begin(), str.end(), str.begin(), toupper);
 	return str;
 }
+
+std::string String::FixReturnTokens(const std::string &str) {
+	// TODO: Optimize.
+	return String::ReplaceAll(String::ReplaceAll(str, "\n", "\\n"), "\r", "\\r");
+}
+
+std::string String::UnfixReturnTokens(const std::string &str) {
+	// TODO: Optimize.
+	return String::ReplaceAll(String::ReplaceAll(str, "\\n", "\n"), "\\r", "\r");
+}
 }

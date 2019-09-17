@@ -4,6 +4,8 @@
 #include <unordered_map>
 #include <Serialized/Node.hpp>
 #include <Serialized/Json/Json.hpp>
+#include <Serialized/Xml/Xml.hpp>
+#include <Serialized/Yaml/Yaml.hpp>
 
 using namespace acid;
 
@@ -154,22 +156,46 @@ int main(int argc, char **argv) {
 	//node["users"][7] = test::User{"köln", "'Etat de São Paulo", R"(\"Hello World\")", true, "01/00/2000"};
 	auto users = node["users"].Get<std::vector<std::optional<test::User>>>();
 
-	Json json1(std::move(node));
-
-	Json json2;
-	json2.LoadString(json1.WriteString());
-	//json2.WriteStream(std::cout);
+	std::filesystem::create_directory("Example");
+	
 	{
-		std::ofstream testOutStream("Test.json");
-		json2.WriteStream(testOutStream, Node::Format::Beautified);
+		// Make a copy of the node.
+		Json json1(node);
+		//json1.WriteStream(std::cout);
+	
+		// Test Json writer.
+		std::ofstream outStream1("Example/Test1.json");
+		json1.WriteStream(outStream1, Node::Format::Beautified);
+		outStream1.close();
+
+		// Test Json reader.
+		std::ifstream inStream1("Example/Test1.json");
+		Json json2;
+		json2.LoadStream(inStream1);
+		inStream1.close();
+		
+		// Ensure Test1.json and Test2.json values are the same (ignore order changes).
+		std::ofstream outStream2("Example/Test2.json");
+		json2.WriteStream(outStream2, Node::Format::Beautified);
+		outStream2.close();
 	}
 	{
-		std::ifstream testInStream("Test.json");
-		Json json3;
-		json3.LoadStream(testInStream);
+		// Make a copy of the node.
+		Yaml xml1(node);
+
+		// Test Yaml writer.
+		std::ofstream outStream1("Example/Xml1.xml");
+		xml1.WriteStream(outStream1, Node::Format::Beautified);
+		outStream1.close();
+	}
+	{
+		// Make a copy of the node.
+		Yaml yaml1(node);
 		
-		std::ofstream testOutStream("Test2.json");
-		json3.WriteStream(testOutStream, Node::Format::Beautified);
+		// Test Yaml writer.
+		std::ofstream outStream1("Example/Yaml1.yaml");
+		yaml1.WriteStream(outStream1, Node::Format::Beautified);
+		outStream1.close();
 	}
 
 	/*Yaml yaml2(node);
