@@ -154,19 +154,16 @@ int main(int argc, char **argv) {
 	//document["users"][7] = test::User{"köln", "'Etat de São Paulo", R"(\"Hello World\")", true, "01/00/2000"};
 	auto users = document["users"].Get<std::vector<std::optional<test::User>>>();
 
-	{
-		std::ofstream testOutStream("Test.json");
-		Json<char>().WriteStream(document, testOutStream, Document::Format::Beautified);
-	}
-	{
-		std::ifstream testInStream("Test.json");
-		Document documentLoaded;
-		Json<char>().LoadStream(documentLoaded, testInStream);
+	Json json1(std::move(document));
 
-		std::ofstream testOutStream("Test2.json");
-		Json<char>().WriteStream(documentLoaded, testOutStream, Document::Format::Beautified);
+	Json json2;
+	json2.LoadString(json1.WriteString(Document::Format::Minified));
+	//json2.Write(std::cout, Node::Format::Beautified);
+	{
+		std::ofstream testStream("Test.json");
+		json2.WriteStream(testStream, Document::Format::Beautified);
 	}
-	
+
 	/*Yaml yaml2(document);
 	//yaml2.Write(std::cout, Document::Format::Beautified);
 	yaml2.Write(std::ofstream("Test.yml"));*/

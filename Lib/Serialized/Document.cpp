@@ -13,6 +13,12 @@ Document::Document(std::string value, std::vector<Document> &&properties) :
 	m_value(std::move(value)) {
 }
 
+void Document::LoadString(std::string_view string) {
+}
+
+void Document::WriteStream(std::ostream &stream, Format format) const {
+}
+
 void Document::Clear() {
 	m_properties.clear();
 }
