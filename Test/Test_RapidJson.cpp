@@ -19,6 +19,7 @@ TEST(rapidjson, parseInMemory) {
 	rapidjsonData.canada.Parse(memoryData.canadaString.c_str());
 	rapidjsonData.catalog.Parse(memoryData.catalogString.c_str());
 	rapidjsonData.twitter.Parse(memoryData.twitterString.c_str());
+	rapidjsonData.canada["ArrayOfMeme"]["Pepe"].IsDouble();
 }
 
 TEST(rapidjson, stringify) {

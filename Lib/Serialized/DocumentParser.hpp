@@ -8,12 +8,8 @@ class DocumentParser {
 public:
 	virtual ~DocumentParser() = default;
 
-	virtual void LoadArray(Document &document, const _Elem *str, std::size_t length) = 0;
+	virtual void LoadString(Document &document, std::basic_string_view<_Elem> string) = 0;
 	virtual void WriteStream(const Document &document, std::basic_ostream<_Elem> &stream, Document::Format format = Document::Format::Minified) const = 0;
-	
-	void LoadString(Document &document, std::basic_string_view<_Elem> string) {
-		LoadArray(document, string.data(), string.length());
-	}
 	
 	void LoadStream(Document &document, std::basic_istream<_Elem> &stream) {
 		// We must read as UTF8 chars.

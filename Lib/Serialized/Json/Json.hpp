@@ -8,7 +8,7 @@ class Json : public DocumentParser<_Elem> {
 public:
 	Json() = default;
 
-	void LoadArray(Document &document, const _Elem *str, std::size_t length) override;
+	void LoadString(Document &document, std::basic_string_view<_Elem> string) override;
 	void WriteStream(const Document &document, std::basic_ostream<_Elem> &stream, Document::Format format = Document::Format::Minified) const override;
 
 private:

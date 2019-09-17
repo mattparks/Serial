@@ -52,7 +52,7 @@ public:
 		}
 	} objects;
 
-	std::string paragraph = "Lorem ipsum dolor sit amet,\nconsectetur adipiscing elit,\nsed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\n";
+	std::string paragraph = "\tLorem ipsum dolor sit amet,\n\rconsectetur adipiscing elit,\nsed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\n";
 	std::unique_ptr<std::string> content = std::make_unique<std::string>("Ut enim ad minim veniam,\nquis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.");
 	//std::string google = "\"https://google.com\"";
 

@@ -28,7 +28,8 @@ bool String::Contains(std::string_view str, std::string_view token) {
 }
 
 bool String::IsWhitespace(char c) {
-	return std::string_view(" \n\r  ").find(c) != std::string::npos;
+	//return std::string_view(" \n\r  ").find(c) != std::string::npos;
+	return c == ' ' || c == '\r' || c == '\n' || c == '\t';
 }
 
 bool String::IsNumber(std::string_view str) {
@@ -91,16 +92,6 @@ std::string String::ReplaceFirst(std::string str, std::string_view token, std::s
 
 	str.replace(startPos, token.length(), to);
 	return str;
-}
-
-std::string String::FixReturnTokens(const std::string &str) {
-	// TODO: Optimize.
-	return ReplaceAll(ReplaceAll(str, "\n", "\\n"), "\r", "\\r");
-}
-
-std::string String::UnfixReturnTokens(const std::string &str) {
-	// TODO: Optimize.
-	return ReplaceAll(ReplaceAll(str, "\\n", "\n"), "\\r", "\r");
 }
 
 std::string String::Lowercase(std::string str) {
