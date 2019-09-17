@@ -1,20 +1,15 @@
+#pragma once
+
 #include "Json.hpp"
 
 #include "Helpers/String.hpp"
 
 namespace acid {
-Json::Json(const Node &node) :
-	Node(node) {
-	SetType(Type::Object);
-}
+template<typename _Elem>
+void Json<_Elem>::LoadString(Document &document, std::basic_string_view<_Elem> string) {
+	auto start = std::chrono::high_resolution_clock::now();
 
-Json::Json(Node &&node) :
-	Node(std::move(node)) {
-	SetType(Type::Object);
-}
-
-void Json::LoadStructure(const std::string &string) {
-	std::vector<std::pair<Type, std::string>> tokens;
+	std::vector<std::pair<Document::Type, std::string>> tokens;
 
 	std::string current;
 	bool inString = false;
@@ -38,7 +33,7 @@ void Json::LoadStructure(const std::string &string) {
 			// Tokens used to read json nodes.
 			if (std::string_view(":{},[]").find(c) != std::string::npos) {
 				AddToken(tokens, current);
-				tokens.emplace_back(Type::Unknown, std::string{c});
+				tokens.emplace_back(Document::Type::Unknown, std::string{c});
 				continue;
 			}
 
@@ -53,23 +48,32 @@ void Json::LoadStructure(const std::string &string) {
 		current += c;
 	}
 
+	auto length = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
+	std::cout << "Tokenized in " << length.count() << "ms\n";
+	start = std::chrono::high_resolution_clock::now();
+	
 	// Converts the list of tokens into nodes.
 	int32_t k = 0;
-	Convert(*this, tokens, 0, k);
+	Convert(document, tokens, 0, k);
+
+	length = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
+	std::cout << "Lexed in " << length.count() << "ms\n";
 }
 
-void Json::WriteStructure(std::ostream &stream, Format format) const {
-	if (format == Format::Minified) {
+template<typename _Elem>
+void Json<_Elem>::WriteStream(const Document &document, std::basic_ostream<_Elem> &stream, Document::Format format) const {
+	if (format == Document::Format::Minified) {
 		stream << '{';
 	} else {
 		stream << "{\n";
 	}
 
-	AppendData(*this, stream, 1, format);
+	AppendData(document, stream, 1, format);
 	stream << '}';
 }
 
-void Json::AppendData(const Node &source, std::ostream &stream, int32_t indentation, Format format) {
+template<typename _Elem>
+void Json<_Elem>::AppendData(const Document &source, std::basic_ostream<_Elem> &stream, int32_t indentation, Document::Format format) {
 	// Creates a string for the indentation level.
 	std::string indents(2 * indentation, ' ');
 
@@ -77,7 +81,7 @@ void Json::AppendData(const Node &source, std::ostream &stream, int32_t indentat
 	if (source.GetProperties().empty()) {
 		auto value = String::FixReturnTokens(source.GetValue());
 
-		if (source.GetType() == Type::String) {
+		if (source.GetType() == Document::Type::String) {
 			stream << '\"' << value << '\"';
 		} else {
 			stream << value;
@@ -103,14 +107,14 @@ void Json::AppendData(const Node &source, std::ostream &stream, int32_t indentat
 				}
 			}
 
-			if (format != Format::Minified) {
+			if (format != Document::Format::Minified) {
 				openString += '\n';
 				closeString.insert(0, indents);
 			}
-		} else if (it->GetType() == Type::Object) {
+		} else if (it->GetType() == Document::Type::Object) {
 			openString = "{";
 			closeString = "}";
-		} else if (it->GetType() == Type::Array) {
+		} else if (it->GetType() == Document::Type::Array) {
 			openString = "[";
 			closeString = "]";
 		}
@@ -120,7 +124,7 @@ void Json::AppendData(const Node &source, std::ostream &stream, int32_t indentat
 			closeString += ',';
 		}
 
-		if (format != Format::Minified) {
+		if (format != Document::Format::Minified) {
 			stream << indents;
 		}
 
@@ -128,7 +132,7 @@ void Json::AppendData(const Node &source, std::ostream &stream, int32_t indentat
 		if (!it->GetName().empty()) {
 			stream << "\"" << it->GetName() << "\":";
 
-			if (format != Format::Minified) {
+			if (format != Document::Format::Minified) {
 				stream << ' ';
 			}
 		}
@@ -138,24 +142,25 @@ void Json::AppendData(const Node &source, std::ostream &stream, int32_t indentat
 		AppendData(*it, stream, indentation + 1, format);
 		stream << closeString;
 
-		if (format != Format::Minified) {
+		if (format != Document::Format::Minified) {
 			stream << '\n';
 		}
 	}
 }
 
-void Json::AddToken(std::vector<std::pair<Type, std::string>> &tokens, std::string &current) {
+template<typename _Elem>
+void Json<_Elem>::AddToken(std::vector<std::pair<Document::Type, std::string>> &tokens, std::string &current) {
 	if (!current.empty()) {
 		// Finds the node value type of the string and adds it to the tokens vector.
 		if (String::IsNumber(current)) {
-			tokens.emplace_back(Type::Number, current);
+			tokens.emplace_back(Document::Type::Number, current);
 		} else if (current == "null") {
-			tokens.emplace_back(Type::Null, current);
+			tokens.emplace_back(Document::Type::Null, current);
 		} else if (current == "true" || current == "false") {
-			tokens.emplace_back(Type::Boolean, current);
+			tokens.emplace_back(Document::Type::Boolean, current);
 		} else {
 			// if (current.front() == current.back() == '\"')
-			tokens.emplace_back(Type::String, current.substr(1, current.size() - 2));
+			tokens.emplace_back(Document::Type::String, current.substr(1, current.size() - 2));
 		}
 	}
 
@@ -163,7 +168,8 @@ void Json::AddToken(std::vector<std::pair<Type, std::string>> &tokens, std::stri
 	current.clear();
 }
 
-void Json::Convert(Node &current, const std::vector<std::pair<Type, std::string>> &v, int32_t i, int32_t &r) {
+template<typename _Elem>
+void Json<_Elem>::Convert(Document &current, const std::vector<std::pair<Document::Type, std::string>> &v, int32_t i, int32_t &r) {
 	if (v[i].second == "{") {
 		auto k = i + 1;
 
@@ -177,7 +183,7 @@ void Json::Convert(Node &current, const std::vector<std::pair<Type, std::string>
 			}
 		}
 
-		current.SetType(Type::Object);
+		current.SetType(Document::Type::Object);
 		r = k + 1;
 	} else if (v[i].second == "[") {
 		auto k = i + 1;
@@ -190,7 +196,7 @@ void Json::Convert(Node &current, const std::vector<std::pair<Type, std::string>
 			}
 		}
 
-		current.SetType(Type::Array);
+		current.SetType(Document::Type::Array);
 		r = k + 1;
 	} else {
 		current.SetValue(String::UnfixReturnTokens(v[i].second));

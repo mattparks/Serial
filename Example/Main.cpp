@@ -2,9 +2,8 @@
 
 #include <fstream>
 #include <unordered_map>
-#include <Serialized/Node.hpp>
+#include <Serialized/Document.hpp>
 #include <Serialized/Json/Json.hpp>
-#include <Serialized/Yaml/Yaml.hpp>
 
 using namespace acid;
 
@@ -17,18 +16,18 @@ public:
 		std::optional<float> optional0;
 		std::optional<std::string> optional1 = "Hello optional string!";
 
-		friend const Node &operator>>(const Node &node, XML &xml) {
-			node["data"].Get(xml.data);
-			node["optional0"].Get(xml.optional0);
-			node["optional1"].Get(xml.optional1);
-			return node;
+		friend const Document &operator>>(const Document &document, XML &xml) {
+			document["data"].Get(xml.data);
+			document["optional0"].Get(xml.optional0);
+			document["optional1"].Get(xml.optional1);
+			return document;
 		}
 
-		friend Node &operator<<(Node &node, const XML &xml) {
-			node["data"].Set(xml.data);
-			node["optional0"].Set(xml.optional0);
-			node["optional1"].Set(xml.optional1);
-			return node;
+		friend Document &operator<<(Document &document, const XML &xml) {
+			document["data"].Set(xml.data);
+			document["optional0"].Set(xml.optional0);
+			document["optional1"].Set(xml.optional1);
+			return document;
 		}
 	} xml;
 
@@ -38,18 +37,18 @@ public:
 		std::string key = "value";
 		std::vector<float> values = {190.0f, 11.0f, -0.001f};
 
-		friend const Node &operator>>(const Node &node, Objects &objects) {
-			node["url"].Get(objects.url);
-			node["key"].Get(objects.key, "failed to get key");
-			node["values"].Get(objects.values);
-			return node;
+		friend const Document &operator>>(const Document &document, Objects &objects) {
+			document["url"].Get(objects.url);
+			document["key"].Get(objects.key, "failed to get key");
+			document["values"].Get(objects.values);
+			return document;
 		}
 
-		friend Node &operator<<(Node &node, const Objects &objects) {
-			node["url"].Set(objects.url);
-			node["key"].Set(objects.key);
-			node["values"].Set(objects.values);
-			return node;
+		friend Document &operator<<(Document &document, const Objects &objects) {
+			document["url"].Set(objects.url);
+			document["key"].Set(objects.key);
+			document["values"].Set(objects.values);
+			return document;
 		}
 	} objects;
 
@@ -63,32 +62,32 @@ public:
 	std::map<int32_t, std::string> map = {{10, "Hello World"}, {-2, "Negative Keys"}, {400, "Larger Key"}};
 	std::map<int32_t, std::vector<std::string>> vectorMap = {{-1, {"A", "B", "C"}}, {8, {"1", "2.00", "3.00"}}, {700, {"%", "$", "#", "&", "#"}}};
 
-	friend const Node &operator>>(const Node &node, Example1 &example1) {
-		node["currentPath"].Get(example1.currentPath);
-		node["paragraph"].Get(example1.paragraph);
-		//node["google"].Get(example1.google);
-		node["content"].Get(example1.content);
-		node["xml"].Get(example1.xml);
-		node["json"].Get(example1.json);
-		node["yaml"].Get(example1.yaml);
-		node["map"].Get(example1.map);
-		node["vectorMap"].Get(example1.vectorMap);
-		node["objects"].Get(example1.objects);
-		return node;
+	friend const Document &operator>>(const Document &document, Example1 &example1) {
+		document["currentPath"].Get(example1.currentPath);
+		document["paragraph"].Get(example1.paragraph);
+		//document["google"].Get(example1.google);
+		document["content"].Get(example1.content);
+		document["xml"].Get(example1.xml);
+		document["json"].Get(example1.json);
+		document["yaml"].Get(example1.yaml);
+		document["map"].Get(example1.map);
+		document["vectorMap"].Get(example1.vectorMap);
+		document["objects"].Get(example1.objects);
+		return document;
 	}
 
-	friend Node &operator<<(Node &node, const Example1 &example1) {
-		node["currentPath"].Set(example1.currentPath);
-		node["paragraph"].Set(example1.paragraph);
-		//node["google"].Set(example1.google);
-		node["content"].Set(example1.content);
-		node["xml"].Set(example1.xml);
-		node["json"].Set(example1.json);
-		node["yaml"].Set(example1.yaml);
-		node["map"].Set(example1.map);
-		node["vectorMap"].Set(example1.vectorMap);
-		node["objects"].Set(example1.objects);
-		return node;
+	friend Document &operator<<(Document &document, const Example1 &example1) {
+		document["currentPath"].Set(example1.currentPath);
+		document["paragraph"].Set(example1.paragraph);
+		//document["google"].Set(example1.google);
+		document["content"].Set(example1.content);
+		document["xml"].Set(example1.xml);
+		document["json"].Set(example1.json);
+		document["yaml"].Set(example1.yaml);
+		document["map"].Set(example1.map);
+		document["vectorMap"].Set(example1.vectorMap);
+		document["objects"].Set(example1.objects);
+		return document;
 	}
 };
 
@@ -100,73 +99,66 @@ public:
 	bool employed = false;
 	std::string birthday;
 
-	friend const Node &operator>>(const Node &node, User &user) {
-		node["username"].Get(user.username);
-		node["fullname"].Get(user.fullname);
-		node["description"].Get(user.description);
-		node["employed"].Get(user.employed);
-		node["birthday"].Get(user.birthday);
-		return node;
+	friend const Document &operator>>(const Document &document, User &user) {
+		document["username"].Get(user.username);
+		document["fullname"].Get(user.fullname);
+		document["description"].Get(user.description);
+		document["employed"].Get(user.employed);
+		document["birthday"].Get(user.birthday);
+		return document;
 	}
 
-	friend Node &operator<<(Node &node, const User &user) {
-		node["username"].Set(user.username);
-		node["fullname"].Set(user.fullname);
-		node["description"].Set(user.description);
-		node["employed"].Set(user.employed);
-		node["birthday"].Set(user.birthday);
-		return node;
+	friend Document &operator<<(Document &document, const User &user) {
+		document["username"].Set(user.username);
+		document["fullname"].Set(user.fullname);
+		document["description"].Set(user.description);
+		document["employed"].Set(user.employed);
+		document["birthday"].Set(user.birthday);
+		return document;
 	}
 };
 }
 
 int main(int argc, char **argv) {
 	test::Example1 example1;
-	Node node;
-	node = example1;
+	Document document;
+	document = example1;
 
 	// Appends different types into a array.
-	node["array1"]->Append("Hello", nullptr, 10, 4.8924f);
+	document["array1"]->Append("Hello", nullptr, 10, 4.8924f);
 
 	// Creates a array, then appends values to the back of the array.
-	node["array2"] = std::vector{1.0f, 10.0f, -5.55f, 9.3456f};
-	node["array2"]->Append(64, 32.1f, -2.0);
-	//node["array2"].SetName("array2_renamed");
-	//auto array2Name{node["array2"].GetName()};
-	//auto array2{node["array2"].Get<std::vector<float>>()};
+	document["array2"] = std::vector{1.0f, 10.0f, -5.55f, 9.3456f};
+	document["array2"]->Append(64, 32.1f, -2.0);
+	//document["array2"].SetName("array2_renamed");
+	//auto array2Name{document["array2"].GetName()};
+	//auto array2{document["array2"].Get<std::vector<float>>()};
 
-	auto timeNow = node["timeNow"].Get<int64_t>(123456); // 123456
-	node.RemoveProperty("timeNow");
+	auto timeNow = document["timeNow"].Get<int64_t>(123456); // 123456
+	document.RemoveProperty("timeNow");
 
-	auto data00 = node["xml"]["data"][0][0].Get<std::string>(); // "clunky"
-	auto data10 = node["xml"]["data"][1][0].Get<std::string>(); // "uses more words than necessary"
+	auto data00 = document["xml"]["data"][0][0].Get<std::string>(); // "clunky"
+	auto data10 = document["xml"]["data"][1][0].Get<std::string>(); // "uses more words than necessary"
 
-	auto mapN2 = node["map"]["-2"].Get<std::string>(); // TODO: Can names be numbers without searching with keys?
-	auto map400 = node["map"]["400"].Get<std::string>(); // TODO: Can names be numbers without searching with keys?
+	auto mapN2 = document["map"]["-2"].Get<std::string>(); // TODO: Can names be numbers without searching with keys?
+	auto map400 = document["map"]["400"].Get<std::string>(); // TODO: Can names be numbers without searching with keys?
 
-	if (auto mapN2_ = node["map"]["-2"]) {
+	if (auto mapN2_ = document["map"]["-2"]) {
 		auto value = mapN2_.Get<std::string>();
 	}
 
-	node["users"][0] = test::User{"user1", "User One", "C++ developer", false, "10/07/2000"};
-	node["users"][1] = test::User{"user2", "User Two", "University student", true, "11/05/1999"};
-	node["users"][3] = test::User{"user3", "User Three", "Website developer", false, "2/03/1996"};
-	node["users"][6] = test::User{"user4", "User Four", "High school student", true, "30/04/2002"};
-	//node["users"][7] = test::User{"köln", "'Etat de São Paulo", R"(\"Hello World\")", true, "01/00/2000"};
-	auto users = node["users"].Get<std::vector<std::optional<test::User>>>();
+	document["users"][0] = test::User{"user1", "User One", "C++ developer", false, "10/07/2000"};
+	document["users"][1] = test::User{"user2", "User Two", "University student", true, "11/05/1999"};
+	document["users"][3] = test::User{"user3", "User Three", "Website developer", false, "2/03/1996"};
+	document["users"][6] = test::User{"user4", "User Four", "High school student", true, "30/04/2002"};
+	//document["users"][7] = test::User{"köln", "'Etat de São Paulo", R"(\"Hello World\")", true, "01/00/2000"};
+	auto users = document["users"].Get<std::vector<std::optional<test::User>>>();
 
-	Json json1(std::move(node));
-
-	Json json2;
-	json2.Load(json1.Write(Node::Format::Minified));
-	//json2.Write(std::cout, Node::Format::Beautified);
-	{
-		std::ofstream testStream("Test.json");
-		json2.Write(testStream, Node::Format::Beautified);
-	}
-
-	/*Yaml yaml2(node);
-	//yaml2.Write(std::cout, Node::Format::Beautified);
+	std::ofstream testStream("Test.json");
+	Json<char>().WriteStream(document, testStream, Document::Format::Beautified);
+	
+	/*Yaml yaml2(document);
+	//yaml2.Write(std::cout, Document::Format::Beautified);
 	yaml2.Write(std::ofstream("Test.yml"));*/
 
 	//std::cout << "\nPress enter to continue...";

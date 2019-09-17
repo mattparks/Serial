@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Node.hpp"
+#include "Document.hpp"
 
 #include <map>
 #include <filesystem>
@@ -11,45 +11,15 @@
 #include "Resources/Resource.hpp"
 
 namespace acid {
-template<typename _Elem>
-void Node::Load(std::basic_istream<_Elem> &stream) {
-	// We must read into a UTF8 char.
-	stream.imbue(std::locale(stream.getloc(), new std::codecvt_utf8<char>));
-	
-	// Reading into a string before iterating is much faster.
-	std::string s(std::istreambuf_iterator<_Elem>(stream), {});
-	
-	LoadStructure(s);
-}
-
-template<typename _Elem>
-void Node::Load(const std::basic_string<_Elem> &string) {
-	//std::basic_stringstream<_Elem> stream(string);
-	//Load<_Elem>(stream);
-	LoadStructure(string);
-}
-
-template<typename _Elem>
-void Node::Write(std::basic_ostream<_Elem> &stream, Format format) const {
-	WriteStructure(stream, format);
-}
-
-template<typename _Elem>
-std::basic_string<_Elem> Node::Write(Format format) const {
-	std::basic_stringstream<_Elem> stream;
-	Write(stream, format);
-	return stream.str();
-}
-
 template<typename T>
-T Node::Get() const {
+T Document::Get() const {
 	T value;
 	*this >> value;
 	return value;
 }
 
 template<typename T>
-T Node::Get(const T &fallback) const {
+T Document::Get(const T &fallback) const {
 	if (!IsValid()) {
 		return fallback;
 	}
@@ -58,14 +28,14 @@ T Node::Get(const T &fallback) const {
 }
 
 template<typename T>
-void Node::Get(T &dest) const {
+void Document::Get(T &dest) const {
 	if (IsValid()) {
 		*this >> dest;
 	}
 }
 
 template<typename T, typename K>
-void Node::Get(T &dest, const K &fallback) const {
+void Document::Get(T &dest, const K &fallback) const {
 	if (IsValid()) {
 		*this >> dest;
 		return;
@@ -75,73 +45,73 @@ void Node::Get(T &dest, const K &fallback) const {
 }
 
 template<typename T>
-void Node::Set(const T &value) {
+void Document::Set(const T &value) {
 	*this << value;
 }
 
 template<typename T>
-Node &Node::Append(const T &value) {
+Document &Document::Append(const T &value) {
 	AddProperty() << value;
 	return *this;
 }
 
 template<typename ...Args>
-Node &Node::Append(const Args &...args) {
+Document &Document::Append(const Args &...args) {
 	(Append(args), ...);
 	return *this;
 }
 
 template<typename T>
-Node &Node::operator=(const T &rhs) {
+Document &Document::operator=(const T &rhs) {
 	Set(rhs);
 	return *this;
 }
 
-/*const Node &operator>>(const Node &node, std::nullptr_t &object)
+/*const Document &operator>>(const Document &node, std::nullptr_t &object)
 {
 	object = nullptr;
 	return node;
 }*/
 
-inline Node &operator<<(Node &node, const std::nullptr_t &object) {
+inline Document &operator<<(Document &node, const std::nullptr_t &object) {
 	node.SetValue("null");
-	node.SetType(Node::Type::Null);
+	node.SetType(Document::Type::Null);
 	return node;
 }
 
-inline const Node &operator>>(const Node &node, bool &object) {
+inline const Document &operator>>(const Document &node, bool &object) {
 	object = String::From<bool>(node.GetValue());
 	return node;
 }
 
-inline Node &operator<<(Node &node, const bool &object) {
+inline Document &operator<<(Document &node, const bool &object) {
 	node.SetValue(String::To(object));
-	node.SetType(Node::Type::Boolean);
+	node.SetType(Document::Type::Boolean);
 	return node;
 }
 
 template<typename T>
-std::enable_if_t<std::is_arithmetic_v<T> || std::is_enum_v<T>, const Node &> operator>>(const Node &node, T &object) {
+std::enable_if_t<std::is_arithmetic_v<T> || std::is_enum_v<T>, const Document &> operator>>(const Document &node, T &object) {
 	object = String::From<T>(node.GetValue());
 	return node;
 }
 
 template<typename T>
-std::enable_if_t<std::is_arithmetic_v<T> || std::is_enum_v<T>, Node &> operator<<(Node &node, const T &object) {
+std::enable_if_t<std::is_arithmetic_v<T> || std::is_enum_v<T>, Document &> operator<<(Document &node, const T &object) {
 	node.SetValue(String::To(object));
-	node.SetType(Node::Type::Number);
+	node.SetType(Document::Type::Number);
 	return node;
 }
 
 /*template<typename T>
-std::enable_if_t<std::is_class_v<T> || std::is_pointer_v<T>, const Node &> operator>>(const Node &node, T &object)
+std::enable_if_t<std::is_class_v<T> || std::is_pointer_v<T>, const Document &> operator>>(const Document &node, T &object)
 {
 	node >> ConstExpr::AsRef(object);
 	return node;
 }*/
 
 template<typename T>
-std::enable_if_t<std::is_class_v<T> || std::is_pointer_v<T>, Node &> operator<<(Node &node, const T &object) {
+std::enable_if_t<std::is_class_v<T> || std::is_pointer_v<T>, Document &> operator<<(Document &node, const T &object) {
 	if (ConstExpr::AsPtr(object) == nullptr) {
 		return node << nullptr;
 	}
@@ -151,14 +121,14 @@ std::enable_if_t<std::is_class_v<T> || std::is_pointer_v<T>, Node &> operator<<(
 }
 
 template<typename T>
-const Node &operator>>(const Node &node, std::unique_ptr<T> &object) {
+const Document &operator>>(const Document &node, std::unique_ptr<T> &object) {
 	object = std::make_unique<T>();
 	node >> *object;
 	return node;
 }
 
 template<typename T>
-Node &operator<<(Node &node, const std::unique_ptr<T> &object) {
+Document &operator<<(Document &node, const std::unique_ptr<T> &object) {
 	if (object == nullptr) {
 		return node << nullptr;
 	}
@@ -168,7 +138,7 @@ Node &operator<<(Node &node, const std::unique_ptr<T> &object) {
 }
 
 template<typename T>
-const Node &operator>>(const Node &node, std::shared_ptr<T> &object) {
+const Document &operator>>(const Document &node, std::shared_ptr<T> &object) {
 	// TODO: Abstract Resource streams out from shared_ptr.
 	if constexpr (std::is_base_of_v<Resource, T>) {
 		object = T::Create(node);
@@ -181,7 +151,7 @@ const Node &operator>>(const Node &node, std::shared_ptr<T> &object) {
 }
 
 template<typename T>
-Node &operator<<(Node &node, const std::shared_ptr<T> &object) {
+Document &operator<<(Document &node, const std::shared_ptr<T> &object) {
 	if (object == nullptr) {
 		return node << nullptr;
 	}
@@ -190,57 +160,57 @@ Node &operator<<(Node &node, const std::shared_ptr<T> &object) {
 	return node;
 }
 
-/*inline const Node &operator>>(const Node &node, char *&string) {
+/*inline const Document &operator>>(const Document &node, char *&string) {
 	std::strcpy(string, node.GetValue().c_str());
 	return node;
 }
 
-inline Node &operator<<(Node &node, const char *string) {
+inline Document &operator<<(Document &node, const char *string) {
 	node.SetValue(string);
-	node.SetType(Node::Type::String);
+	node.SetType(Document::Type::String);
 	return node;
 }*/
 
-inline const Node &operator>>(const Node &node, std::string &string) {
+inline const Document &operator>>(const Document &node, std::string &string) {
 	string = node.GetValue();
 	return node;
 }
 
-inline Node &operator<<(Node &node, const std::string &string) {
+inline Document &operator<<(Document &node, const std::string &string) {
 	node.SetValue(string);
-	node.SetType(Node::Type::String);
+	node.SetType(Document::Type::String);
 	return node;
 }
 
-inline const Node &operator>>(const Node &node, std::filesystem::path &object) {
+inline const Document &operator>>(const Document &node, std::filesystem::path &object) {
 	object = node.GetValue();
 	return node;
 }
 
-inline Node &operator<<(Node &node, const std::filesystem::path &object) {
+inline Document &operator<<(Document &node, const std::filesystem::path &object) {
 	auto str = object.string();
 	std::replace(str.begin(), str.end(), '\\', '/');
 	node.SetValue(str);
-	node.SetType(Node::Type::String);
+	node.SetType(Document::Type::String);
 	return node;
 }
 
 template<typename T, typename K>
-const Node &operator>>(const Node &node, std::pair<T, K> &pair) {
+const Document &operator>>(const Document &node, std::pair<T, K> &pair) {
 	pair.first = String::From<T>(node.GetName());
 	node >> pair.second;
 	return node;
 }
 
 template<typename T, typename K>
-Node &operator<<(Node &node, const std::pair<T, K> &pair) {
+Document &operator<<(Document &node, const std::pair<T, K> &pair) {
 	node.SetName(String::To(pair.first));
 	node << pair.second;
 	return node;
 }
 
 template<typename T>
-const Node &operator>>(const Node &node, std::optional<T> &optional) {
+const Document &operator>>(const Document &node, std::optional<T> &optional) {
 	if (node.GetValue() != "null") {
 		T x;
 		node >> x;
@@ -253,7 +223,7 @@ const Node &operator>>(const Node &node, std::optional<T> &optional) {
 }
 
 template<typename T>
-Node &operator<<(Node &node, const std::optional<T> &optional) {
+Document &operator<<(Document &node, const std::optional<T> &optional) {
 	if (optional) {
 		return node << *optional;
 	}
@@ -262,7 +232,7 @@ Node &operator<<(Node &node, const std::optional<T> &optional) {
 }
 
 template<typename T>
-const Node &operator>>(const Node &node, std::vector<T> &vector) {
+const Document &operator>>(const Document &node, std::vector<T> &vector) {
 	vector = {};
 	vector.reserve(node.GetProperties().size());
 
@@ -276,17 +246,17 @@ const Node &operator>>(const Node &node, std::vector<T> &vector) {
 }
 
 template<typename T>
-Node &operator<<(Node &node, const std::vector<T> &vector) {
+Document &operator<<(Document &node, const std::vector<T> &vector) {
 	for (const auto &x : vector) {
 		node.AddProperty() << x;
 	}
 
-	node.SetType(Node::Type::Array);
+	node.SetType(Document::Type::Array);
 	return node;
 }
 
 template<typename T, typename K>
-const Node &operator>>(const Node &node, std::map<T, K> &map) {
+const Document &operator>>(const Document &node, std::map<T, K> &map) {
 	map = {};
 
 	for (const auto &property : node.GetProperties()) {
@@ -299,12 +269,12 @@ const Node &operator>>(const Node &node, std::map<T, K> &map) {
 }
 
 template<typename T, typename K>
-Node &operator<<(Node &node, const std::map<T, K> &map) {
+Document &operator<<(Document &node, const std::map<T, K> &map) {
 	for (const auto &x : map) {
 		node.AddProperty() << x;
 	}
 
-	node.SetType(Node::Type::Array);
+	node.SetType(Document::Type::Array);
 	return node;
 }
 }

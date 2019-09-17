@@ -1,23 +1,23 @@
-#include "Node.hpp"
+#include "Document.hpp"
 
 namespace acid {
-static const Node NullNode = Node("null", Node::Type::Null);
+static const Document NullDocument = Document("null", Document::Type::Null);
 
-Node::Node(std::string value, Type type) :
+Document::Document(std::string value, Type type) :
 	m_value(std::move(value)),
 	m_type(type) {
 }
 
-Node::Node(std::string value, std::vector<Node> &&properties) :
+Document::Document(std::string value, std::vector<Document> &&properties) :
 	m_properties(std::move(properties)),
 	m_value(std::move(value)) {
 }
 
-void Node::Clear() {
+void Document::Clear() {
 	m_properties.clear();
 }
 
-bool Node::IsValid() const {
+bool Document::IsValid() const {
 	switch (m_type) {
 	case Type::Object:
 	case Type::Array:
@@ -27,7 +27,7 @@ bool Node::IsValid() const {
 	}
 }
 
-bool Node::HasProperty(const std::string &name) const {
+bool Document::HasProperty(const std::string &name) const {
 	for (const auto &property : m_properties) {
 		if (property.m_name == name) {
 			return true;
@@ -37,7 +37,7 @@ bool Node::HasProperty(const std::string &name) const {
 	return false;
 }
 
-NodeReturn Node::GetProperty(const std::string &name) const {
+DocumentReturn Document::GetProperty(const std::string &name) const {
 	for (const auto &property : m_properties) {
 		if (property.m_name == name) {
 			return {this, name, &property};
@@ -47,7 +47,7 @@ NodeReturn Node::GetProperty(const std::string &name) const {
 	return {this, name, nullptr};
 }
 
-NodeReturn Node::GetProperty(uint32_t index) const {
+DocumentReturn Document::GetProperty(uint32_t index) const {
 	if (index < m_properties.size()) {
 		return {this, index, &m_properties[index]};
 	}
@@ -55,54 +55,54 @@ NodeReturn Node::GetProperty(uint32_t index) const {
 	return {this, index, nullptr};
 }
 
-Node &Node::AddProperty() {
+Document &Document::AddProperty() {
 	return m_properties.emplace_back();
 }
 
-Node &Node::AddProperty(const std::string &name, Node &&node) {
+Document &Document::AddProperty(const std::string &name, Document &&node) {
 	node.m_name = name;
 	return m_properties.emplace_back(std::move(node));
 }
 
-Node &Node::AddProperty(uint32_t index, Node &&node) {
-	m_properties.resize(std::max(m_properties.size(), static_cast<std::size_t>(index + 1)), NullNode);
+Document &Document::AddProperty(uint32_t index, Document &&node) {
+	m_properties.resize(std::max(m_properties.size(), static_cast<std::size_t>(index + 1)), NullDocument);
 	return m_properties[index] = std::move(node);
 }
 
-void Node::RemoveProperty(const std::string &name) {
+void Document::RemoveProperty(const std::string &name) {
 	//node.m_parent = nullptr;
 	m_properties.erase(std::remove_if(m_properties.begin(), m_properties.end(), [name](const auto &n) {
 		return n.GetName() == name;
 	}), m_properties.end());
 }
 
-void Node::RemoveProperty(const Node &node) {
+void Document::RemoveProperty(const Document &node) {
 	//node.m_parent = nullptr;
 	m_properties.erase(std::remove_if(m_properties.begin(), m_properties.end(), [node](const auto &n) {
 		return n == node;
 	}), m_properties.end());
 }
 
-NodeReturn Node::operator[](const std::string &key) const {
+DocumentReturn Document::operator[](const std::string &key) const {
 	return GetProperty(key);
 }
 
-NodeReturn Node::operator[](uint32_t index) const {
+DocumentReturn Document::operator[](uint32_t index) const {
 	return GetProperty(index);
 }
 
-bool Node::operator==(const Node &other) const {
+bool Document::operator==(const Document &other) const {
 	return m_value == other.m_value && m_properties.size() == other.m_properties.size() &&
 		std::equal(m_properties.begin(), m_properties.end(), other.m_properties.begin(), [](const auto &left, const auto &right) {
 			return left == right;
 		});
 }
 
-bool Node::operator!=(const Node &other) const {
+bool Document::operator!=(const Document &other) const {
 	return !(*this == other);
 }
 
-bool Node::operator<(const Node &other) const {
+bool Document::operator<(const Document &other) const {
 	if (m_name < other.m_name) return true;
 	if (other.m_name < m_name) return false;
 
@@ -113,11 +113,5 @@ bool Node::operator<(const Node &other) const {
 	if (other.m_properties < m_properties) return false;
 	
 	return false;
-}
-
-void Node::LoadStructure(const std::string &string) {
-}
-
-void Node::WriteStructure(std::ostream &stream, Format format) const {
 }
 }

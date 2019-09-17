@@ -1,40 +1,44 @@
 #include <gtest/gtest.h>
 
-#include <Serialized/Node.hpp>
+#include <Serialized/Document.hpp>
 #include <Serialized/Json/Json.hpp>
 
 #include "MemoryData.hpp"
 
 static class AcidData {
 public:
-	acid::Json canada;
-	acid::Json catalog;
-	acid::Json twitter;
+	acid::Document canada;
+	acid::Document catalog;
+	acid::Document twitter;
 } acidData;
 
 TEST(acid, parseInMemory) {
-	acidData.canada.Load(memoryData.canadaString);
-	acidData.catalog.Load(memoryData.catalogString);
-	acidData.twitter.Load(memoryData.twitterString);
+	acid::Json<char> parser;
+	parser.LoadString(acidData.canada, memoryData.canadaString);
+	parser.LoadString(acidData.catalog, memoryData.catalogString);
+	parser.LoadString(acidData.twitter, memoryData.twitterString);
 }
 
 TEST(acid, stringify) {
-	auto canadaString = acidData.canada.Write();
-	auto catalogString = acidData.catalog.Write();
-	auto twitterString = acidData.twitter.Write();
+	acid::Json<char> parser;
+	auto canadaString = parser.WriteString(acidData.canada);
+	auto catalogString = parser.WriteString(acidData.catalog);
+	auto twitterString = parser.WriteString(acidData.twitter);
 }
 
 TEST(acid, prettify) {
-	auto canadaString = acidData.canada.Write(acid::Node::Format::Beautified);
-	auto catalogString = acidData.catalog.Write(acid::Node::Format::Beautified);
-	auto twitterString = acidData.twitter.Write(acid::Node::Format::Beautified);
+	acid::Json<char> parser;
+	auto canadaString = parser.WriteString(acidData.canada, acid::Document::Format::Beautified);
+	auto catalogString = parser.WriteString(acidData.catalog, acid::Document::Format::Beautified);
+	auto twitterString = parser.WriteString(acidData.twitter, acid::Document::Format::Beautified);
 }
 
 TEST(acid, writeToFiles) {
+	acid::Json<char> parser;
 	std::ofstream canadaFile("Tests/canada.acid.json", std::ios_base::binary | std::ios_base::out);
-	acidData.canada.Write(canadaFile);
+	parser.WriteStream(acidData.canada, canadaFile);
 	std::ofstream catalogFile("Tests/citm_catalog.acid.json", std::ios_base::binary | std::ios_base::out);
-	acidData.catalog.Write(catalogFile, acid::Node::Format::Beautified);
+	parser.WriteStream(acidData.catalog, catalogFile, acid::Document::Format::Beautified);
 	std::ofstream twitterFile("Tests/twitter.acid.json", std::ios_base::binary | std::ios_base::out);
-	acidData.twitter.Write(twitterFile, acid::Node::Format::Beautified);
+	parser.WriteStream(acidData.twitter, twitterFile, acid::Document::Format::Beautified);
 }
