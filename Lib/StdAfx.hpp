@@ -10,5 +10,7 @@
 #include <variant>
 #include <vector>
 #include <utility>
+#include <algorithm>
+#include <filesystem>
 
 #define ACID_EXPORT

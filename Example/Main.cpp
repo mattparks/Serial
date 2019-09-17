@@ -5,7 +5,6 @@
 #include <Serialized/Node.hpp>
 #include <Serialized/Json/Json.hpp>
 #include <Serialized/Xml/Xml.hpp>
-#include <Serialized/Yaml/Yaml.hpp>
 
 using namespace acid;
 
@@ -54,7 +53,7 @@ public:
 		}
 	} objects;
 
-	std::string paragraph = "\tLorem ipsum dolor sit amet,\n\rconsectetur adipiscing elit,\nsed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\n";
+	std::string paragraph = "\tLorem ipsum dolor sit amet,\nconsectetur adipiscing elit,\nsed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\n";
 	std::unique_ptr<std::string> content = std::make_unique<std::string>("Ut enim ad minim veniam,\nquis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.");
 	//std::string google = "\"https://google.com\"";
 
@@ -181,20 +180,11 @@ int main(int argc, char **argv) {
 	}
 	{
 		// Make a copy of the node.
-		Yaml xml1(node);
+		Xml xml1("node", node);
 
-		// Test Yaml writer.
+		// Test Xml writer.
 		std::ofstream outStream1("Example/Xml1.xml");
 		xml1.WriteStream(outStream1, Node::Format::Beautified);
-		outStream1.close();
-	}
-	{
-		// Make a copy of the node.
-		Yaml yaml1(node);
-		
-		// Test Yaml writer.
-		std::ofstream outStream1("Example/Yaml1.yaml");
-		yaml1.WriteStream(outStream1, Node::Format::Beautified);
 		outStream1.close();
 	}
 
