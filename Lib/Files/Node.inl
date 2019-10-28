@@ -12,7 +12,9 @@ namespace acid {
 template<typename _Elem>
 void Node::LoadStream(std::basic_istream<_Elem> & stream) {
 	// We must read as UTF8 chars.
-	stream.imbue(std::locale(stream.getloc(), new std::codecvt_utf8<char>));
+	if constexpr (!std::is_same_v<_Elem, char>) {
+		stream.imbue(std::locale(stream.getloc(), new std::codecvt_utf8<char>));
+	}
 
 	// Reading into a string before iterating is much faster.
 	std::string s(std::istreambuf_iterator<_Elem>(stream), {});
@@ -82,8 +84,7 @@ Node &Node::operator=(const T &rhs) {
 	return *this;
 }
 
-/*const Node &operator>>(const Node &node, std::nullptr_t &object)
-{
+/*const Node &operator>>(const Node &node, std::nullptr_t &object) {
 	object = nullptr;
 	return node;
 }*/
@@ -99,7 +100,7 @@ inline const Node &operator>>(const Node &node, bool &object) {
 	return node;
 }
 
-inline Node &operator<<(Node &node, const bool &object) {
+inline Node &operator<<(Node &node, bool object) {
 	node.SetValue(String::To(object));
 	node.SetType(Node::Type::Boolean);
 	return node;
@@ -112,15 +113,14 @@ std::enable_if_t<std::is_arithmetic_v<T> || std::is_enum_v<T>, const Node &> ope
 }
 
 template<typename T>
-std::enable_if_t<std::is_arithmetic_v<T> || std::is_enum_v<T>, Node &> operator<<(Node &node, const T &object) {
+std::enable_if_t<std::is_arithmetic_v<T> || std::is_enum_v<T>, Node &> operator<<(Node &node, T object) {
 	node.SetValue(String::To(object));
 	node.SetType(Node::Type::Number);
 	return node;
 }
 
 /*template<typename T>
-std::enable_if_t<std::is_class_v<T> || std::is_pointer_v<T>, const Node &> operator>>(const Node &node, T &object)
-{
+std::enable_if_t<std::is_class_v<T> || std::is_pointer_v<T>, const Node &> operator>>(const Node &node, T &object) {
 	node >> ConstExpr::AsRef(object);
 	return node;
 }*/
@@ -175,7 +175,7 @@ Node &operator<<(Node &node, const std::shared_ptr<T> &object) {
 	return node;
 }
 
-/*inline const Node &operator>>(const Node &node, char *&string) {
+inline const Node &operator>>(const Node &node, char *&string) {
 	std::strcpy(string, node.GetValue().c_str());
 	return node;
 }
@@ -184,7 +184,7 @@ inline Node &operator<<(Node &node, const char *string) {
 	node.SetValue(string);
 	node.SetType(Node::Type::String);
 	return node;
-}*/
+}
 
 inline const Node &operator>>(const Node &node, std::string &string) {
 	string = node.GetValue();
@@ -248,7 +248,7 @@ Node &operator<<(Node &node, const std::optional<T> &optional) {
 
 template<typename T>
 const Node &operator>>(const Node &node, std::vector<T> &vector) {
-	vector = {};
+	vector.clear();
 	vector.reserve(node.GetProperties().size());
 
 	for (const auto &property : node.GetProperties()) {
@@ -272,7 +272,7 @@ Node &operator<<(Node &node, const std::vector<T> &vector) {
 
 template<typename T, typename K>
 const Node &operator>>(const Node &node, std::map<T, K> &map) {
-	map = {};
+	map.clear();
 
 	for (const auto &property : node.GetProperties()) {
 		std::pair<T, K> pair;

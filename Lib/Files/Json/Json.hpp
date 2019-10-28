@@ -1,13 +1,13 @@
 #pragma once
 
-#include "Serialized/Node.hpp"
+#include "Files/Node.hpp"
 
 namespace acid {
-class Xml : public Node {
+class Json : public Node {
 public:
-	Xml(const std::string &rootName);
-	Xml(const std::string &rootName, const Node &node);
-	Xml(const std::string &rootName, Node &&node);
+	Json() = default;
+	Json(const Node &node);
+	Json(Node &&node);
 
 	void LoadString(std::string_view string) override;
 	void WriteStream(std::ostream &stream, Format format = Format::Minified) const override;
