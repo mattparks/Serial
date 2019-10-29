@@ -13,7 +13,8 @@ public:
 		Array,
 		String,
 		Boolean,
-		Number,
+		Integer,
+		Decimal,
 		Null,
 		Unknown
 	};

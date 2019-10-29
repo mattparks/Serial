@@ -5,6 +5,13 @@
 namespace acid {
 class Json : public Node {
 public:
+	class Exception : public std::exception {
+	public:
+		explicit Exception(std::string_view message) :
+			std::exception(message.data()) {
+		}
+	};
+	
 	Json() = default;
 	Json(const Node &node);
 	Json(Node &&node);

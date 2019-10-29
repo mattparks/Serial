@@ -33,6 +33,7 @@ void NodeReturn::Get(T &dest) {
 template<typename T, typename K>
 void NodeReturn::Get(T &dest, const K &fallback) {
 	if (!has_value()) {
+		dest = fallback;
 		return;
 	}
 

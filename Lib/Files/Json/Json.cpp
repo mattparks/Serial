@@ -44,6 +44,9 @@ void Json::LoadString(std::string_view string) {
 		}
 	}
 
+	if (tokens.empty())
+		throw std::runtime_error("No tokens found in document");
+
 	// Converts the tokens into nodes.
 	int32_t k = 0;
 	Convert(*this, tokens, 0, k);
@@ -65,7 +68,16 @@ void Json::AddToken(std::string_view view, std::vector<Token> &tokens) {
 		} else if (view == "true" || view == "false") {
 			tokens.emplace_back(view, Type::Boolean);
 		} else if (String::IsNumber(view)) {
-			tokens.emplace_back(view, Type::Number);
+			// This is a quick hack to get if the number is a decimal.
+			if (view.find('.') != std::string::npos) {
+				if (view.size() >= std::numeric_limits<long double>::digits)
+					throw std::runtime_error("Decimal number is too long");
+				tokens.emplace_back(view, Type::Decimal);
+			} else {
+				if (view.size() >= std::numeric_limits<uint64_t>::digits)
+					throw std::runtime_error("Integer number is too long");
+				tokens.emplace_back(view, Type::Integer);
+			}
 		} else { // if (view.front() == view.back() == '\"')
 			tokens.emplace_back(view.substr(1, view.length() - 2), Type::String);
 		}
@@ -82,6 +94,8 @@ void Json::Convert(Node &current, const std::vector<Token> &tokens, int32_t i, i
 			Convert(current.AddProperty(key), tokens, k, k);
 			if (tokens[k].view == ",")
 				k++;
+			if (k >= tokens.size())
+				throw std::runtime_error("Missing end of {} array");
 		}
 
 		current.SetType(Type::Object);
@@ -93,6 +107,8 @@ void Json::Convert(Node &current, const std::vector<Token> &tokens, int32_t i, i
 			Convert(current.AddProperty(), tokens, k, k);
 			if (tokens[k].view == ",")
 				k++;
+			if (k >= tokens.size())
+				throw std::runtime_error("Missing end of [] object");
 		}
 
 		current.SetType(Type::Array);
@@ -160,7 +176,7 @@ void Json::AppendData(const Node &source, std::ostream &stream, Format format, i
 		} else if (it->GetType() == Type::Array) {
 			stream << ']';
 		}
-		
+
 		// Separate properties by comma.
 		if (it != source.GetProperties().end() - 1)
 			stream << ',';

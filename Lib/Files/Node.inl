@@ -115,7 +115,7 @@ std::enable_if_t<std::is_arithmetic_v<T> || std::is_enum_v<T>, const Node &> ope
 template<typename T>
 std::enable_if_t<std::is_arithmetic_v<T> || std::is_enum_v<T>, Node &> operator<<(Node &node, T object) {
 	node.SetValue(String::To(object));
-	node.SetType(Node::Type::Number);
+	node.SetType(std::is_floating_point_v<T> ? Node::Type::Decimal : Node::Type::Integer);
 	return node;
 }
 
