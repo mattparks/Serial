@@ -13,7 +13,7 @@ Json::Json(Node &&node) :
 	SetType(Type::Object);
 }
 
-void Json::LoadString(std::string_view string) {
+void Json::ParseString(std::string_view string) {
 	// Tokenizes the string view into small views that are used to build a Node tree.
 	std::vector<Token> tokens;
 

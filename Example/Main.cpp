@@ -170,7 +170,7 @@ int main(int argc, char **argv) {
 		// Test Json reader.
 		std::ifstream inStream1("Example/Test1.json");
 		Json json2;
-		json2.LoadStream(inStream1);
+		json2.ParseStream(inStream1);
 		inStream1.close();
 		
 		// Ensure Test1.json and Test2.json values are the same (ignore order changes).

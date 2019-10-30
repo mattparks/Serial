@@ -16,7 +16,7 @@ public:
 	Json(const Node &node);
 	Json(Node &&node);
 
-	void LoadString(std::string_view string) override;
+	void ParseString(std::string_view string) override;
 	void WriteStream(std::ostream &stream, Format format = Format::Minified) const override;
 
 private:

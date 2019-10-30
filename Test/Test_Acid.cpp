@@ -12,9 +12,9 @@ public:
 } acidData;
 
 TEST(acid, parseInMemory) {
-	acidData.canada.LoadString(memoryData.canadaString);
-	acidData.catalog.LoadString(memoryData.catalogString);
-	acidData.twitter.LoadString(memoryData.twitterString);
+	acidData.canada.ParseString(memoryData.canadaString);
+	acidData.catalog.ParseString(memoryData.catalogString);
+	acidData.twitter.ParseString(memoryData.twitterString);
 }
 
 inline const acid::Node &operator>>(const acid::Node &node, Status &status) {

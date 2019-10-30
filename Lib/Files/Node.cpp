@@ -13,7 +13,7 @@ Node::Node(std::string value, std::vector<Node> &&properties) :
 	m_value(std::move(value)) {
 }
 
-void Node::LoadString(std::string_view string) {
+void Node::ParseString(std::string_view string) {
 }
 
 void Node::WriteStream(std::ostream &stream, Format format) const {
