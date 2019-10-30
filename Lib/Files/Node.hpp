@@ -68,22 +68,22 @@ public:
 	template<typename ...Args>
 	Node &Append(const Args &...args);
 
-	bool HasProperty(const std::string &name) const;
-	NodeView GetProperty(const std::string &name) const;
+	bool HasProperty(std::string_view name) const;
+	NodeView GetProperty(std::string_view name) const;
 	NodeView GetProperty(uint32_t index) const;
 	Node &AddProperty();
-	Node &AddProperty(const std::string &name, Node &&node);
+	Node &AddProperty(std::string_view name, Node &&node);
 	Node &AddProperty(uint32_t index, Node &&node);
-	Node &AddProperty(const std::string &name);
+	Node &AddProperty(std::string_view name);
 	Node &AddProperty(uint32_t index);
-	void RemoveProperty(const std::string &name);
+	void RemoveProperty(std::string_view name);
 	void RemoveProperty(const Node &node);
 
-	std::vector<NodeView> GetProperties(const std::string &name) const;
-	NodeView GetPropertyWithBackup(const std::string &name, const std::string &backupName) const;
-	NodeView GetPropertyWithValue(const std::string &propertyName, const std::string &propertyValue) const;
+	std::vector<NodeView> GetProperties(std::string_view name) const;
+	NodeView GetPropertyWithBackup(std::string_view name, std::string_view backupName) const;
+	NodeView GetPropertyWithValue(std::string_view propertyName, std::string_view propertyValue) const;
 
-	NodeView operator[](const std::string &key) const;
+	NodeView operator[](std::string_view key) const;
 	NodeView operator[](uint32_t index) const;
 
 	Node &operator=(const Node &node) = default;
@@ -99,10 +99,10 @@ public:
 	std::vector<Node> &GetProperties() { return m_properties; }
 
 	const std::string &GetName() const { return m_name; }
-	void SetName(const std::string &name) { m_name = name; }
+	void SetName(std::string name) { m_name = std::move(name); }
 
 	const std::string &GetValue() const { return m_value; }
-	void SetValue(const std::string &value) { m_value = value; }
+	void SetValue(std::string value) { m_value = std::move(value); }
 
 	const Type &GetType() const { return m_type; }
 	void SetType(Type type) { m_type = type; }
@@ -133,7 +133,7 @@ protected:
 	};
 
 	std::vector<Node> m_properties;
-	std::string m_name;
+	std::string m_name; // key
 	std::string m_value;
 	Type m_type = Type::Object;
 };
