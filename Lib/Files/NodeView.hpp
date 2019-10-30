@@ -9,12 +9,12 @@ class Node;
  * @brief Class that is returned from a {@link Node} when getting properties. This represents a key tree from a parent,
  * this allows reads of large trees with broken nodes to not need to generate new content.
  */
-class ACID_EXPORT NodeReturn {
+class ACID_EXPORT NodeView {
 	friend class Node;
 public:
-	NodeReturn() = default;
-	NodeReturn(Node const *parent, std::variant<std::string, int32_t> key, Node const *value);
-	NodeReturn(NodeReturn *parent, std::variant<std::string, int32_t> key);
+	NodeView() = default;
+	NodeView(Node const *parent, std::variant<std::string, int32_t> key, Node const *value);
+	NodeView(NodeView *parent, std::variant<std::string, int32_t> key);
 
 	bool has_value() const noexcept;
 	Node *get();
@@ -36,8 +36,8 @@ public:
 	template<typename T>
 	void Set(const T &value);
 
-	NodeReturn operator[](const std::string &key);
-	NodeReturn operator[](uint32_t index);
+	NodeView operator[](const std::string &key);
+	NodeView operator[](uint32_t index);
 
 	template<typename T>
 	Node &operator=(const T &rhs);

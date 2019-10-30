@@ -1,6 +1,6 @@
 #pragma once
 
-#include "NodeReturn.hpp"
+#include "NodeView.hpp"
 
 namespace acid {
 /**
@@ -16,6 +16,7 @@ public:
 		Integer,
 		Decimal,
 		Null,
+		Token,
 		Unknown
 	};
 
@@ -68,8 +69,8 @@ public:
 	Node &Append(const Args &...args);
 
 	bool HasProperty(const std::string &name) const;
-	NodeReturn GetProperty(const std::string &name) const;
-	NodeReturn GetProperty(uint32_t index) const;
+	NodeView GetProperty(const std::string &name) const;
+	NodeView GetProperty(uint32_t index) const;
 	Node &AddProperty();
 	Node &AddProperty(const std::string &name, Node &&node);
 	Node &AddProperty(uint32_t index, Node &&node);
@@ -78,12 +79,12 @@ public:
 	void RemoveProperty(const std::string &name);
 	void RemoveProperty(const Node &node);
 
-	std::vector<NodeReturn> GetProperties(const std::string &name) const;
-	NodeReturn GetPropertyWithBackup(const std::string &name, const std::string &backupName) const;
-	NodeReturn GetPropertyWithValue(const std::string &propertyName, const std::string &propertyValue) const;
+	std::vector<NodeView> GetProperties(const std::string &name) const;
+	NodeView GetPropertyWithBackup(const std::string &name, const std::string &backupName) const;
+	NodeView GetPropertyWithValue(const std::string &propertyName, const std::string &propertyValue) const;
 
-	NodeReturn operator[](const std::string &key) const;
-	NodeReturn operator[](uint32_t index) const;
+	NodeView operator[](const std::string &key) const;
+	NodeView operator[](uint32_t index) const;
 
 	Node &operator=(const Node &node) = default;
 	Node &operator=(Node &&node) = default;
@@ -109,13 +110,26 @@ public:
 protected:
 	class Token {
 	public:
-		Token(std::string_view view, Type type) :
-			view(view),
-			type(type) {
+		Token(Type type, std::string_view view) :
+			type(type),
+			view(view) {
 		}
 
-		std::string_view view;
+		/**
+		 * Compares if two tokens have the same type and string contents.
+		 * @param other The other token to compare.
+		 * @return If the tokens are equal.
+		 */
+		bool operator==(const Token &other) const {
+			return type == other.type && view == other.view.data();
+		}
+
+		bool operator!=(const Token &other) const {
+			return !operator==(other);
+		}
+
 		Type type;
+		std::string_view view;
 	};
 
 	std::vector<Node> m_properties;
@@ -126,4 +140,4 @@ protected:
 }
 
 #include "Node.inl"
-#include "NodeReturn.inl"
+#include "NodeView.inl"

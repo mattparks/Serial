@@ -1,25 +1,25 @@
-#include "NodeReturn.hpp"
+#include "NodeView.hpp"
 
 #include "Node.hpp"
 
 namespace acid {
-NodeReturn::NodeReturn(Node const *parent, std::variant<std::string, int32_t> key, Node const *value) :
+NodeView::NodeView(Node const *parent, std::variant<std::string, int32_t> key, Node const *value) :
 	m_parent(const_cast<Node *>(parent)),
 	m_keys{std::move(key)},
 	m_value(const_cast<Node *>(value)) {
 }
 
-NodeReturn::NodeReturn(NodeReturn *parent, std::variant<std::string, int32_t> key) :
+NodeView::NodeView(NodeView *parent, std::variant<std::string, int32_t> key) :
 	m_parent(parent->m_parent),
 	m_keys(parent->m_keys) {
 	m_keys.emplace_back(std::move(key));
 }
 
-bool NodeReturn::has_value() const noexcept {
+bool NodeView::has_value() const noexcept {
 	return m_value != nullptr;
 }
 
-Node *NodeReturn::get() {
+Node *NodeView::get() {
 	if (!has_value()) {
 		// This will build the tree of nodes from the return keys tree.
 		for (const auto &key : m_keys) {
@@ -43,7 +43,7 @@ Node *NodeReturn::get() {
 	return m_value;
 }
 
-NodeReturn NodeReturn::operator[](const std::string &key) {
+NodeView NodeView::operator[](const std::string &key) {
 	if (!has_value()) {
 		return {this, key};
 	}
@@ -51,7 +51,7 @@ NodeReturn NodeReturn::operator[](const std::string &key) {
 	return get()->operator[](key);
 }
 
-NodeReturn NodeReturn::operator[](uint32_t index) {
+NodeView NodeView::operator[](uint32_t index) {
 	if (!has_value()) {
 		return {this, index};
 	}
@@ -59,7 +59,7 @@ NodeReturn NodeReturn::operator[](uint32_t index) {
 	return get()->operator[](index);
 }
 
-std::string NodeReturn::GetName() const {
+std::string NodeView::GetName() const {
 	if (!has_value()) {
 		return *std::get_if<std::string>(&m_keys.back());
 	}
@@ -67,7 +67,7 @@ std::string NodeReturn::GetName() const {
 	return m_value->GetName();
 }
 
-void NodeReturn::SetName(const std::string &name) {
+void NodeView::SetName(const std::string &name) {
 	if (!has_value()) {
 		m_keys.back() = name;
 		return;

@@ -43,7 +43,7 @@ bool Node::HasProperty(const std::string &name) const {
 	return false;
 }
 
-NodeReturn Node::GetProperty(const std::string &name) const {
+NodeView Node::GetProperty(const std::string &name) const {
 	for (const auto &property : m_properties) {
 		if (property.m_name == name) {
 			return {this, name, &property};
@@ -53,7 +53,7 @@ NodeReturn Node::GetProperty(const std::string &name) const {
 	return {this, name, nullptr};
 }
 
-NodeReturn Node::GetProperty(uint32_t index) const {
+NodeView Node::GetProperty(uint32_t index) const {
 	if (index < m_properties.size()) {
 		return {this, index, &m_properties[index]};
 	}
@@ -100,8 +100,8 @@ void Node::RemoveProperty(const Node &node) {
 	}), m_properties.end());
 }
 
-std::vector<NodeReturn> Node::GetProperties(const std::string &name) const {
-	std::vector<NodeReturn> properties;
+std::vector<NodeView> Node::GetProperties(const std::string &name) const {
+	std::vector<NodeView> properties;
 
 	for (const auto &property : m_properties) {
 		if (property.m_name == name)
@@ -111,7 +111,7 @@ std::vector<NodeReturn> Node::GetProperties(const std::string &name) const {
 	return properties;
 }
 
-NodeReturn Node::GetPropertyWithBackup(const std::string &name, const std::string &backupName) const {
+NodeView Node::GetPropertyWithBackup(const std::string &name, const std::string &backupName) const {
 	if (auto p1 = GetProperty(name))
 		return p1;
 	if (auto p2 = GetProperty(backupName))
@@ -119,7 +119,7 @@ NodeReturn Node::GetPropertyWithBackup(const std::string &name, const std::strin
 	return {this, name, nullptr};
 }
 
-NodeReturn Node::GetPropertyWithValue(const std::string &propertyName, const std::string &propertyValue) const {
+NodeView Node::GetPropertyWithValue(const std::string &propertyName, const std::string &propertyValue) const {
 	for (const auto &property : m_properties) {
 		auto properties1 = property.GetProperties(propertyName);
 		if (properties1.empty())
@@ -134,11 +134,11 @@ NodeReturn Node::GetPropertyWithValue(const std::string &propertyName, const std
 	return {this, propertyName, nullptr};
 }
 
-NodeReturn Node::operator[](const std::string &key) const {
+NodeView Node::operator[](const std::string &key) const {
 	return GetProperty(key);
 }
 
-NodeReturn Node::operator[](uint32_t index) const {
+NodeView Node::operator[](uint32_t index) const {
 	return GetProperty(index);
 }
 
