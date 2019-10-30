@@ -37,28 +37,30 @@ T Node::Get() const {
 
 template<typename T>
 T Node::Get(const T &fallback) const {
-	if (!IsValid()) {
+	if (!IsValid())
 		return fallback;
-	}
-
+	
 	return Get<T>();
 }
 
 template<typename T>
-void Node::Get(T &dest) const {
-	if (IsValid()) {
-		*this >> dest;
-	}
+bool Node::Get(T &dest) const {
+	if (!IsValid())
+		return false;
+	
+	*this >> dest;
+	return true;
 }
 
 template<typename T, typename K>
-void Node::Get(T &dest, const K &fallback) const {
-	if (IsValid()) {
-		*this >> dest;
-		return;
+bool Node::Get(T &dest, const K &fallback) const {
+	if (!IsValid()) {
+		dest = fallback;
+		return false;
 	}
 
-	dest = fallback;
+	*this >> dest;
+	return true;
 }
 
 template<typename T>

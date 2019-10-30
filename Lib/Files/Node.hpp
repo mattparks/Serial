@@ -46,9 +46,9 @@ public:
 	template<typename T>
 	T Get(const T &fallback) const;
 	template<typename T>
-	void Get(T &dest) const;
+	bool Get(T &dest) const;
 	template<typename T, typename K>
-	void Get(T &dest, const K &fallback) const;
+	bool Get(T &dest, const K &fallback) const;
 	template<typename T>
 	void Set(const T &value);
 

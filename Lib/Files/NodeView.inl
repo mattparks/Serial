@@ -5,36 +5,33 @@
 namespace acid {
 template<typename T>
 T NodeView::Get() {
-	if (!has_value()) {
+	if (!has_value())
 		return {};
-	}
 
 	return m_value->Get<T>();
 }
 
 template<typename T>
 T NodeView::Get(const T &fallback) {
-	if (!has_value()) {
+	if (!has_value())
 		return fallback;
-	}
 
 	return m_value->Get<T>(fallback);
 }
 
 template<typename T>
-void NodeView::Get(T &dest) {
-	if (!has_value()) {
-		return;
-	}
+bool NodeView::Get(T &dest) {
+	if (!has_value())
+		return false;
 
 	return m_value->Get<T>(dest);
 }
 
 template<typename T, typename K>
-void NodeView::Get(T &dest, const K &fallback) {
+bool NodeView::Get(T &dest, const K &fallback) {
 	if (!has_value()) {
 		dest = fallback;
-		return;
+		return false;
 	}
 
 	return m_value->Get<T>(dest, fallback);
@@ -42,7 +39,7 @@ void NodeView::Get(T &dest, const K &fallback) {
 
 template<typename T>
 void NodeView::Set(const T &value) {
-	return get()->Set<T>(value);
+	get()->Set<T>(value);
 }
 
 template<typename T>
