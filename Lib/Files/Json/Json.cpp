@@ -92,12 +92,13 @@ void Json::Convert(Node &current, const std::vector<Token> &tokens, int32_t i, i
 		auto k = i + 1;
 
 		while (tokens[k] != Token(Type::Token, "}")) {
+			auto key = tokens[k].view;
 			if (k + 2 >= tokens.size())
 				throw std::runtime_error("Missing end of {} array");
 			if (tokens[k + 1].view != ":")
 				throw std::runtime_error("Missing object colon");
 			k += 2;
-			Convert(current.AddProperty(tokens[k].view), tokens, k, k);
+			Convert(current.AddProperty(key), tokens, k, k);
 			if (tokens[k].view == ",")
 				k++;
 		}
