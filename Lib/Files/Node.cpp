@@ -102,7 +102,7 @@ std::vector<NodeView> Node::GetProperties(std::string_view name) const {
 
 	for (const auto &property : m_properties) {
 		if (property.m_name == name)
-			properties.emplace_back(this, std::string(name), &property);
+			properties.emplace_back(NodeView(this, std::string(name), &property));
 	}
 
 	return properties;

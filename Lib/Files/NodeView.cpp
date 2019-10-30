@@ -43,26 +43,23 @@ Node *NodeView::get() {
 	return m_value;
 }
 
-NodeView NodeView::operator[](const std::string &key) {
-	if (!has_value()) {
-		return {this, key};
-	}
+NodeView NodeView::operator[](std::string_view key) {
+	if (!has_value())
+		return {this, std::string(key)};
 
 	return get()->operator[](key);
 }
 
 NodeView NodeView::operator[](uint32_t index) {
-	if (!has_value()) {
+	if (!has_value())
 		return {this, index};
-	}
 
 	return get()->operator[](index);
 }
 
 std::string NodeView::GetName() const {
-	if (!has_value()) {
+	if (!has_value())
 		return *std::get_if<std::string>(&m_keys.back());
-	}
 
 	return m_value->GetName();
 }

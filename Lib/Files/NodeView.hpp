@@ -11,11 +11,11 @@ class Node;
  */
 class ACID_EXPORT NodeView {
 	friend class Node;
-public:
+private:
 	NodeView() = default;
 	NodeView(Node const *parent, std::variant<std::string, int32_t> key, Node const *value);
 	NodeView(NodeView *parent, std::variant<std::string, int32_t> key);
-
+public:
 	bool has_value() const noexcept;
 	Node *get();
 
@@ -36,7 +36,7 @@ public:
 	template<typename T>
 	void Set(const T &value);
 
-	NodeView operator[](const std::string &key);
+	NodeView operator[](std::string_view key);
 	NodeView operator[](uint32_t index);
 
 	template<typename T>
