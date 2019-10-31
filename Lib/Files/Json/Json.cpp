@@ -14,8 +14,6 @@ Json::Json(Node &&node) :
 }
 
 void Json::ParseString(std::string_view string) {
-	auto debugStart = std::chrono::high_resolution_clock::now();
-
 	// Tokenizes the string view into small views that are used to build a Node tree.
 	Tokens tokens;
 
@@ -49,17 +47,12 @@ void Json::ParseString(std::string_view string) {
 		}
 	}
 
-	std::cout << "Json tokenized in " << 0.001 * std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - debugStart).count() << "ms\n";
-	debugStart = std::chrono::high_resolution_clock::now();
-
 	if (tokens.empty())
 		throw std::runtime_error("No tokens found in document");
 
 	// Converts the tokens into nodes.
 	int32_t k = 0;
 	Convert(*this, tokens, 0, k);
-
-	std::cout << "Json converted to node in " << 0.001 * std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - debugStart).count() << "ms\n";
 }
 
 void Json::WriteStream(std::ostream &stream, Format format) const {
@@ -74,7 +67,7 @@ void Json::AddToken(std::string_view view, Tokens &tokens) {
 	if (view.length() != 0) {
 		// Finds the node value type of the string and adds it to the tokens vector.
 		if (view == "null") {
-			tokens.emplace_back(Type::Null, view);
+			tokens.emplace_back(Type::Null, std::string_view());
 		} else if (view == "true" || view == "false") {
 			tokens.emplace_back(Type::Boolean, view);
 		} else if (String::IsNumber(view)) {
