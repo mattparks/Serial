@@ -14,9 +14,9 @@ public:
 
 TEST(json11, parseInMemory) {
 	std::string err;
-	json11Data.canada = json11::Json::parse(memoryData.canadaString, err);
-	json11Data.catalog = json11::Json::parse(memoryData.catalogString, err);
-	json11Data.twitter = json11::Json::parse(memoryData.twitterString, err);
+	json11Data.canada = json11::Json::parse(MemoryData::canadaString, err);
+	json11Data.catalog = json11::Json::parse(MemoryData::catalogString, err);
+	json11Data.twitter = json11::Json::parse(MemoryData::twitterString, err);
 }
 
 TEST(json11, stringify) {

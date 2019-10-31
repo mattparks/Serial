@@ -14,8 +14,10 @@ Json::Json(Node &&node) :
 }
 
 void Json::ParseString(std::string_view string) {
+	auto debugStart = std::chrono::high_resolution_clock::now();
+
 	// Tokenizes the string view into small views that are used to build a Node tree.
-	std::vector<Token> tokens;
+	Tokens tokens;
 
 	std::size_t tokenStart = 0;
 	enum class QuoteState : uint8_t {
@@ -47,12 +49,17 @@ void Json::ParseString(std::string_view string) {
 		}
 	}
 
+	std::cout << "Json tokenized in " << 0.001 * std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - debugStart).count() << "ms\n";
+	debugStart = std::chrono::high_resolution_clock::now();
+
 	if (tokens.empty())
 		throw std::runtime_error("No tokens found in document");
 
 	// Converts the tokens into nodes.
 	int32_t k = 0;
 	Convert(*this, tokens, 0, k);
+
+	std::cout << "Json converted to node in " << 0.001 * std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - debugStart).count() << "ms\n";
 }
 
 void Json::WriteStream(std::ostream &stream, Format format) const {
@@ -63,7 +70,7 @@ void Json::WriteStream(std::ostream &stream, Format format) const {
 	stream << '}';
 }
 
-void Json::AddToken(std::string_view view, std::vector<Token> &tokens) {
+void Json::AddToken(std::string_view view, Tokens &tokens) {
 	if (view.length() != 0) {
 		// Finds the node value type of the string and adds it to the tokens vector.
 		if (view == "null") {
@@ -87,7 +94,7 @@ void Json::AddToken(std::string_view view, std::vector<Token> &tokens) {
 	}
 }
 
-void Json::Convert(Node &current, const std::vector<Token> &tokens, int32_t i, int32_t &r) {
+void Json::Convert(Node &current, const Tokens &tokens, int32_t i, int32_t &r) {
 	if (tokens[i] == Token(Type::Token, "{")) {
 		auto k = i + 1;
 

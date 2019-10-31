@@ -2,14 +2,12 @@
 
 #include <string>
 
-static class MemoryData {
+class MemoryData {
 public:
-	MemoryData();
-	
-	std::string canadaString;
-	std::string catalogString;
-	std::string twitterString;
-} memoryData;
+	static std::string canadaString;
+	static std::string catalogString;
+	static std::string twitterString;
+};
 
 struct Status {
 	struct User {

@@ -13,9 +13,9 @@ public:
 } simplejsonData;
 
 TEST(simplejson, parseInMemory) {
-	simplejsonData.canada = JSON::Parse(memoryData.canadaString.c_str());
-	simplejsonData.catalog = JSON::Parse(memoryData.catalogString.c_str());
-	simplejsonData.twitter = JSON::Parse(memoryData.twitterString.c_str());
+	simplejsonData.canada = JSON::Parse(MemoryData::canadaString.c_str());
+	simplejsonData.catalog = JSON::Parse(MemoryData::catalogString.c_str());
+	simplejsonData.twitter = JSON::Parse(MemoryData::twitterString.c_str());
 }
 
 TEST(simplejson, stringify) {

@@ -30,16 +30,16 @@ public:
 	 * @param token The token.
 	 * @return If a string contains the token.
 	 */
-	static bool Contains(std::string_view str, std::string_view token);
+	static bool Contains(std::string_view str, std::string_view token) noexcept;
 
-	static bool IsWhitespace(char c);
+	static bool IsWhitespace(char c) noexcept;
 
 	/**
 	 * Gets if a string is a number.
 	 * @param str The string.
 	 * @return If a string is a number.
 	 */
-	static bool IsNumber(std::string_view str);
+	static bool IsNumber(std::string_view str) noexcept;
 
 	/**
 	 * Gets the first char index in the string.
@@ -47,7 +47,7 @@ public:
 	 * @param c The char to look for.
 	 * @return The char index.
 	 */
-	static int32_t FindCharPos(std::string_view str, char c);
+	static int32_t FindCharPos(std::string_view str, char c) noexcept;
 
 	/**
 	 * Trims the left and right side of a string of whitespace.
@@ -83,6 +83,14 @@ public:
 	static std::string ReplaceAll(std::string str, std::string_view token, std::string_view to);
 
 	/**
+	 * Replaces all tokens from a string.
+	 * @param str The string.
+	 * @param replaces A list of tokens to replace and strings to replace tokens with.
+	 * @return The string with the tokens replaced.
+	 */
+	static std::string ReplaceAll(std::string str, const std::vector<std::pair<std::string_view, std::string_view>> &replaces) noexcept;
+
+	/**
 	 * Replaces the first token from a string.
 	 * @param str The string.
 	 * @param token The token.
@@ -96,14 +104,14 @@ public:
 	 * @param str The string.
 	 * @return The string with return lines fixed.
 	 */
-	static std::string FixReturnTokens(const std::string &str);
+	static std::string FixReturnTokens(const std::string &str) noexcept;
 
 	/**
 	 * unFixes all tokens return line tokens from a string so it is file write-able.
 	 * @param str The string.
 	 * @return The string with return lines unfixed.
 	 */
-	static std::string UnfixReturnTokens(const std::string &str);
+	static std::string UnfixReturnTokens(const std::string &str) noexcept;
 
 	/**
 	 * Lower cases a string.

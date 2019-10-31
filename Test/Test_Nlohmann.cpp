@@ -13,9 +13,9 @@ public:
 } nlohmannData;
 
 TEST(nlohmann, parseInMemory) {
-	nlohmannData.canada = nlohmann::json::parse(memoryData.canadaString);
-	nlohmannData.catalog = nlohmann::json::parse(memoryData.catalogString);
-	nlohmannData.twitter = nlohmann::json::parse(memoryData.twitterString);
+	nlohmannData.canada = nlohmann::json::parse(MemoryData::canadaString);
+	nlohmannData.catalog = nlohmann::json::parse(MemoryData::catalogString);
+	nlohmannData.twitter = nlohmann::json::parse(MemoryData::twitterString);
 }
 
 TEST(nlohmann, stringify) {
