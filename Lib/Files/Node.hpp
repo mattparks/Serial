@@ -123,7 +123,7 @@ protected:
 	};
 	using Tokens = std::vector<Token>;
 
-	std::vector<Node> m_properties;
+	std::vector<Node> m_properties; // members
 	std::string m_name; // key
 	std::string m_value;
 	Type m_type = Type::Object;
