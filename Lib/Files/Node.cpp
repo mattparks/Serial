@@ -25,9 +25,14 @@ void Node::Clear() {
 
 bool Node::IsValid() const {
 	switch (m_type) {
+	case Type::Token:
+	case Type::Unknown:
+		return false;
 	case Type::Object:
 	case Type::Array:
 		return !m_properties.empty();
+	case Type::Null:
+		return true;
 	default:
 		return !m_value.empty();
 	}
