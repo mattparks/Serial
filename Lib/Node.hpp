@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ostream>
+
 #include "NodeView.hpp"
 
 namespace acid {
@@ -8,10 +10,54 @@ namespace acid {
  */
 class Node {
 public:
-	enum class Format : uint8_t {
-		Beautified,
-		Minified
+	/**
+	 * @brief Class that is used to print a char, and ignore null char.
+	 */
+	class NullableChar {
+	public:
+		constexpr NullableChar(char val) : val(val) {}
+
+		constexpr operator const char &() const noexcept { return val; }
+
+		friend std::ostream &operator<<(std::ostream &stream, const NullableChar &c) {
+			if (c.val != '\0') stream << c.val;
+			return stream;
+		}
+
+		char val;
 	};
+
+	/**
+	 * @brief Class that represents a configurable output format.
+	 */
+	class Format {
+	public:
+		constexpr Format(int8_t spacesPerIndent, char newLine, char space, bool inlineArrays) :
+			spacesPerIndent(spacesPerIndent),
+			newLine(newLine),
+			space(space),
+			inlineArrays(inlineArrays) {
+		}
+
+		/**
+		 * Creates a string for the indentation level.
+		 * @param indent The node level to get indentation for.
+		 * @return The indentation string.
+		 */
+		std::string GetIndents(int8_t indent) const {
+			return std::string(spacesPerIndent * indent, ' ');
+		}
+
+		/// Writes a node with full padding.
+		static const Format Beautified;
+		/// Writes a node with no padding.
+		static const Format Minified;
+
+		int8_t spacesPerIndent;
+		NullableChar newLine, space;
+		bool inlineArrays;
+	};
+
 	using Type = NodeConstView::Type;
 
 	Node() = default;
@@ -23,12 +69,12 @@ public:
 	virtual ~Node() = default;
 
 	virtual void ParseString(std::string_view string);
-	virtual void WriteStream(std::ostream &stream, Format format = Format::Minified) const;
+	virtual void WriteStream(std::ostream &stream, const Format &format = Format::Minified) const;
 
 	template<typename _Elem = char>
 	void ParseStream(std::basic_istream<_Elem> &stream);
 	template<typename _Elem = char>
-	std::basic_string<_Elem> WriteString(Format format = Format::Minified) const;
+	std::basic_string<_Elem> WriteString(const Format &format = Format::Minified) const;
 
 	template<typename T>
 	T GetName() const;
