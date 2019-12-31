@@ -89,7 +89,7 @@ void Node::ParseStream(std::basic_istream<_Elem> & stream) {
 }
 
 template<typename _Elem>
-std::basic_string<_Elem> Node::WriteString(const Node::Format &format) const {
+std::basic_string<_Elem> Node::WriteString(const Format &format) const {
 	std::basic_stringstream<_Elem> stream;
 	WriteStream(stream, format);
 	return stream.str();

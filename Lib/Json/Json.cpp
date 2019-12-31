@@ -60,7 +60,7 @@ void Json::ParseString(std::string_view string) {
 	Tokens tokens;
 
 	std::size_t tokenStart = 0;
-	enum class QuoteState : uint8_t {
+	enum class QuoteState : char {
 		None = '\0', Single = '\'', Double = '"'
 	} quoteState = QuoteState::None;
 
@@ -80,7 +80,7 @@ void Json::ParseString(std::string_view string) {
 				// On whitespace start save current token.
 				AddToken(std::string_view(string.data() + tokenStart, index - tokenStart), tokens);
 				tokenStart = index + 1;
-			} else if (std::string_view(":{},[]").find(c) != std::string::npos) {
+			} else if (c == ':' || c == '{' || c == '}' || c == ',' || c == '[' || c == ']') {
 				// Tokens used to read json nodes.
 				AddToken(std::string_view(string.data() + tokenStart, index - tokenStart), tokens);
 				tokens.emplace_back(Type::Token, std::string_view(string.data() + index, 1));
