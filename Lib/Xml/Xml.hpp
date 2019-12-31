@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Files/Node.hpp"
+#include "Node.hpp"
 
 namespace acid {
 class Xml : public Node {

@@ -1,8 +1,35 @@
 #include "Xml.hpp"
 
-#include "Helpers/String.hpp"
+#include <sstream>
 
 namespace acid {
+namespace priv {
+std::string ReplaceAll(std::string str, std::string_view token, std::string_view to) {
+	auto pos = str.find(token);
+
+	while (pos != std::string::npos) {
+		str.replace(pos, token.size(), to);
+		pos = str.find(token, pos + token.size());
+	}
+
+	return str;
+}
+
+std::string Trim(std::string str, std::string_view whitespace = " \t\n\r") {
+	auto strBegin = str.find_first_not_of(whitespace);
+
+	if (strBegin == std::string::npos)
+		return "";
+
+	auto strEnd = str.find_last_not_of(whitespace);
+	auto strRange = strEnd - strBegin + 1;
+
+	auto trimmed = str;
+	trimmed = trimmed.substr(strBegin, strRange);
+	return trimmed;
+}
+}
+
 Xml::Xml(const std::string &rootName) {
 	SetName(rootName);
 }
@@ -37,17 +64,19 @@ void Xml::AppendData(const Node &source, std::ostream &stream, Format format, in
 	// Creates a string for the indentation level.
 	std::string indents(2 * indent, ' ');
 
-	auto tagName = String::ReplaceAll(source.GetName(), " ", "_");
+	auto tagName = priv::ReplaceAll(source.GetName(), " ", "_");
 
+	int attributeCount = 0;
 	std::stringstream nameAttributes;
 	nameAttributes << tagName;
 
 	for (const auto &property : source.GetProperties()) {
-		if (property.GetName().rfind('_', 0) == 0)
-			nameAttributes << " " << property.GetName().substr(1) << "=\"" << property.GetValue() << "\"";
+		if (property.GetName().rfind('_', 0) != 0) continue;
+		nameAttributes << " " << property.GetName().substr(1) << "=\"" << property.GetValue() << "\"";
+		attributeCount++;
 	}
 
-	auto nameAndAttribs = String::Trim(nameAttributes.str());
+	auto nameAndAttribs = priv::Trim(nameAttributes.str());
 
 	if (format != Format::Minified)
 		stream << indents;
@@ -67,7 +96,7 @@ void Xml::AppendData(const Node &source, std::ostream &stream, Format format, in
 		return;
 	}
 
-	if (source.GetProperties().empty() && source.GetValue().empty()) {
+	if (source.GetProperties().size() - attributeCount == 0 && source.GetValue().empty()) {
 		stream << "<" << nameAndAttribs << "/>";
 
 		if (format != Format::Minified) {
@@ -77,7 +106,12 @@ void Xml::AppendData(const Node &source, std::ostream &stream, Format format, in
 		return;
 	}
 
-	stream << "<" << nameAndAttribs << ">" << source.GetValue();
+	stream << "<" << nameAndAttribs << ">";
+	if (!source.GetValue().empty()) {
+		if (format != Format::Minified)
+			stream << '\n' << indents << "  ";
+		stream << source.GetValue();
+	}
 
 	if (!source.GetProperties().empty()) {
 		if (format != Format::Minified) {

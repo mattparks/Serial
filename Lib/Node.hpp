@@ -6,13 +6,13 @@ namespace acid {
 /**
  * @brief Class that is used to represent a tree of UFT-8 values, used in serialization.
  */
-class ACID_EXPORT Node {
+class Node {
 public:
 	enum class Format : uint8_t {
 		Beautified,
 		Minified
 	};
-	using Type = NodeView::Type;
+	using Type = NodeConstView::Type;
 
 	Node() = default;
 	Node(const Node &node) = default;
@@ -23,12 +23,12 @@ public:
 	virtual ~Node() = default;
 
 	virtual void ParseString(std::string_view string);
-	virtual void WriteStream(std::ostream &stream, Node::Format format = Node::Format::Minified) const;
+	virtual void WriteStream(std::ostream &stream, Format format = Format::Minified) const;
 
 	template<typename _Elem = char>
-	void ParseStream(std::basic_istream<_Elem> & stream);
+	void ParseStream(std::basic_istream<_Elem> &stream);
 	template<typename _Elem = char>
-	std::basic_string<_Elem> WriteString(Node::Format format = Node::Format::Minified) const;
+	std::basic_string<_Elem> WriteString(Format format = Format::Minified) const;
 
 	template<typename T>
 	T GetName() const;
@@ -63,23 +63,30 @@ public:
 	Node &Append(const Args &...args);
 
 	bool HasProperty(std::string_view name) const;
-	NodeView GetProperty(std::string_view name) const;
-	NodeView GetProperty(uint32_t index) const;
+	NodeConstView GetProperty(std::string_view name) const;
+	NodeConstView GetProperty(uint32_t index) const;
+	NodeView GetProperty(std::string_view name);
+	NodeView GetProperty(uint32_t index);
 	Node &AddProperty();
 	Node &AddProperty(std::string_view name, Node &&node);
-	Node &AddProperty(uint32_t index, Node &&node);
 	Node &AddProperty(std::string_view name);
+	Node &AddProperty(uint32_t index, Node &&node);
 	Node &AddProperty(uint32_t index);
 	void RemoveProperty(std::string_view name);
 	void RemoveProperty(const Node &node);
 
-	std::vector<NodeView> GetProperties(std::string_view name) const;
-	NodeView GetPropertyWithBackup(std::string_view name, std::string_view backupName) const;
-	NodeView GetPropertyWithValue(std::string_view propertyName, std::string_view propertyValue) const;
+	std::vector<NodeConstView> GetProperties(std::string_view name) const;
+	NodeConstView GetPropertyWithBackup(std::string_view name, std::string_view backupName) const;
+	NodeConstView GetPropertyWithValue(std::string_view propertyName, std::string_view propertyValue) const;
+	std::vector<NodeView> GetProperties(std::string_view name);
+	NodeView GetPropertyWithBackup(std::string_view name, std::string_view backupName);
+	NodeView GetPropertyWithValue(std::string_view propertyName, std::string_view propertyValue);
 
-	NodeView operator[](std::string_view key) const;
-	NodeView operator[](uint32_t index) const;
-
+	NodeConstView operator[](std::string_view key) const;
+	NodeConstView operator[](uint32_t index) const;
+	NodeView operator[](std::string_view key);
+	NodeView operator[](uint32_t index);
+	
 	Node &operator=(const Node &node) = default;
 	Node &operator=(Node &&node) = default;
 	template<typename T>
@@ -136,4 +143,5 @@ protected:
 }
 
 #include "Node.inl"
+#include "NodeConstView.inl"
 #include "NodeView.inl"

@@ -2,9 +2,9 @@
 
 #include <fstream>
 #include <unordered_map>
-#include <Files/Node.hpp>
-#include <Files/Json/Json.hpp>
-#include <Files/Xml/Xml.hpp>
+#include <Node.hpp>
+#include <Json/Json.hpp>
+#include <Xml/Xml.hpp>
 
 using namespace acid;
 

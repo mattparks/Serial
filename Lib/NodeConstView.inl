@@ -4,19 +4,14 @@
 
 namespace acid {
 template<typename T>
-T NodeView::GetName() const {
+T NodeConstView::GetName() const {
 	if (!has_value())
 		return {};
 	return m_value->GetName<T>();
 }
 
 template<typename T>
-void NodeView::SetName(const T &value) {
-	return get()->SetName<T>(value);
-}
-
-template<typename T>
-T NodeView::Get() {
+T NodeConstView::Get() const {
 	if (!has_value())
 		return {};
 
@@ -24,7 +19,7 @@ T NodeView::Get() {
 }
 
 template<typename T>
-T NodeView::Get(const T &fallback) {
+T NodeConstView::Get(const T &fallback) const {
 	if (!has_value())
 		return fallback;
 
@@ -32,7 +27,7 @@ T NodeView::Get(const T &fallback) {
 }
 
 template<typename T>
-bool NodeView::Get(T &dest) {
+bool NodeConstView::Get(T &dest) const {
 	if (!has_value())
 		return false;
 
@@ -40,22 +35,12 @@ bool NodeView::Get(T &dest) {
 }
 
 template<typename T, typename K>
-bool NodeView::Get(T &dest, const K &fallback) {
+bool NodeConstView::Get(T &dest, const K &fallback) const {
 	if (!has_value()) {
 		dest = fallback;
 		return false;
 	}
 
 	return m_value->Get<T>(dest, fallback);
-}
-
-template<typename T>
-void NodeView::Set(const T &value) {
-	get()->Set<T>(value);
-}
-
-template<typename T>
-Node &NodeView::operator=(const T &rhs) {
-	return *get() = rhs;
 }
 }

@@ -1,8 +1,50 @@
 #include "Json.hpp"
 
-#include "Helpers/String.hpp"
-
 namespace acid {
+namespace priv {
+bool IsWhitespace(char c) noexcept {
+	return c == ' ' || c == '\n' || c == '\r' || c == '\t';
+}
+
+bool IsNumber(std::string_view str) noexcept {
+	// This is the fastest way to tell if a string holds a decimal number.
+	return std::all_of(str.cbegin(), str.cend(), [](const auto c) {
+		return (c >= '0' && c <= '9') || c == '.' || c == '-';
+	});
+}
+
+std::string FixEscapedChars(std::string str) {
+	static const std::vector<std::pair<char, std::string_view>> replaces = {{'\\', "\\\\"}, {'\n', "\\n"}, {'\r', "\\r"}, {'\t', "\\t"}, {'\"', "\\\""}};
+
+	for (const auto &[from, to] : replaces) {
+		auto pos = str.find(from);
+		while (pos != std::string::npos) {
+			str.replace(pos, 1, to);
+			pos = str.find(from, pos + 2);
+		}
+	}
+
+	return str;
+}
+
+std::string UnfixEscapedChars(std::string str) {
+	static const std::vector<std::pair<std::string_view, char>> replaces = {{"\\n", '\n'}, {"\\r", '\r'}, {"\\t", '\t'}, {"\\\"", '\"'}, {"\\\\", '\\'}};
+
+	for (const auto &[from, to] : replaces) {
+		auto pos = str.find(from);
+		while (pos != std::string::npos) {
+			if (pos != 0 && str[pos - 1] == '\\')
+				str.erase(str.begin() + --pos);
+			else
+				str.replace(pos, from.size(), 1, to);
+			pos = str.find(from, pos + 1 + from.size());
+		}
+	}
+
+	return str;
+}
+}
+
 Json::Json(const Node &node) :
 	Node(node) {
 	SetType(Type::Object);
@@ -34,7 +76,7 @@ void Json::ParseString(std::string_view string) {
 		// When not reading a string tokens can be found.
 		// While in a string whitespace and tokens are added to the strings view.
 		if (quoteState == QuoteState::None) {
-			if (String::IsWhitespace(c)) {
+			if (priv::IsWhitespace(c)) {
 				// On whitespace start save current token.
 				AddToken(std::string_view(string.data() + tokenStart, index - tokenStart), tokens);
 				tokenStart = index + 1;
@@ -56,11 +98,11 @@ void Json::ParseString(std::string_view string) {
 }
 
 void Json::WriteStream(std::ostream &stream, Format format) const {
-	stream << '{';
+	stream << (this->GetType() == Type::Array ? '[' : '{');
 	if (format != Format::Minified)
 		stream << '\n';
 	AppendData(*this, stream, format, 1);
-	stream << '}';
+	stream << (this->GetType() == Type::Array ? ']' : '}');
 }
 
 void Json::AddToken(std::string_view view, Tokens &tokens) {
@@ -70,7 +112,7 @@ void Json::AddToken(std::string_view view, Tokens &tokens) {
 			tokens.emplace_back(Type::Null, std::string_view());
 		} else if (view == "true" || view == "false") {
 			tokens.emplace_back(Type::Boolean, view);
-		} else if (String::IsNumber(view)) {
+		} else if (priv::IsNumber(view)) {
 			// This is a quick hack to get if the number is a decimal.
 			if (view.find('.') != std::string::npos) {
 				if (view.size() >= std::numeric_limits<long double>::digits)
@@ -121,7 +163,7 @@ void Json::Convert(Node &current, const Tokens &tokens, int32_t i, int32_t &r) {
 	} else {
 		std::string str(tokens[i].view);
 		if (tokens[i].type == Type::String)
-			str = String::UnfixEscapedChars(str);
+			str = priv::UnfixEscapedChars(str);
 		current.SetValue(str);
 		current.SetType(tokens[i].type);
 		r = i + 1;
@@ -135,7 +177,7 @@ void Json::AppendData(const Node &source, std::ostream &stream, Format format, i
 	// Only output the value if no properties exist.
 	if (source.GetProperties().empty()) {
 		if (source.GetType() == Type::String)
-			stream << '\"' << String::FixEscapedChars(source.GetValue()) << '\"';
+			stream << '\"' << priv::FixEscapedChars(source.GetValue()) << '\"';
 		else if (source.GetType() == Type::Null)
 			stream << "null";
 		else
@@ -173,13 +215,13 @@ void Json::AppendData(const Node &source, std::ostream &stream, Format format, i
 		}
 
 		// Shorten primitive array output length.
-		if (isArray && format != Format::Minified && !it->GetProperties().empty() && it[0].GetType() != Type::Object) {
+		/*if (isArray && format != Format::Minified && !it->GetProperties().empty() && it->GetProperties()[0].GetType() != Type::Object) {
 			stream << indents << "  ";
-			AppendData(*it, stream, format, 0);
+			AppendData(*it, stream, format, indent);
 			stream << '\n';
-		} else {
+		} else {*/
 			AppendData(*it, stream, format, indent + 1);
-		}
+		//}
 
 		if (!it->GetProperties().empty()) {
 			if (format != Format::Minified)
@@ -190,12 +232,12 @@ void Json::AppendData(const Node &source, std::ostream &stream, Format format, i
 		} else if (it->GetType() == Type::Array) {
 			stream << ']';
 		}
-		
+
 		// Separate properties by comma.
 		if (it != source.GetProperties().end() - 1)
 			stream << ',';
 		// No new line if the indent level is zero (if primitive array type).
-		if (format != Format::Minified && indent != 0)
+		if (format != Format::Minified)
 			stream << (indent != 0 ? '\n' : ' ');
 	}
 }

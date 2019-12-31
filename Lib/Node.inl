@@ -1,19 +1,86 @@
 #pragma once
 
-#include "Node.hpp"
-
 #include <codecvt>
+#include <filesystem>
+#include <optional>
+#include <sstream>
 
-#include "Helpers/ConstExpr.hpp"
-#include "Helpers/String.hpp"
-#include "Resources/Resource.hpp"
+#include "Node.hpp"
+#include <map>
 
 namespace acid {
+namespace priv {
+template<typename T> struct is_optional : std::false_type {};
+template<typename T> struct is_optional<std::optional<T>> : std::true_type {};
+template<typename T> inline constexpr bool is_optional_v = is_optional<T>::value;
+
+/**
+ * Converts a type to a string.
+ * @tparam T The type to convert from.
+ * @param val The value to convert.
+ * @return The value as a string.
+ */
+template<typename T>
+static std::string To(T val) {
+	if constexpr (std::is_same_v<std::string, T> || std::is_same_v<const char *, T>) {
+		return val;
+	} else if constexpr (std::is_enum_v<T>) {
+		typedef typename std::underlying_type<T>::type safe_type;
+		return std::to_string(static_cast<safe_type>(val));
+	} else if constexpr (std::is_same_v<bool, T>) {
+		return val ? "true" : "false";
+	} else if constexpr (std::is_same_v<std::nullptr_t, T>) {
+		return "null";
+	} else if constexpr (is_optional_v<T>) {
+		if (!val.has_value())
+			return "null";
+		return To(*val);
+	} else {
+		return std::to_string(val);
+	}
+}
+
+/**
+ * Converts a string to a type.
+ * @tparam T The type to convert to.
+ * @param str The string to convert.
+ * @return The string as a value.
+ */
+template<typename T>
+static T From(const std::string &str) {
+	if constexpr (std::is_same_v<std::string, T>) {
+		return str;
+	} else if constexpr (std::is_enum_v<T>) {
+		typedef typename std::underlying_type<T>::type safe_type;
+		return static_cast<T>(From<safe_type>(str));
+	} else if constexpr (std::is_same_v<bool, T>) {
+		return str == "true" || From<std::optional<int32_t>>(str) == 1;
+	} else if constexpr (is_optional_v<T>) {
+		typedef typename T::value_type base_type;
+		base_type temp;
+		std::istringstream iss(str);
+
+		if ((iss >> temp).fail())
+			return std::nullopt;
+		return temp;
+	} else {
+		long double temp;
+		std::istringstream iss(str);
+		iss >> temp;
+		return static_cast<T>(temp);
+	}
+}
+}
+
 template<typename _Elem>
 void Node::ParseStream(std::basic_istream<_Elem> & stream) {
 	// We must read as UTF8 chars.
 	if constexpr (!std::is_same_v<_Elem, char>) {
+#if defined(ACID_BUILD_CLANG) || defined(ACID_BUILD_GNU)
+		throw std::runtime_error("Cannot dynamicly parse wide streams on GCC or Clang");
+#else
 		stream.imbue(std::locale(stream.getloc(), new std::codecvt_utf8<char>));
+#endif
 	}
 
 	// Reading into a string before iterating is much faster.
@@ -31,12 +98,12 @@ std::basic_string<_Elem> Node::WriteString(Node::Format format) const {
 template<typename T>
 T Node::GetName() const {
 	// Only supports basic string to type conversions.
-	return String::From<T>(m_name);
+	return priv::From<T>(m_name);
 }
 
 template<typename T>
 void Node::SetName(const T &value) {
-	m_name = To<T>(value);
+	m_name = priv::To<T>(value);
 }
 
 template<typename T>
@@ -112,8 +179,14 @@ inline Node &operator<<(Node &node, const Node &object) {
 	return node;
 }*/
 
-template<typename T>
-std::enable_if_t<std::is_pointer_v<T>, Node &> operator<<(Node &node, const T object) {
+inline Node &operator<<(Node &node, const std::nullptr_t &object) {
+	node.SetValue("");
+	node.SetType(Node::Type::Null);
+	return node;
+}
+
+template<typename T, std::enable_if_t<std::is_pointer_v<T>, int> = 0>
+Node &operator<<(Node &node, const T object) {
 	if (object == nullptr) {
 		return node << nullptr;
 	}
@@ -162,32 +235,26 @@ Node &operator<<(Node &node, const std::shared_ptr<T> &object) {
 	return node;
 }
 
-inline Node &operator<<(Node &node, const std::nullptr_t &object) {
-	node.SetValue("");
-	node.SetType(Node::Type::Null);
-	return node;
-}
-
 inline const Node &operator>>(const Node &node, bool &object) {
-	object = String::From<bool>(node.GetValue());
+	object = priv::From<bool>(node.GetValue());
 	return node;
 }
 
 inline Node &operator<<(Node &node, bool object) {
-	node.SetValue(String::To(object));
+	node.SetValue(priv::To(object));
 	node.SetType(Node::Type::Boolean);
 	return node;
 }
 
-template<typename T>
-std::enable_if_t<std::is_arithmetic_v<T> || std::is_enum_v<T>, const Node &> operator>>(const Node &node, T &object) {
-	object = String::From<T>(node.GetValue());
+template<typename T, std::enable_if_t<std::is_arithmetic_v<T> || std::is_enum_v<T>, int> = 0>
+const Node &operator>>(const Node &node, T &object) {
+	object = priv::From<T>(node.GetValue());
 	return node;
 }
 
-template<typename T>
-std::enable_if_t<std::is_arithmetic_v<T> || std::is_enum_v<T>, Node &> operator<<(Node &node, T object) {
-	node.SetValue(String::To(object));
+template<typename T, std::enable_if_t<std::is_arithmetic_v<T> || std::is_enum_v<T>, int> = 0>
+Node &operator<<(Node &node, T object) {
+	node.SetValue(priv::To(object));
 	node.SetType(std::is_floating_point_v<T> ? Node::Type::Decimal : Node::Type::Integer);
 	return node;
 }
@@ -199,6 +266,14 @@ inline const Node &operator>>(const Node &node, char *&string) {
 
 inline Node &operator<<(Node &node, const char *string) {
 	node.SetValue(string);
+	node.SetType(Node::Type::String);
+	return node;
+}
+
+//inline const Node &operator>>(const Node &node, std::string_view &string)
+
+inline Node &operator<<(Node &node, std::string_view string) {
+	node.SetValue(string.data());
 	node.SetType(Node::Type::String);
 	return node;
 }
@@ -236,7 +311,7 @@ const Node &operator>>(const Node &node, std::pair<T, K> &pair) {
 
 template<typename T, typename K>
 Node &operator<<(Node &node, const std::pair<T, K> &pair) {
-	node.SetName(String::To(pair.first));
+	node.SetName(priv::To(pair.first));
 	node << pair.second;
 	return node;
 }
