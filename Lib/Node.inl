@@ -1,12 +1,16 @@
 #pragma once
 
-#include <codecvt>
-#include <filesystem>
-#include <optional>
-#include <sstream>
-
 #include "Node.hpp"
+
+#include <algorithm>
+#include <codecvt>
+#include <cstring>
+#include <filesystem>
+#include <memory>
+#include <optional>
+#include <vector>
 #include <map>
+#include <sstream>
 
 namespace acid {
 namespace priv {
@@ -76,7 +80,7 @@ template<typename _Elem>
 void Node::ParseStream(std::basic_istream<_Elem> & stream) {
 	// We must read as UTF8 chars.
 	if constexpr (!std::is_same_v<_Elem, char>) {
-#if defined(ACID_BUILD_CLANG) || defined(ACID_BUILD_GNU)
+#if defined(__clang__) || defined(__GNUC__)
 		throw std::runtime_error("Cannot dynamicly parse wide streams on GCC or Clang");
 #else
 		stream.imbue(std::locale(stream.getloc(), new std::codecvt_utf8<char>));
@@ -98,12 +102,12 @@ std::basic_string<_Elem> Node::WriteString(const Format &format) const {
 template<typename T>
 T Node::GetName() const {
 	// Only supports basic string to type conversions.
-	return priv::From<T>(m_name);
+	return priv::From<T>(name);
 }
 
 template<typename T>
 void Node::SetName(const T &value) {
-	m_name = priv::To<T>(value);
+	name = priv::To<T>(value);
 }
 
 template<typename T>

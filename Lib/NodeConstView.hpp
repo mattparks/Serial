@@ -1,7 +1,8 @@
 #pragma once
 
-#include <string>
+#include <cstdint>
 #include <variant>
+#include <string>
 #include <vector>
 
 namespace acid {
@@ -14,7 +15,7 @@ class Node;
 class NodeConstView {
 	friend class Node;
 protected:
-	using Key = std::variant<std::string, int32_t>;
+	using Key = std::variant<std::string, uint32_t>;
 
 	NodeConstView() = default;
 	NodeConstView(const Node *parent, Key key, const Node *value);
@@ -22,25 +23,17 @@ protected:
 
 public:
 	enum class Type : uint8_t {
-		Object,
-		Array,
-		String,
-		Boolean,
-		Integer,
-		Decimal,
-		Null,
-		Token,
-		Unknown
+		Object, Array, String, Boolean, Integer, Decimal, Null, Token, Unknown
 	};
 
-	bool has_value() const noexcept { return m_value != nullptr; }
-	const Node *get() { return m_value; }
+	bool has_value() const noexcept { return value != nullptr; }
+	const Node *get() const { return value; }
 
 	explicit operator bool() const noexcept { return has_value(); }
-	operator const Node &() { return *get(); }
+	operator const Node &() const { return *value; }
 
-	const Node &operator*() { return *get(); }
-	const Node *operator->() { return get(); }
+	const Node &operator*() const { return *value; }
+	const Node *operator->() const { return value; }
 
 	template<typename T>
 	T GetName() const;
@@ -68,8 +61,8 @@ public:
 	Type GetType() const;
 	
 protected:
-	const Node *m_parent = nullptr;
-	const Node *m_value = nullptr;
-	std::vector<Key> m_keys;
+	const Node *parent = nullptr;
+	const Node *value = nullptr;
+	std::vector<Key> keys;
 };
 }

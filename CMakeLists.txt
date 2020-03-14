@@ -4,6 +4,7 @@ project(Serial VERSION 0.0.1 LANGUAGES C CXX)
 
 option(BUILD_SHARED_LIBS "Build Shared Libraries" ON)
 option(SERIAL_BUILD_EXAMPLE "Build the Serial example" ON)
+option(BUILD_TESTS "Build test applications" ON)
 
 # Sets the install directories defined by GNU
 include(GNUInstallDirs)
@@ -33,24 +34,27 @@ endif()
 
 add_subdirectory(Lib)
 
-include(FetchContent)
-
-FetchContent_Declare(
-		googletest
-		GIT_REPOSITORY https://github.com/google/googletest.git
-		GIT_TAG release-1.8.1
-		)
-
-FetchContent_GetProperties(googletest)
-
-if(NOT googletest_POPULATED)
-	FetchContent_Populate(googletest)
-	add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR})
-endif()
-
-enable_testing()
-add_subdirectory(Test)
-
 if(SERIAL_BUILD_EXAMPLE)
 	add_subdirectory(Example)
+endif()
+
+# Allows automation of "BUILD_TESTING"
+include(CTest)
+if(BUILD_TESTS)
+	include(FetchContent)
+	FetchContent_Declare(
+			googletest
+			GIT_REPOSITORY https://github.com/google/googletest.git
+			GIT_TAG release-1.8.1
+			)
+
+	FetchContent_GetProperties(googletest)
+
+	if(NOT googletest_POPULATED)
+		FetchContent_Populate(googletest)
+		add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR})
+	endif()
+
+	enable_testing()
+	add_subdirectory(Test)
 endif()

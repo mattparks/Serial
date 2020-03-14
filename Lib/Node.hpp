@@ -65,7 +65,6 @@ public:
 	Node(Node &&node) = default;
 	explicit Node(std::string value, Type type = Type::String);
 	Node(std::string value, std::vector<Node> &&properties);
-
 	virtual ~Node() = default;
 
 	virtual void ParseString(std::string_view string);
@@ -94,13 +93,13 @@ public:
 
 	/**
 	 * Clears all properties from this node.
-	 **/
+	 */
 	void Clear();
 
 	/**
 	 * Gets if the node has a value, or has properties that have values.
 	 * @return If the node is internally valid.
-	 **/
+	 */
 	bool IsValid() const;
 
 	template<typename T>
@@ -142,17 +141,17 @@ public:
 	bool operator!=(const Node &other) const;
 	bool operator<(const Node &other) const;
 
-	const std::vector<Node> &GetProperties() const { return m_properties; }
-	std::vector<Node> &GetProperties() { return m_properties; }
+	const std::vector<Node> &GetProperties() const { return properties; }
+	std::vector<Node> &GetProperties() { return properties; }
 
-	const std::string &GetName() const { return m_name; }
-	void SetName(std::string name) { m_name = std::move(name); }
+	const std::string &GetName() const { return name; }
+	void SetName(std::string name) { this->name = std::move(name); }
 
-	const std::string &GetValue() const { return m_value; }
-	void SetValue(std::string value) { m_value = std::move(value); }
+	const std::string &GetValue() const { return value; }
+	void SetValue(std::string value) { this->value = std::move(value); }
 
-	const Type &GetType() const { return m_type; }
-	void SetType(Type type) { m_type = type; }
+	const Type &GetType() const { return type; }
+	void SetType(Type type) { this->type = type; }
 
 protected:
 	class Token {
@@ -181,10 +180,10 @@ protected:
 	};
 	using Tokens = std::vector<Token>;
 
-	std::vector<Node> m_properties; // members
-	std::string m_name; // key
-	std::string m_value;
-	Type m_type = Type::Object;
+	std::vector<Node> properties; // members
+	std::string name; // key
+	std::string value;
+	Type type = Type::Object;
 };
 }
 
