@@ -214,6 +214,14 @@ NodeView Node::operator[](uint32_t index) {
 	return GetProperty(index);
 }
 
+Node &Node::operator=(Node &&rhs) noexcept {
+	properties = std::move(rhs.properties);
+	//name = std::move(rhs.name);
+	value = std::move(rhs.value);
+	type = std::move(rhs.type);
+	return *this;
+}
+
 bool Node::operator==(const Node &rhs) const {
 	return value == rhs.value && properties.size() == rhs.properties.size() &&
 		std::equal(properties.begin(), properties.end(), rhs.properties.begin(), [](const auto &left, const auto &right) {

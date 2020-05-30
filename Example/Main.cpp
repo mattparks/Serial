@@ -156,6 +156,10 @@ int main(int argc, char **argv) {
 	node["users"][6] = std::move(user4);
 	//node["users"][7] = test::User{"köln", "'Etat de São Paulo", R"(\"Hello World\")", true, "01/00/2000"};
 	//node["users"][8] = node["users"][6];
+
+	Node timepoint;
+	timepoint.SetType(Node::Type::Object);
+	node["timepoint"] = std::move(timepoint);
 	
 	auto users = node["users"].Get<std::vector<std::optional<test::User>>>();
 

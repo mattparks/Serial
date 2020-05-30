@@ -39,6 +39,8 @@ public:
 	NodeView operator=(const NodeView &) = delete;
 	template<typename T>
 	Node &operator=(const T &rhs);
+	template<typename T>
+	Node &operator=(T &&rhs);
 
 	std::vector<Node> &GetProperties();
 

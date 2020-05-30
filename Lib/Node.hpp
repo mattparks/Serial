@@ -133,7 +133,7 @@ public:
 	NodeView operator[](uint32_t index);
 	
 	Node &operator=(const Node &) = default;
-	Node &operator=(Node &&) = default;
+	Node &operator=(Node &&rhs) noexcept;
 	template<typename T>
 	Node &operator=(const T &rhs);
 
