@@ -13,9 +13,9 @@ public:
 	void WriteStream(std::ostream &stream, const Format &format = Format::Minified) const override;
 
 	Json& operator=(const Json& node) = default;
-	Json& operator=(Json && node) = default;
+	Json& operator=(Json &&node) = default;
 	template<typename T>
-	Json& operator=(const T & rhs) {
+	Json& operator=(const T &rhs) {
 		Set(rhs);
 		return *this;
 	}

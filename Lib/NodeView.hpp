@@ -34,6 +34,9 @@ public:
 	NodeView operator[](std::string_view key);
 	NodeView operator[](uint32_t index);
 
+	// TODO: Support copying nodes.
+	NodeView operator=(const NodeConstView &) = delete;
+	NodeView operator=(const NodeView &) = delete;
 	template<typename T>
 	Node &operator=(const T &rhs);
 

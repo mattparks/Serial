@@ -13,9 +13,9 @@ public:
 	void WriteStream(std::ostream &stream, const Format &format = Format::Minified) const override;
 
 	Xml &operator=(const Xml &node) = default;
-	Xml &operator=(Xml && node) = default;
+	Xml &operator=(Xml &&node) = default;
 	template<typename T>
-	Xml &operator=(const T & rhs) {
+	Xml &operator=(const T &rhs) {
 		Set(rhs);
 		return *this;
 	}

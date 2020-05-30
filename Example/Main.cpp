@@ -151,8 +151,12 @@ int main(int argc, char **argv) {
 	node["users"][0] = test::User{"user1", "User One", "C++ developer", false, "10/07/2000"};
 	node["users"][1] = test::User{"user2", "User Two", "University student", true, "11/05/1999"};
 	node["users"][3] = test::User{"user3", "User Three", "Website developer", false, "2/03/1996"};
-	node["users"][6] = test::User{"user4", "User Four", "High school student", true, "30/04/2002"};
+	Node user4;
+	user4 = test::User{"user4", "User Four", "High school student", true, "30/04/2002"};
+	node["users"][6] = std::move(user4);
 	//node["users"][7] = test::User{"köln", "'Etat de São Paulo", R"(\"Hello World\")", true, "01/00/2000"};
+	//node["users"][8] = node["users"][6];
+	
 	auto users = node["users"].Get<std::vector<std::optional<test::User>>>();
 
 	std::filesystem::create_directory("Example");

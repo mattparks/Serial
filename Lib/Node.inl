@@ -10,6 +10,7 @@
 #include <optional>
 #include <vector>
 #include <map>
+#include <set>
 #include <sstream>
 
 namespace acid {
@@ -80,7 +81,7 @@ template<typename _Elem>
 void Node::ParseStream(std::basic_istream<_Elem> & stream) {
 	// We must read as UTF8 chars.
 	if constexpr (!std::is_same_v<_Elem, char>) {
-#if defined(__clang__) || defined(__GNUC__)
+#ifndef _MSC_VER
 		throw std::runtime_error("Cannot dynamicly parse wide streams on GCC or Clang");
 #else
 		stream.imbue(std::locale(stream.getloc(), new std::codecvt_utf8<char>));
@@ -191,9 +192,8 @@ inline Node &operator<<(Node &node, const std::nullptr_t &object) {
 
 template<typename T, std::enable_if_t<std::is_pointer_v<T>, int> = 0>
 Node &operator<<(Node &node, const T object) {
-	if (object == nullptr) {
+	if (!object)
 		return node << nullptr;
-	}
 
 	node << *object;
 	return node;
@@ -208,9 +208,8 @@ const Node &operator>>(const Node &node, std::unique_ptr<T> &object) {
 
 template<typename T>
 Node &operator<<(Node &node, const std::unique_ptr<T> &object) {
-	if (object == nullptr) {
+	if (!object)
 		return node << nullptr;
-	}
 
 	node << *object;
 	return node;
@@ -218,22 +217,15 @@ Node &operator<<(Node &node, const std::unique_ptr<T> &object) {
 
 template<typename T>
 const Node &operator>>(const Node &node, std::shared_ptr<T> &object) {
-	// TODO: Abstract Resource streams out from shared_ptr.
-	if constexpr (std::is_base_of_v<Resource, T>) {
-		object = T::Create(node);
-		return node;
-	} else {
-		object = std::make_shared<T>();
-		node >> *object;
-		return node;
-	}
+	object = std::make_shared<T>();
+	node >> *object;
+	return node;
 }
 
 template<typename T>
 Node &operator<<(Node &node, const std::shared_ptr<T> &object) {
-	if (object == nullptr) {
+	if (!object)
 		return node << nullptr;
-	}
 
 	node << *object;
 	return node;
@@ -335,9 +327,8 @@ const Node &operator>>(const Node &node, std::optional<T> &optional) {
 
 template<typename T>
 Node &operator<<(Node &node, const std::optional<T> &optional) {
-	if (optional) {
+	if (optional)
 		return node << *optional;
-	}
 
 	return node << nullptr;
 }
@@ -358,9 +349,30 @@ const Node &operator>>(const Node &node, std::vector<T> &vector) {
 
 template<typename T>
 Node &operator<<(Node &node, const std::vector<T> &vector) {
-	for (const auto &x : vector) {
+	for (const auto &x : vector)
 		node.AddProperty() << x;
+
+	node.SetType(Node::Type::Array);
+	return node;
+}
+
+template<typename T>
+const Node &operator>>(const Node &node, std::set<T> &vector) {
+	vector.clear();
+
+	for (const auto &property : node.GetProperties()) {
+		T x;
+		property >> x;
+		vector.emplace(std::move(x));
 	}
+
+	return node;
+}
+
+template<typename T>
+Node &operator<<(Node &node, const std::set<T> &vector) {
+	for (const auto &x : vector)
+		node.AddProperty() << x;
 
 	node.SetType(Node::Type::Array);
 	return node;
@@ -381,9 +393,8 @@ const Node &operator>>(const Node &node, std::map<T, K> &map) {
 
 template<typename T, typename K>
 Node &operator<<(Node &node, const std::map<T, K> &map) {
-	for (const auto &x : map) {
+	for (const auto &x : map)
 		node.AddProperty() << x;
-	}
 
 	node.SetType(Node::Type::Array);
 	return node;
