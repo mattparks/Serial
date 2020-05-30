@@ -11,6 +11,8 @@ namespace acid {
 class Node final {
 public:
 	using Type = NodeConstView::Type;
+	/// key, members
+	using Properties = NodeConstView::Properties;
 
 	/**
 	 * @brief Class that is used to print a char, and ignore null char.
@@ -84,29 +86,20 @@ public:
 		Type type;
 		std::string_view view;
 	};
-	using Tokens = std::vector<Token>;
 	
 	Node() = default;
-	Node(const std::string &name, const Node &node);
 	Node(const Node &node) = default;
 	Node(Node &&node) = default;
-	explicit Node(std::string value, Type type = Type::String);
-	Node(std::string value, std::vector<Node> &&properties);
 
-	template<typename NodeParser>
-	void ParseString(std::string_view string);
-	template<typename NodeParser>
-	void WriteStream(std::ostream &stream, Format format = Format::Minified) const;
+	template<typename NodeParser, typename ...Args>
+	void ParseString(std::string_view string, Args ... args);
+	template<typename NodeParser, typename ...Args>
+	void WriteStream(std::ostream &stream, Format format = Format::Minified, Args ... args) const;
 
-	template<typename NodeParser, typename _Elem = char>
-	void ParseStream(std::basic_istream<_Elem> &stream);
-	template<typename NodeParser, typename _Elem = char>
-	std::basic_string<_Elem> WriteString(const Format &format = Format::Minified) const;
-
-	template<typename T>
-	T GetName() const;
-	template<typename T>
-	void SetName(const T &value);
+	template<typename NodeParser, typename _Elem = char, typename ...Args>
+	void ParseStream(std::basic_istream<_Elem> &stream, Args ... args);
+	template<typename NodeParser, typename _Elem = char, typename ...Args>
+	std::basic_string<_Elem> WriteString(const Format &format = Format::Minified, Args ... args) const;
 
 	template<typename T>
 	T Get() const;
@@ -150,18 +143,22 @@ public:
 
 	std::vector<NodeConstView> GetProperties(const std::string &name) const;
 	NodeConstView GetPropertyWithBackup(const std::string &name, const std::string &backupName) const;
-	NodeConstView GetPropertyWithValue(const std::string &propertyName, const std::string &propertyValue) const;
+	NodeConstView GetPropertyWithValue(const std::string &name, const std::string &value) const;
 	std::vector<NodeView> GetProperties(const std::string &name);
 	NodeView GetPropertyWithBackup(const std::string &name, const std::string &backupName);
-	NodeView GetPropertyWithValue(const std::string &propertyName, const std::string &propertyValue);
+	NodeView GetPropertyWithValue(const std::string &name, const std::string &value);
 
 	NodeConstView operator[](const std::string &key) const;
 	NodeConstView operator[](uint32_t index) const;
 	NodeView operator[](const std::string &key);
 	NodeView operator[](uint32_t index);
-	
+
 	Node &operator=(const Node &) = default;
-	Node &operator=(Node &&rhs) noexcept;
+	Node &operator=(Node &&) = default;
+	Node &operator=(const NodeConstView &rhs);
+	Node &operator=(NodeConstView &&rhs);
+	Node &operator=(NodeView &rhs);
+	Node &operator=(NodeView &&rhs);
 	template<typename T>
 	Node &operator=(const T &rhs);
 
@@ -169,11 +166,8 @@ public:
 	bool operator!=(const Node &rhs) const;
 	bool operator<(const Node &rhs) const;
 
-	const std::vector<Node> &GetProperties() const { return properties; }
-	std::vector<Node> &GetProperties() { return properties; }
-
-	const std::string &GetName() const { return name; }
-	void SetName(std::string name) { this->name = std::move(name); }
+	const Properties &GetProperties() const { return properties; }
+	Properties &GetProperties() { return properties; }
 
 	const std::string &GetValue() const { return value; }
 	void SetValue(std::string value) { this->value = std::move(value); }
@@ -182,8 +176,7 @@ public:
 	void SetType(Type type) { this->type = type; }
 
 protected:
-	std::vector<Node> properties; // members
-	std::string name; // key
+	Properties properties;
 	std::string value;
 	Type type = Type::Object;
 };

@@ -45,16 +45,10 @@ NodeConstView NodeConstView::operator[](uint32_t index) const {
 	return value->operator[](index);
 }
 
-std::vector<Node> NodeConstView::GetProperties() const {
+NodeConstView::Properties NodeConstView::GetProperties() const {
 	if (!has_value())
 		return {};
 	return value->GetProperties();
-}
-
-std::string NodeConstView::GetName() const {
-	if (!has_value())
-		return *std::get_if<std::string>(&keys.back());
-	return value->GetName();
 }
 
 NodeView::Type NodeConstView::GetType() const {

@@ -25,6 +25,8 @@ public:
 	enum class Type : uint8_t {
 		Object, Array, String, Boolean, Integer, Decimal, Null, Token, Unknown
 	};
+	/// key, members
+	using Properties = std::vector<std::pair<std::string, Node>>;
 
 	bool has_value() const noexcept { return value != nullptr; }
 	const Node *get() const { return value; }
@@ -54,9 +56,7 @@ public:
 	NodeConstView operator[](const std::string &key) const;
 	NodeConstView operator[](uint32_t index) const;
 
-	std::vector<Node> GetProperties() const;
-	
-	std::string GetName() const;
+	Properties GetProperties() const;
 
 	Type GetType() const;
 	

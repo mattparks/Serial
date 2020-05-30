@@ -155,12 +155,15 @@ int main(int argc, char **argv) {
 	user4 = test::User{"user4", "User Four", "High school student", true, "30/04/2002"};
 	node["users"][6] = std::move(user4);
 	//node["users"][7] = test::User{"köln", "'Etat de São Paulo", R"(\"Hello World\")", true, "01/00/2000"};
-	//node["users"][8] = node["users"][6];
+
+	auto &user8 = *node["users"][8];
+	node["users"][8] = node["users"][6];
 
 	Node numbers;
 	numbers["a"] = std::vector{1, 2, 3, 4};
 	numbers["b"] = std::vector{5, 6, 7, 8};
 	numbers["c"] = std::vector{9, 10, 11, 12};
+	//numbers["d"] = numbers["a"];
 	node["numbers"] = std::move(numbers);
 	
 	auto users = node["users"].Get<std::vector<std::optional<test::User>>>();
@@ -169,7 +172,7 @@ int main(int argc, char **argv) {
 	
 	{
 		// Make a copy of the node.
-		Node json1(node);
+		Node json1 = node;
 		//json1.WriteStream<Json>(std::cout);
 	
 		// Test Json writer.
@@ -190,11 +193,11 @@ int main(int argc, char **argv) {
 	}
 	{
 		// Make a copy of the node.
-		Node xml1("node", node);
+		Node xml1 = node;
 
 		// Test Xml writer.
 		std::ofstream outStream1("Example/Xml1.xml");
-		xml1.WriteStream<Xml>(outStream1, Node::Format::Beautified);
+		xml1.WriteStream<Xml>(outStream1, Node::Format::Beautified, "node");
 		outStream1.close();
 	}
 

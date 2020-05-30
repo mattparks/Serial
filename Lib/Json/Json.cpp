@@ -175,24 +175,24 @@ void Json::AppendData(const Node &source, std::ostream &stream, Node::Format for
 	for (auto it = source.GetProperties().begin(); it < source.GetProperties().end(); ++it) {
 		stream << indents;
 		// Output name for property if it exists.
-		if (!it->GetName().empty()) {
-			stream << '\"' << it->GetName() << "\":" << format.space;
+		if (!it->first.empty()) {
+			stream << '\"' << it->first << "\":" << format.space;
 		}
 
 		bool isArray = false;
-		if (!it->GetProperties().empty()) {
+		if (!it->second.GetProperties().empty()) {
 			// If all properties have no names, then this must be an array.
-			for (const auto &property2 : it->GetProperties()) {
-				if (property2.GetName().empty()) {
+			for (const auto &property2 : it->second.GetProperties()) {
+				if (property2.first.empty()) {
 					isArray = true;
 					break;
 				}
 			}
 
 			stream << (isArray ? '[' : '{') << format.newLine;
-		} else if (it->GetType() == Node::Type::Object) {
+		} else if (it->second.GetType() == Node::Type::Object) {
 			stream << '{';
-		} else if (it->GetType() == Node::Type::Array) {
+		} else if (it->second.GetType() == Node::Type::Array) {
 			stream << '[';
 		}
 
@@ -202,20 +202,20 @@ void Json::AppendData(const Node &source, std::ostream &stream, Node::Format for
 		};
 
 		// Shorten primitive array output length.
-		if (isArray && format.inlineArrays && !it->GetProperties().empty() && IsPrimitive(it->GetProperties()[0].GetType())) {
+		if (isArray && format.inlineArrays && !it->second.GetProperties().empty() && IsPrimitive(it->second.GetProperties()[0].second.GetType())) {
 			stream << format.GetIndents(indent + 1);
 			// New lines are printed a a space, no spaces are ever emitted by primitives.
-			AppendData(*it, stream, Node::Format(0, ' ', '\0', false), indent);
+			AppendData(it->second, stream, Node::Format(0, ' ', '\0', false), indent);
 			stream << '\n';
 		} else {
-			AppendData(*it, stream, format, indent + 1);
+			AppendData(it->second, stream, format, indent + 1);
 		}
 
-		if (!it->GetProperties().empty()) {
+		if (!it->second.GetProperties().empty()) {
 			stream << indents << (isArray ? ']' : '}');
-		} else if (it->GetType() == Node::Type::Object) {
+		} else if (it->second.GetType() == Node::Type::Object) {
 			stream << '}';
-		} else if (it->GetType() == Node::Type::Array) {
+		} else if (it->second.GetType() == Node::Type::Array) {
 			stream << ']';
 		}
 

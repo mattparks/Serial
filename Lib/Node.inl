@@ -77,18 +77,18 @@ static T From(const std::string &str) {
 }
 }
 
-template<typename NodeParser>
-void Node::ParseString(std::string_view string) {
-	NodeParser::ParseString(*this, string);
+template<typename NodeParser, typename ... Args>
+void Node::ParseString(std::string_view string, Args ... args) {
+	NodeParser::ParseString(*this, string, args...);
 }
 
-template<typename NodeParser>
-void Node::WriteStream(std::ostream &stream, Format format) const {
-	NodeParser::WriteStream(*this, stream, format);
+template<typename NodeParser, typename ... Args>
+void Node::WriteStream(std::ostream &stream, Format format, Args... args) const {
+	NodeParser::WriteStream(*this, stream, format, args...);
 }
 
-template<typename NodeParser, typename _Elem>
-void Node::ParseStream(std::basic_istream<_Elem> & stream) {
+template<typename NodeParser, typename _Elem, typename ... Args>
+void Node::ParseStream(std::basic_istream<_Elem> &stream, Args ... args) {
 	// We must read as UTF8 chars.
 	if constexpr (!std::is_same_v<_Elem, char>) {
 #ifndef _MSC_VER
@@ -100,25 +100,14 @@ void Node::ParseStream(std::basic_istream<_Elem> & stream) {
 
 	// Reading into a string before iterating is much faster.
 	std::string s(std::istreambuf_iterator<_Elem>(stream), {});
-	ParseString<NodeParser>(s);
+	ParseString<NodeParser>(s, args...);
 }
 
-template<typename NodeParser, typename _Elem>
-std::basic_string<_Elem> Node::WriteString(const Format &format) const {
+template<typename NodeParser, typename _Elem, typename ... Args>
+std::basic_string<_Elem> Node::WriteString(const Format &format, Args ... args) const {
 	std::basic_stringstream<_Elem> stream;
-	WriteStream<NodeParser>(stream, format);
+	WriteStream<NodeParser>(stream, format, args...);
 	return stream.str();
-}
-
-template<typename T>
-T Node::GetName() const {
-	// Only supports basic string to type conversions.
-	return priv::From<T>(name);
-}
-
-template<typename T>
-void Node::SetName(const T &value) {
-	name = priv::To<T>(value);
 }
 
 template<typename T>
@@ -308,20 +297,6 @@ inline Node &operator<<(Node &node, const std::filesystem::path &object) {
 	return node;
 }
 
-template<typename T, typename K>
-const Node &operator>>(const Node &node, std::pair<T, K> &pair) {
-	pair.first = node.GetName<T>();
-	node >> pair.second;
-	return node;
-}
-
-template<typename T, typename K>
-Node &operator<<(Node &node, const std::pair<T, K> &pair) {
-	node.SetName(priv::To(pair.first));
-	node << pair.second;
-	return node;
-}
-
 template<typename T>
 const Node &operator>>(const Node &node, std::optional<T> &optional) {
 	if (node.GetValue() != "null") {
@@ -348,7 +323,7 @@ const Node &operator>>(const Node &node, std::vector<T> &vector) {
 	vector.clear();
 	vector.reserve(node.GetProperties().size());
 
-	for (const auto &property : node.GetProperties()) {
+	for (const auto &[propertyName, property] : node.GetProperties()) {
 		T x;
 		property >> x;
 		vector.emplace_back(std::move(x));
@@ -370,7 +345,7 @@ template<typename T>
 const Node &operator>>(const Node &node, std::set<T> &vector) {
 	vector.clear();
 
-	for (const auto &property : node.GetProperties()) {
+	for (const auto &[propertyName, property] : node.GetProperties()) {
 		T x;
 		property >> x;
 		vector.emplace(std::move(x));
@@ -392,9 +367,10 @@ template<typename T, typename K>
 const Node &operator>>(const Node &node, std::map<T, K> &map) {
 	map.clear();
 
-	for (const auto &property : node.GetProperties()) {
+	for (const auto &[propertyName, property] : node.GetProperties()) {
 		std::pair<T, K> pair;
-		property >> pair;
+		pair.first = priv::From<T>(propertyName);
+		property >> pair.second;
 		map.emplace(std::move(pair));
 	}
 
@@ -403,8 +379,9 @@ const Node &operator>>(const Node &node, std::map<T, K> &map) {
 
 template<typename T, typename K>
 Node &operator<<(Node &node, const std::map<T, K> &map) {
-	for (const auto &x : map)
-		node.AddProperty() << x;
+	for (const auto &x : map) {
+		node.AddProperty(priv::To(x.first)) << x.second;
+	}
 
 	node.SetType(Node::Type::Array);
 	return node;

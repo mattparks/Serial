@@ -33,9 +33,9 @@ std::string Trim(std::string str, std::string_view whitespace = " \t\n\r") {
 void Xml::ParseString(Node &node, std::string_view string) {
 }
 
-void Xml::WriteStream(const Node &node, std::ostream &stream, Node::Format format) {
+void Xml::WriteStream(const Node &node, std::ostream &stream, Node::Format format, const std::string &rootName) {
 	stream << R"(<?xml version="1.0" encoding="utf-8"?>)" << format.newLine;
-	AppendData(node, stream, format, 0);
+	AppendData(rootName, node, stream, format, 0);
 }
 
 void Xml::AddToken(std::string_view view, std::vector<Node::Token> &tokens) {
@@ -44,18 +44,18 @@ void Xml::AddToken(std::string_view view, std::vector<Node::Token> &tokens) {
 void Xml::Convert(Node &current, const std::vector<Node::Token> &tokens, int32_t i, int32_t &r) {
 }
 
-void Xml::AppendData(const Node &source, std::ostream &stream, Node::Format format, int32_t indent) {
+void Xml::AppendData(const std::string &name, const Node &source, std::ostream &stream, Node::Format format, int32_t indent) {
 	auto indents = format.GetIndents(indent);
 
-	auto tagName = priv::ReplaceAll(source.GetName(), " ", "_");
+	auto tagName = priv::ReplaceAll(name, " ", "_");
 
 	int attributeCount = 0;
 	std::stringstream nameAttributes;
 	nameAttributes << tagName;
 
-	for (const auto &property : source.GetProperties()) {
-		if (property.GetName().rfind('_', 0) != 0) continue;
-		nameAttributes << " " << property.GetName().substr(1) << "=\"" << property.GetValue() << "\"";
+	for (const auto &[propertyName, property] : source.GetProperties()) {
+		if (propertyName.rfind('_', 0) != 0) continue;
+		nameAttributes << " " << propertyName.substr(1) << "=\"" << property.GetValue() << "\"";
 		attributeCount++;
 	}
 
@@ -63,12 +63,12 @@ void Xml::AppendData(const Node &source, std::ostream &stream, Node::Format form
 
 	stream << indents;
 
-	if (source.GetName()[0] == '?') {
+	if (name[0] == '?') {
 		stream << "<" << nameAndAttribs << "?>" << format.newLine;
 
-		for (const auto &property : source.GetProperties()) {
-			if (property.GetName().rfind('_', 0) != 0)
-				AppendData(property, stream, format, indent);
+		for (const auto &[propertyName, property] : source.GetProperties()) {
+			if (propertyName.rfind('_', 0) != 0)
+				AppendData(propertyName, property, stream, format, indent);
 		}
 
 		return;
@@ -88,9 +88,9 @@ void Xml::AppendData(const Node &source, std::ostream &stream, Node::Format form
 	if (!source.GetProperties().empty()) {
 		stream << format.newLine;
 
-		for (const auto &property : source.GetProperties()) {
-			if (property.GetName().rfind('_', 0) != 0)
-				AppendData(property, stream, format, indent + 1);
+		for (const auto &[propertyName, property] : source.GetProperties()) {
+			if (propertyName.rfind('_', 0) != 0)
+				AppendData(propertyName, property, stream, format, indent + 1);
 		}
 
 		stream << indents;

@@ -62,18 +62,9 @@ NodeView NodeView::operator[](uint32_t index) {
 	return const_cast<Node *>(value)->operator[](index);
 }
 
-std::vector<Node> &NodeView::GetProperties() {
+NodeView::Properties &NodeView::GetProperties() {
 	if (!has_value())
 		return get()->GetProperties();
 	return const_cast<Node *>(value)->GetProperties();
-}
-
-void NodeView::SetName(const std::string &name) {
-	if (!has_value()) {
-		keys.back() = name;
-		return;
-	}
-
-	const_cast<Node *>(value)->SetName(name);
 }
 }
