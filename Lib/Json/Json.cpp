@@ -47,7 +47,7 @@ std::string UnfixEscapedChars(std::string str) {
 
 void Json::ParseString(Node &node, std::string_view string) {
 	// Tokenizes the string view into small views that are used to build a Node tree.
-	Node::Tokens tokens;
+	std::vector<Node::Token> tokens;
 
 	std::size_t tokenStart = 0;
 	enum class QuoteState : char {
@@ -93,7 +93,7 @@ void Json::WriteStream(const Node &node, std::ostream &stream, Node::Format form
 	stream << (node.GetType() == Node::Type::Array ? ']' : '}');
 }
 
-void Json::AddToken(std::string_view view, Node::Tokens &tokens) {
+void Json::AddToken(std::string_view view, std::vector<Node::Token> &tokens) {
 	if (view.length() != 0) {
 		// Finds the node value type of the string and adds it to the tokens vector.
 		if (view == "null") {
@@ -117,7 +117,7 @@ void Json::AddToken(std::string_view view, Node::Tokens &tokens) {
 	}
 }
 
-void Json::Convert(Node &current, const Node::Tokens &tokens, int32_t i, int32_t &r) {
+void Json::Convert(Node &current, const std::vector<Node::Token> &tokens, int32_t i, int32_t &r) {
 	if (tokens[i] == Node::Token(Node::Type::Token, "{")) {
 		auto k = i + 1;
 
@@ -128,7 +128,7 @@ void Json::Convert(Node &current, const Node::Tokens &tokens, int32_t i, int32_t
 			if (tokens[k + 1].view != ":")
 				throw std::runtime_error("Missing object colon");
 			k += 2;
-			Convert(current.AddProperty(key), tokens, k, k);
+			Convert(current.AddProperty(std::string(key)), tokens, k, k);
 			if (tokens[k].view == ",")
 				k++;
 		}

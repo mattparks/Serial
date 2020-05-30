@@ -87,20 +87,20 @@ public:
 	using Tokens = std::vector<Token>;
 	
 	Node() = default;
-	Node(const std::string &rootName, const Node &node);
+	Node(const std::string &name, const Node &node);
 	Node(const Node &node) = default;
 	Node(Node &&node) = default;
 	explicit Node(std::string value, Type type = Type::String);
 	Node(std::string value, std::vector<Node> &&properties);
 
-	template<typename T>
+	template<typename NodeParser>
 	void ParseString(std::string_view string);
-	template<typename T>
+	template<typename NodeParser>
 	void WriteStream(std::ostream &stream, Format format = Format::Minified) const;
 
-	template<typename T, typename _Elem = char>
+	template<typename NodeParser, typename _Elem = char>
 	void ParseStream(std::basic_istream<_Elem> &stream);
-	template<typename T, typename _Elem = char>
+	template<typename NodeParser, typename _Elem = char>
 	std::basic_string<_Elem> WriteString(const Format &format = Format::Minified) const;
 
 	template<typename T>
@@ -135,29 +135,29 @@ public:
 	template<typename ...Args>
 	Node &Append(const Args &...args);
 
-	bool HasProperty(std::string_view name) const;
-	NodeConstView GetProperty(std::string_view name) const;
+	bool HasProperty(const std::string &name) const;
+	NodeConstView GetProperty(const std::string &name) const;
 	NodeConstView GetProperty(uint32_t index) const;
-	NodeView GetProperty(std::string_view name);
+	NodeView GetProperty(const std::string &name);
 	NodeView GetProperty(uint32_t index);
 	Node &AddProperty();
-	Node &AddProperty(std::string_view name, Node &&node);
-	Node &AddProperty(std::string_view name);
+	Node &AddProperty(const std::string &name, Node &&node);
+	Node &AddProperty(const std::string &name);
 	Node &AddProperty(uint32_t index, Node &&node);
 	Node &AddProperty(uint32_t index);
-	void RemoveProperty(std::string_view name);
+	void RemoveProperty(const std::string &name);
 	void RemoveProperty(const Node &node);
 
-	std::vector<NodeConstView> GetProperties(std::string_view name) const;
-	NodeConstView GetPropertyWithBackup(std::string_view name, std::string_view backupName) const;
-	NodeConstView GetPropertyWithValue(std::string_view propertyName, std::string_view propertyValue) const;
-	std::vector<NodeView> GetProperties(std::string_view name);
-	NodeView GetPropertyWithBackup(std::string_view name, std::string_view backupName);
-	NodeView GetPropertyWithValue(std::string_view propertyName, std::string_view propertyValue);
+	std::vector<NodeConstView> GetProperties(const std::string &name) const;
+	NodeConstView GetPropertyWithBackup(const std::string &name, const std::string &backupName) const;
+	NodeConstView GetPropertyWithValue(const std::string &propertyName, const std::string &propertyValue) const;
+	std::vector<NodeView> GetProperties(const std::string &name);
+	NodeView GetPropertyWithBackup(const std::string &name, const std::string &backupName);
+	NodeView GetPropertyWithValue(const std::string &propertyName, const std::string &propertyValue);
 
-	NodeConstView operator[](std::string_view key) const;
+	NodeConstView operator[](const std::string &key) const;
 	NodeConstView operator[](uint32_t index) const;
-	NodeView operator[](std::string_view key);
+	NodeView operator[](const std::string &key);
 	NodeView operator[](uint32_t index);
 	
 	Node &operator=(const Node &) = default;

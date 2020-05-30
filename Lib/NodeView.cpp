@@ -32,27 +32,27 @@ Node *NodeView::get() {
 	return const_cast<Node *>(value);
 }
 
-std::vector<NodeView> NodeView::GetProperties(std::string_view name) {
+std::vector<NodeView> NodeView::GetProperties(const std::string &name) {
 	if (!has_value())
 		return {};
 	return const_cast<Node *>(value)->GetProperties(name);
 }
 
-NodeView NodeView::GetPropertyWithBackup(std::string_view name, std::string_view backupName) {
+NodeView NodeView::GetPropertyWithBackup(const std::string &name, const std::string &backupName) {
 	if (!has_value())
-		return {this, std::string(name)};
+		return {this, name};
 	return const_cast<Node *>(value)->GetPropertyWithBackup(name, backupName);
 }
 
-NodeView NodeView::GetPropertyWithValue(std::string_view propertyName, std::string_view propertyValue) {
+NodeView NodeView::GetPropertyWithValue(const std::string &propertyName, const std::string &propertyValue) {
 	if (!has_value())
-		return {this, std::string(propertyName)};
+		return {this, propertyName};
 	return const_cast<Node *>(value)->GetPropertyWithValue(propertyName, propertyValue);
 }
 
-NodeView NodeView::operator[](std::string_view key) {
+NodeView NodeView::operator[](const std::string &key) {
 	if (!has_value())
-		return {this, std::string(key)};
+		return {this, key};
 	return const_cast<Node *>(value)->operator[](key);
 }
 

@@ -8,9 +8,9 @@ const Node::Format Node::Format::Minified = Format(0, '\0', '\0', false);
 
 static const Node NullNode = Node("null", Node::Type::Null);
 
-Node::Node(const std::string &rootName, const Node &node) :
+Node::Node(const std::string &name, const Node &node) :
 	Node(node) {
-	SetName(rootName);
+	SetName(name);
 }
 
 Node::Node(std::string value, Type type) :
@@ -42,7 +42,7 @@ bool Node::IsValid() const {
 	}
 }
 
-bool Node::HasProperty(std::string_view name) const {
+bool Node::HasProperty(const std::string &name) const {
 	for (const auto &property : properties) {
 		if (property.name == name)
 			return true;
@@ -51,13 +51,13 @@ bool Node::HasProperty(std::string_view name) const {
 	return false;
 }
 
-NodeConstView Node::GetProperty(std::string_view name) const {
+NodeConstView Node::GetProperty(const std::string &name) const {
 	for (const auto &property : properties) {
 		if (property.name == name)
-			return {this, std::string(name), &property};
+			return {this, name, &property};
 	}
 
-	return {this, std::string(name), nullptr};
+	return {this, name, nullptr};
 }
 
 NodeConstView Node::GetProperty(uint32_t index) const {
@@ -68,13 +68,13 @@ NodeConstView Node::GetProperty(uint32_t index) const {
 }
 
 // TODO: Duplicate
-NodeView Node::GetProperty(std::string_view name) {
+NodeView Node::GetProperty(const std::string &name) {
 	for (auto &property : properties) {
 		if (property.name == name)
-			return {this, std::string(name), &property};
+			return {this, name, &property};
 	}
 
-	return {this, std::string(name), nullptr};
+	return {this, name, nullptr};
 }
 
 // TODO: Duplicate
@@ -89,12 +89,12 @@ Node &Node::AddProperty() {
 	return properties.emplace_back();
 }
 
-Node &Node::AddProperty(std::string_view name, Node &&node) {
+Node &Node::AddProperty(const std::string &name, Node &&node) {
 	node.name = name;
 	return properties.emplace_back(std::move(node));
 }
 
-Node &Node::AddProperty(std::string_view name) {
+Node &Node::AddProperty(const std::string &name) {
 	Node node;
 	node.name = name;
 	return properties.emplace_back(std::move(node));
@@ -110,10 +110,10 @@ Node &Node::AddProperty(uint32_t index) {
 	return properties[index];
 }
 
-void Node::RemoveProperty(std::string_view name) {
+void Node::RemoveProperty(const std::string &name) {
 	//node.parent = nullptr;
 	properties.erase(std::remove_if(properties.begin(), properties.end(), [name](const auto &n) {
-		return n.GetName() == name;
+		return n.name == name;
 	}), properties.end());
 }
 
@@ -124,78 +124,78 @@ void Node::RemoveProperty(const Node &node) {
 	}), properties.end());
 }
 
-std::vector<NodeConstView> Node::GetProperties(std::string_view name) const {
+std::vector<NodeConstView> Node::GetProperties(const std::string &name) const {
 	std::vector<NodeConstView> properties;
 
 	for (const auto &property : this->properties) {
 		if (property.name == name)
-			properties.emplace_back(NodeConstView(this, std::string(name), &property));
+			properties.emplace_back(NodeConstView(this, name, &property));
 	}
 
 	return properties;
 }
 
-NodeConstView Node::GetPropertyWithBackup(std::string_view name, std::string_view backupName) const {
+NodeConstView Node::GetPropertyWithBackup(const std::string &name, const std::string &backupName) const {
 	if (auto p1 = GetProperty(name))
 		return p1;
 	if (auto p2 = GetProperty(backupName))
 		return p2;
-	return {this, std::string(name), nullptr};
+	return {this, name, nullptr};
 }
 
-NodeConstView Node::GetPropertyWithValue(std::string_view propertyName, std::string_view propertyValue) const {
+NodeConstView Node::GetPropertyWithValue(const std::string &propertyName, const std::string &propertyValue) const {
 	for (const auto &property : properties) {
 		auto properties1 = property.GetProperties(propertyName);
 		if (properties1.empty())
-			return {this, std::string(propertyName), nullptr};
+			return {this, propertyName, nullptr};
 
 		for (auto &property1 : properties1) {
 			if (property1 && property1->GetValue() == propertyValue)
-				return {this, std::string(propertyName), &property};
+				return {this, propertyName, &property};
 		}
 	}
 
-	return {this, std::string(propertyName), nullptr};
+	return {this, propertyName, nullptr};
 }
 
 // TODO: Duplicate
-std::vector<NodeView> Node::GetProperties(std::string_view name) {
+std::vector<NodeView> Node::GetProperties(const std::string &name) {
 	std::vector<NodeView> properties;
 
 	for (auto &property : this->properties) {
 		if (property.name == name)
-			properties.emplace_back(NodeView(this, std::string(name), &property));
+			properties.emplace_back(NodeView(this, name, &property));
 	}
 
 	return properties;
 }
 
 // TODO: Duplicate
-NodeView Node::GetPropertyWithBackup(std::string_view name, std::string_view backupName) {
+NodeView Node::GetPropertyWithBackup(const std::string &name, const std::string &backupName) {
 	if (auto p1 = GetProperty(name))
 		return p1;
 	if (auto p2 = GetProperty(backupName))
 		return p2;
-	return {this, std::string(name), nullptr};
+	return {this, name, nullptr};
 }
 
 // TODO: Duplicate
-NodeView Node::GetPropertyWithValue(std::string_view propertyName, std::string_view propertyValue) {
+NodeView Node::GetPropertyWithValue(const std::string &propertyName, const std::string &propertyValue) {
 	for (auto &property : properties) {
 		auto properties1 = property.GetProperties(propertyName);
 		if (properties1.empty())
-			return {this, std::string(propertyName), nullptr};
+			return {this, propertyName, nullptr};
 
 		for (auto &property1 : properties1) {
 			if (property1 && property1->GetValue() == propertyValue)
-				return {this, std::string(propertyName), &property};
+				return {this, propertyName, &property};
 		}
 	}
 
 	return {this, std::string(propertyName), nullptr};
 }
 
-NodeConstView Node::operator[](std::string_view key) const {
+NodeConstView Node::operator[](const std::string &key) const {
 	return GetProperty(key);
 }
 
@@ -204,7 +204,7 @@ NodeConstView Node::operator[](uint32_t index) const {
 }
 
 // TODO: Duplicate
-NodeView Node::operator[](std::string_view key) {
+NodeView Node::operator[](const std::string &key) {
 	return GetProperty(key);
 }
 
