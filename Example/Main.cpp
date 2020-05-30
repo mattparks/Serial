@@ -177,18 +177,18 @@ int main(int argc, char **argv) {
 	
 		// Test Json writer.
 		std::ofstream outStream1("Example/Test1.json");
-		json1.WriteStream<Json>(outStream1, Node::Format::Beautified);
+		json1.WriteStream(outStream1, Json(Node::Format::Beautified));
 		outStream1.close();
 
 		// Test Json reader.
 		std::ifstream inStream1("Example/Test1.json");
 		Node json2;
-		json2.ParseStream<Json>(inStream1);
+		json2.ParseStream(inStream1, Json());
 		inStream1.close();
 		
 		// Ensure Test1.json and Test2.json values are the same (ignore order changes).
 		std::ofstream outStream2("Example/Test2.json");
-		json2.WriteStream<Json>(outStream2, Node::Format::Beautified);
+		json2.WriteStream(outStream2, Json(Node::Format::Beautified));
 		outStream2.close();
 	}
 	{
@@ -197,7 +197,7 @@ int main(int argc, char **argv) {
 
 		// Test Xml writer.
 		std::ofstream outStream1("Example/Xml1.xml");
-		xml1.WriteStream<Xml>(outStream1, Node::Format::Beautified, "node");
+		xml1.WriteStream(outStream1, Xml("node", Node::Format::Beautified));
 		outStream1.close();
 	}
 

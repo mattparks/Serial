@@ -77,18 +77,8 @@ static T From(const std::string &str) {
 }
 }
 
-template<typename NodeParser, typename ... Args>
-void Node::ParseString(std::string_view string, Args ... args) {
-	NodeParser::ParseString(*this, string, args...);
-}
-
-template<typename NodeParser, typename ... Args>
-void Node::WriteStream(std::ostream &stream, Format format, Args... args) const {
-	NodeParser::WriteStream(*this, stream, format, args...);
-}
-
-template<typename NodeParser, typename _Elem, typename ... Args>
-void Node::ParseStream(std::basic_istream<_Elem> &stream, Args ... args) {
+template<typename _Elem>
+void Node::ParseStream(std::basic_istream<_Elem> &stream, const Formatter &formatter) {
 	// We must read as UTF8 chars.
 	if constexpr (!std::is_same_v<_Elem, char>) {
 #ifndef _MSC_VER
@@ -100,13 +90,13 @@ void Node::ParseStream(std::basic_istream<_Elem> &stream, Args ... args) {
 
 	// Reading into a string before iterating is much faster.
 	std::string s(std::istreambuf_iterator<_Elem>(stream), {});
-	ParseString<NodeParser>(s, args...);
+	ParseString(s, formatter);
 }
 
-template<typename NodeParser, typename _Elem, typename ... Args>
-std::basic_string<_Elem> Node::WriteString(const Format &format, Args ... args) const {
+template<typename _Elem>
+std::basic_string<_Elem> Node::WriteString(const Formatter &formatter) const {
 	std::basic_stringstream<_Elem> stream;
-	WriteStream<NodeParser>(stream, format, args...);
+	WriteStream(stream, formatter);
 	return stream.str();
 }
 

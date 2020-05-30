@@ -30,10 +30,15 @@ std::string Trim(std::string str, std::string_view whitespace = " \t\n\r") {
 }
 }
 
-void Xml::ParseString(Node &node, std::string_view string) {
+Xml::Xml(const std::string &rootName, Node::Format format):
+	rootName(rootName),
+	format(format) {
 }
 
-void Xml::WriteStream(const Node &node, std::ostream &stream, Node::Format format, const std::string &rootName) {
+void Xml::ParseString(Node &node, std::string_view string) const {
+}
+
+void Xml::WriteStream(const Node &node, std::ostream &stream) const {
 	stream << R"(<?xml version="1.0" encoding="utf-8"?>)" << format.newLine;
 	AppendData(rootName, node, stream, format, 0);
 }

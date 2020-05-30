@@ -45,7 +45,11 @@ std::string UnfixEscapedChars(std::string str) {
 }
 }
 
-void Json::ParseString(Node &node, std::string_view string) {
+Json::Json(Node::Format format) :
+	format(format) {
+}
+
+void Json::ParseString(Node &node, std::string_view string) const {
 	// Tokenizes the string view into small views that are used to build a Node tree.
 	std::vector<Node::Token> tokens;
 
@@ -87,7 +91,7 @@ void Json::ParseString(Node &node, std::string_view string) {
 	Convert(node, tokens, 0, k);
 }
 
-void Json::WriteStream(const Node &node, std::ostream &stream, Node::Format format) {
+void Json::WriteStream(const Node &node, std::ostream &stream) const {
 	stream << (node.GetType() == Node::Type::Array ? '[' : '{') << format.newLine;
 	AppendData(node, stream, format, 1);
 	stream << (node.GetType() == Node::Type::Array ? ']' : '}');

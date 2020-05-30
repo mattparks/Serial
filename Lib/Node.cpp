@@ -9,6 +9,14 @@ const Node::Format Node::Format::Minified = Format(0, '\0', '\0', false);
 static const Node NullNode = (Node() = nullptr);
 static const std::pair<std::string, Node> NullNodePair = {"", NullNode};
 
+void Node::ParseString(std::string_view string, const Formatter &formatter) {
+	formatter.ParseString(*this, string);
+}
+
+void Node::WriteStream(std::ostream &stream, const Formatter &formatter) const {
+	formatter.WriteStream(*this, stream);
+}
+
 void Node::Clear() {
 	properties.clear();
 }

@@ -62,6 +62,14 @@ public:
 		bool inlineArrays;
 	};
 
+	class Formatter {
+	public:
+		virtual ~Formatter() = default;
+
+		virtual void ParseString(Node &node, std::string_view string) const = 0;
+		virtual void WriteStream(const Node &node, std::ostream &stream) const = 0;
+	};
+
 	class Token {
 	public:
 		Token() = default;
@@ -86,20 +94,18 @@ public:
 		Type type;
 		std::string_view view;
 	};
-	
+
 	Node() = default;
 	Node(const Node &node) = default;
 	Node(Node &&node) = default;
 
-	template<typename NodeParser, typename ...Args>
-	void ParseString(std::string_view string, Args ... args);
-	template<typename NodeParser, typename ...Args>
-	void WriteStream(std::ostream &stream, Format format = Format::Minified, Args ... args) const;
+	void ParseString(std::string_view string, const Formatter &formatter);
+	void WriteStream(std::ostream &stream, const Formatter &formatter) const;
 
-	template<typename NodeParser, typename _Elem = char, typename ...Args>
-	void ParseStream(std::basic_istream<_Elem> &stream, Args ... args);
-	template<typename NodeParser, typename _Elem = char, typename ...Args>
-	std::basic_string<_Elem> WriteString(const Format &format = Format::Minified, Args ... args) const;
+	template<typename _Elem = char>
+	void ParseStream(std::basic_istream<_Elem> &stream, const Formatter &formatter);
+	template<typename _Elem = char>
+	std::basic_string<_Elem> WriteString(const Formatter &formatter) const;
 
 	template<typename T>
 	T Get() const;
