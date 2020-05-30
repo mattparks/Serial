@@ -157,9 +157,11 @@ int main(int argc, char **argv) {
 	//node["users"][7] = test::User{"köln", "'Etat de São Paulo", R"(\"Hello World\")", true, "01/00/2000"};
 	//node["users"][8] = node["users"][6];
 
-	Node timepoint;
-	timepoint.SetType(Node::Type::Object);
-	node["timepoint"] = std::move(timepoint);
+	Node numbers;
+	numbers["a"] = std::vector{1, 2, 3, 4};
+	numbers["b"] = std::vector{5, 6, 7, 8};
+	numbers["c"] = std::vector{9, 10, 11, 12};
+	node["numbers"] = std::move(numbers);
 	
 	auto users = node["users"].Get<std::vector<std::optional<test::User>>>();
 
@@ -167,32 +169,32 @@ int main(int argc, char **argv) {
 	
 	{
 		// Make a copy of the node.
-		Json json1(node);
-		//json1.WriteStream(std::cout);
+		Node json1(node);
+		//json1.WriteStream<Json>(std::cout);
 	
 		// Test Json writer.
 		std::ofstream outStream1("Example/Test1.json");
-		json1.WriteStream(outStream1, Node::Format::Beautified);
+		json1.WriteStream<Json>(outStream1, Node::Format::Beautified);
 		outStream1.close();
 
 		// Test Json reader.
 		std::ifstream inStream1("Example/Test1.json");
-		Json json2;
-		json2.ParseStream(inStream1);
+		Node json2;
+		json2.ParseStream<Json>(inStream1);
 		inStream1.close();
 		
 		// Ensure Test1.json and Test2.json values are the same (ignore order changes).
 		std::ofstream outStream2("Example/Test2.json");
-		json2.WriteStream(outStream2, Node::Format::Beautified);
+		json2.WriteStream<Json>(outStream2, Node::Format::Beautified);
 		outStream2.close();
 	}
 	{
 		// Make a copy of the node.
-		Xml xml1("node", node);
+		Node xml1("node", node);
 
 		// Test Xml writer.
 		std::ofstream outStream1("Example/Xml1.xml");
-		xml1.WriteStream(outStream1, Node::Format::Beautified);
+		xml1.WriteStream<Xml>(outStream1, Node::Format::Beautified);
 		outStream1.close();
 	}
 

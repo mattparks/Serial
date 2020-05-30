@@ -36,7 +36,9 @@ public:
 
 	// TODO: Support copying nodes.
 	NodeView operator=(const NodeConstView &) = delete;
+	//NodeView operator=(NodeConstView &&) = delete;
 	NodeView operator=(const NodeView &) = delete;
+	//NodeView operator=(NodeView &&) = delete;
 	template<typename T>
 	Node &operator=(const T &rhs);
 	template<typename T>

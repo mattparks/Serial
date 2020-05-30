@@ -8,8 +8,10 @@ namespace acid {
 /**
  * @brief Class that is used to represent a tree of UFT-8 values, used in serialization.
  */
-class Node {
+class Node final {
 public:
+	using Type = NodeConstView::Type;
+
 	/**
 	 * @brief Class that is used to print a char, and ignore null char.
 	 */
@@ -58,21 +60,47 @@ public:
 		bool inlineArrays;
 	};
 
-	using Type = NodeConstView::Type;
+	class Token {
+	public:
+		Token() = default;
+		Token(Type type, std::string_view view) :
+			type(type),
+			view(view) {
+		}
 
+		/**
+		 * Compares if two tokens have the same type and string contents.
+		 * @param rhs The other token to compare.
+		 * @return If the tokens are equal.
+		 */
+		bool operator==(const Token &rhs) const {
+			return type == rhs.type && view == rhs.view.data();
+		}
+
+		bool operator!=(const Token &rhs) const {
+			return !operator==(rhs);
+		}
+
+		Type type;
+		std::string_view view;
+	};
+	using Tokens = std::vector<Token>;
+	
 	Node() = default;
+	Node(const std::string &rootName, const Node &node);
 	Node(const Node &node) = default;
 	Node(Node &&node) = default;
 	explicit Node(std::string value, Type type = Type::String);
 	Node(std::string value, std::vector<Node> &&properties);
-	virtual ~Node() = default;
 
-	virtual void ParseString(std::string_view string);
-	virtual void WriteStream(std::ostream &stream, const Format &format = Format::Minified) const;
+	template<typename T>
+	void ParseString(std::string_view string);
+	template<typename T>
+	void WriteStream(std::ostream &stream, Format format = Format::Minified) const;
 
-	template<typename _Elem = char>
+	template<typename T, typename _Elem = char>
 	void ParseStream(std::basic_istream<_Elem> &stream);
-	template<typename _Elem = char>
+	template<typename T, typename _Elem = char>
 	std::basic_string<_Elem> WriteString(const Format &format = Format::Minified) const;
 
 	template<typename T>
@@ -154,32 +182,6 @@ public:
 	void SetType(Type type) { this->type = type; }
 
 protected:
-	class Token {
-	public:
-		Token() = default;
-		Token(Type type, std::string_view view) :
-			type(type),
-			view(view) {
-		}
-
-		/**
-		 * Compares if two tokens have the same type and string contents.
-		 * @param rhs The other token to compare.
-		 * @return If the tokens are equal.
-		 */
-		bool operator==(const Token &rhs) const {
-			return type == rhs.type && view == rhs.view.data();
-		}
-
-		bool operator!=(const Token &rhs) const {
-			return !operator==(rhs);
-		}
-
-		Type type;
-		std::string_view view;
-	};
-	using Tokens = std::vector<Token>;
-
 	std::vector<Node> properties; // members
 	std::string name; // key
 	std::string value;

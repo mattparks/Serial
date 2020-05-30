@@ -8,6 +8,11 @@ const Node::Format Node::Format::Minified = Format(0, '\0', '\0', false);
 
 static const Node NullNode = Node("null", Node::Type::Null);
 
+Node::Node(const std::string &rootName, const Node &node) :
+	Node(node) {
+	SetName(rootName);
+}
+
 Node::Node(std::string value, Type type) :
 	value(std::move(value)),
 	type(type) {
@@ -16,12 +21,6 @@ Node::Node(std::string value, Type type) :
 Node::Node(std::string value, std::vector<Node> &&properties) :
 	properties(std::move(properties)),
 	value(std::move(value)) {
-}
-
-void Node::ParseString(std::string_view string) {
-}
-
-void Node::WriteStream(std::ostream &stream, const Format &format) const {
 }
 
 void Node::Clear() {

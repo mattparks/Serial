@@ -77,7 +77,17 @@ static T From(const std::string &str) {
 }
 }
 
-template<typename _Elem>
+template<typename T>
+void Node::ParseString(std::string_view string) {
+	T::ParseString(*this, string);
+}
+
+template<typename T>
+void Node::WriteStream(std::ostream &stream, Format format) const {
+	T::WriteStream(*this, stream, format);
+}
+
+template<typename T, typename _Elem>
 void Node::ParseStream(std::basic_istream<_Elem> & stream) {
 	// We must read as UTF8 chars.
 	if constexpr (!std::is_same_v<_Elem, char>) {
@@ -90,13 +100,13 @@ void Node::ParseStream(std::basic_istream<_Elem> & stream) {
 
 	// Reading into a string before iterating is much faster.
 	std::string s(std::istreambuf_iterator<_Elem>(stream), {});
-	ParseString(s);
+	ParseString<T>(s);
 }
 
-template<typename _Elem>
+template<typename T, typename _Elem>
 std::basic_string<_Elem> Node::WriteString(const Format &format) const {
 	std::basic_stringstream<_Elem> stream;
-	WriteStream(stream, format);
+	WriteStream<T>(stream, format);
 	return stream.str();
 }
 
