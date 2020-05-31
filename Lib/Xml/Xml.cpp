@@ -37,17 +37,6 @@ void Xml::AppendData(const Node &node, std::ostream &stream, Node::Format format
 
 	stream << indents;
 
-	if (node.GetName()[0] == '?') {
-		stream << "<" << nameAndAttribs << "?>" << format.newLine;
-
-		for (const auto &property : node.GetProperties()) {
-			if (property.GetName().rfind('-', 0) != 0)
-				AppendData(property, stream, format, indent);
-		}
-
-		return;
-	}
-
 	if (node.GetProperties().size() - attributeCount == 0 && node.GetValue().empty()) {
 		stream << "<" << nameAndAttribs << "/>" << format.newLine;
 		return;
@@ -55,11 +44,12 @@ void Xml::AppendData(const Node &node, std::ostream &stream, Node::Format format
 
 	stream << "<" << nameAndAttribs << ">";
 	if (!node.GetValue().empty()) {
-		stream << format.newLine << format.GetIndents(indent + 1);
+		//stream << format.newLine << format.GetIndents(indent + 1);
 		stream << node.GetValue();
+		//stream << format.newLine << indents;
 	}
 
-	if (!node.GetProperties().empty()) {
+	if (node.GetProperties().size() - attributeCount != 0) {
 		stream << format.newLine;
 
 		for (const auto &property : node.GetProperties()) {
