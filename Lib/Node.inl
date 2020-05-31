@@ -58,7 +58,7 @@ T Node::GetName() const {
 template<typename T>
 void Node::SetName(const T &value) {
 	// Basic type to string conversion.
-	name = String::To<T>(value);
+	name = String::To(value);
 }
 
 template<typename T>

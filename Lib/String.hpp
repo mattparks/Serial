@@ -106,7 +106,7 @@ public:
 			return std::to_string(val);
 		}
 	}
-
+	
 	/**
 	 * Converts a string to a type.
 	 * @tparam T The type to convert to.

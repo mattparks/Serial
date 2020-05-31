@@ -62,17 +62,6 @@ public:
 		bool inlineArrays;
 	};
 
-	/**
-	 * @brief Class that is used to read a Node from a file format, or to write one.
-	 */
-	class Formatter {
-	public:
-		virtual ~Formatter() = default;
-
-		virtual void ParseString(Node &node, std::string_view string) const = 0;
-		virtual void WriteStream(const Node &node, std::ostream &stream, Format format) const = 0;
-	};
-
 	class Token {
 	public:
 		Token() = default;
