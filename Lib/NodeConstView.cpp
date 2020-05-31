@@ -2,7 +2,7 @@
 
 #include "Node.hpp"
 
-namespace acid {
+namespace serial {
 NodeConstView::NodeConstView(const Node *parent, Key key, const Node *value) :
 	parent(parent),
 	value(value),
@@ -45,7 +45,7 @@ NodeConstView NodeConstView::operator[](uint32_t index) const {
 	return value->operator[](index);
 }
 
-NodeConstView::Properties NodeConstView::GetProperties() const {
+std::vector<Node> NodeConstView::GetProperties() const {
 	if (!has_value())
 		return {};
 	return value->GetProperties();

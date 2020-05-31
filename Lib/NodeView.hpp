@@ -2,7 +2,7 @@
 
 #include "NodeConstView.hpp"
 
-namespace acid {
+namespace serial {
 /**
  * @brief Class that extends the usage of {@link NodeConstView} to mutable nodes.
  */
@@ -22,6 +22,9 @@ public:
 	Node *operator->() { return get(); }
 
 	template<typename T>
+	void SetName(const T &value);
+
+	template<typename T>
 	void Set(const T &value);
 
 	std::vector<NodeView> GetProperties(const std::string &name);
@@ -38,6 +41,6 @@ public:
 	template<typename T>
 	Node &operator=(T &&rhs);
 
-	Properties &GetProperties();
+	std::vector<Node> &GetProperties();
 };
 }

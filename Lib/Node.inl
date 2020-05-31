@@ -13,72 +13,21 @@
 #include <set>
 #include <sstream>
 
-namespace acid {
-namespace priv {
-template<typename T> struct is_optional : std::false_type {};
-template<typename T> struct is_optional<std::optional<T>> : std::true_type {};
-template<typename T> inline constexpr bool is_optional_v = is_optional<T>::value;
+#include "String.hpp"
 
-/**
- * Converts a type to a string.
- * @tparam T The type to convert from.
- * @param val The value to convert.
- * @return The value as a string.
- */
-template<typename T>
-static std::string To(T val) {
-	if constexpr (std::is_same_v<std::string, T> || std::is_same_v<const char *, T>) {
-		return val;
-	} else if constexpr (std::is_enum_v<T>) {
-		typedef typename std::underlying_type<T>::type safe_type;
-		return std::to_string(static_cast<safe_type>(val));
-	} else if constexpr (std::is_same_v<bool, T>) {
-		return val ? "true" : "false";
-	} else if constexpr (std::is_same_v<std::nullptr_t, T>) {
-		return "null";
-	} else if constexpr (is_optional_v<T>) {
-		if (!val.has_value())
-			return "null";
-		return To(*val);
-	} else {
-		return std::to_string(val);
-	}
+namespace serial {
+template<typename NodeParser>
+void Node::ParseString(std::string_view string) {
+	NodeParser::ParseString(*this, string);
 }
 
-/**
- * Converts a string to a type.
- * @tparam T The type to convert to.
- * @param str The string to convert.
- * @return The string as a value.
- */
-template<typename T>
-static T From(const std::string &str) {
-	if constexpr (std::is_same_v<std::string, T>) {
-		return str;
-	} else if constexpr (std::is_enum_v<T>) {
-		typedef typename std::underlying_type<T>::type safe_type;
-		return static_cast<T>(From<safe_type>(str));
-	} else if constexpr (std::is_same_v<bool, T>) {
-		return str == "true" || From<std::optional<int32_t>>(str) == 1;
-	} else if constexpr (is_optional_v<T>) {
-		typedef typename T::value_type base_type;
-		base_type temp;
-		std::istringstream iss(str);
-
-		if ((iss >> temp).fail())
-			return std::nullopt;
-		return temp;
-	} else {
-		long double temp;
-		std::istringstream iss(str);
-		iss >> temp;
-		return static_cast<T>(temp);
-	}
-}
+template<typename NodeParser>
+void Node::WriteStream(std::ostream &stream, Format format) const {
+	NodeParser::WriteStream(*this, stream, format);
 }
 
-template<typename _Elem>
-void Node::ParseStream(std::basic_istream<_Elem> &stream, const Formatter &formatter) {
+template<typename NodeParser, typename _Elem>
+void Node::ParseStream(std::basic_istream<_Elem> &stream) {
 	// We must read as UTF8 chars.
 	if constexpr (!std::is_same_v<_Elem, char>) {
 #ifndef _MSC_VER
@@ -90,14 +39,26 @@ void Node::ParseStream(std::basic_istream<_Elem> &stream, const Formatter &forma
 
 	// Reading into a string before iterating is much faster.
 	std::string s(std::istreambuf_iterator<_Elem>(stream), {});
-	ParseString(s, formatter);
+	ParseString<NodeParser>(s);
 }
 
-template<typename _Elem>
-std::basic_string<_Elem> Node::WriteString(const Formatter &formatter) const {
+template<typename NodeParser, typename _Elem>
+std::basic_string<_Elem> Node::WriteString(Format format) const {
 	std::basic_stringstream<_Elem> stream;
-	WriteStream(stream, formatter);
+	WriteStream<NodeParser>(stream, format);
 	return stream.str();
+}
+
+template<typename T>
+T Node::GetName() const {
+	// String to basic type conversion.
+	return String::From<T>(name);
+}
+
+template<typename T>
+void Node::SetName(const T &value) {
+	// Basic type to string conversion.
+	name = String::To<T>(value);
 }
 
 template<typename T>
@@ -221,25 +182,25 @@ Node &operator<<(Node &node, const std::shared_ptr<T> &object) {
 }
 
 inline const Node &operator>>(const Node &node, bool &object) {
-	object = priv::From<bool>(node.GetValue());
+	object = String::From<bool>(node.GetValue());
 	return node;
 }
 
 inline Node &operator<<(Node &node, bool object) {
-	node.SetValue(priv::To(object));
+	node.SetValue(String::To(object));
 	node.SetType(Node::Type::Boolean);
 	return node;
 }
 
 template<typename T, std::enable_if_t<std::is_arithmetic_v<T> || std::is_enum_v<T>, int> = 0>
 const Node &operator>>(const Node &node, T &object) {
-	object = priv::From<T>(node.GetValue());
+	object = String::From<T>(node.GetValue());
 	return node;
 }
 
 template<typename T, std::enable_if_t<std::is_arithmetic_v<T> || std::is_enum_v<T>, int> = 0>
 Node &operator<<(Node &node, T object) {
-	node.SetValue(priv::To(object));
+	node.SetValue(String::To(object));
 	node.SetType(std::is_floating_point_v<T> ? Node::Type::Decimal : Node::Type::Integer);
 	return node;
 }
@@ -287,6 +248,20 @@ inline Node &operator<<(Node &node, const std::filesystem::path &object) {
 	return node;
 }
 
+template<typename T, typename K>
+const Node &operator>>(const Node &node, std::pair<T, K> &pair) {
+	pair.first = node.GetName<T>();
+	node >> pair.second;
+	return node;
+}
+
+template<typename T, typename K>
+Node &operator<<(Node &node, const std::pair<T, K> &pair) {
+	node.SetName(String::To(pair.first));
+	node << pair.second;
+	return node;
+}
+
 template<typename T>
 const Node &operator>>(const Node &node, std::optional<T> &optional) {
 	if (node.GetValue() != "null") {
@@ -313,7 +288,7 @@ const Node &operator>>(const Node &node, std::vector<T> &vector) {
 	vector.clear();
 	vector.reserve(node.GetProperties().size());
 
-	for (const auto &[propertyName, property] : node.GetProperties()) {
+	for (const auto &property : node.GetProperties()) {
 		T x;
 		property >> x;
 		vector.emplace_back(std::move(x));
@@ -335,7 +310,7 @@ template<typename T>
 const Node &operator>>(const Node &node, std::set<T> &vector) {
 	vector.clear();
 
-	for (const auto &[propertyName, property] : node.GetProperties()) {
+	for (const auto &property : node.GetProperties()) {
 		T x;
 		property >> x;
 		vector.emplace(std::move(x));
@@ -357,10 +332,9 @@ template<typename T, typename K>
 const Node &operator>>(const Node &node, std::map<T, K> &map) {
 	map.clear();
 
-	for (const auto &[propertyName, property] : node.GetProperties()) {
+	for (const auto &property : node.GetProperties()) {
 		std::pair<T, K> pair;
-		pair.first = priv::From<T>(propertyName);
-		property >> pair.second;
+		property >> pair;
 		map.emplace(std::move(pair));
 	}
 
@@ -369,9 +343,8 @@ const Node &operator>>(const Node &node, std::map<T, K> &map) {
 
 template<typename T, typename K>
 Node &operator<<(Node &node, const std::map<T, K> &map) {
-	for (const auto &x : map) {
-		node.AddProperty(priv::To(x.first)) << x.second;
-	}
+	for (const auto &x : map)
+		node.AddProperty() << x;
 
 	node.SetType(Node::Type::Array);
 	return node;

@@ -2,7 +2,7 @@
 
 #include "Node.hpp"
 
-namespace acid {
+namespace serial {
 template<typename T>
 T NodeConstView::GetName() const {
 	if (!has_value())

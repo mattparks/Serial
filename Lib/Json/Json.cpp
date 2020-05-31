@@ -1,55 +1,9 @@
 #include "Json.hpp"
 
-namespace acid {
-namespace priv {
-bool IsWhitespace(char c) noexcept {
-	return c == ' ' || c == '\n' || c == '\r' || c == '\t';
-}
+#include "String.hpp"
 
-bool IsNumber(std::string_view str) noexcept {
-	// This is the fastest way to tell if a string holds a decimal number.
-	return std::all_of(str.cbegin(), str.cend(), [](const auto c) {
-		return (c >= '0' && c <= '9') || c == '.' || c == '-';
-	});
-}
-
-std::string FixEscapedChars(std::string str) {
-	static const std::vector<std::pair<char, std::string_view>> replaces = {{'\\', "\\\\"}, {'\n', "\\n"}, {'\r', "\\r"}, {'\t', "\\t"}, {'\"', "\\\""}};
-
-	for (const auto &[from, to] : replaces) {
-		auto pos = str.find(from);
-		while (pos != std::string::npos) {
-			str.replace(pos, 1, to);
-			pos = str.find(from, pos + 2);
-		}
-	}
-
-	return str;
-}
-
-std::string UnfixEscapedChars(std::string str) {
-	static const std::vector<std::pair<std::string_view, char>> replaces = {{"\\n", '\n'}, {"\\r", '\r'}, {"\\t", '\t'}, {"\\\"", '\"'}, {"\\\\", '\\'}};
-
-	for (const auto &[from, to] : replaces) {
-		auto pos = str.find(from);
-		while (pos != std::string::npos) {
-			if (pos != 0 && str[pos - 1] == '\\')
-				str.erase(str.begin() + --pos);
-			else
-				str.replace(pos, from.size(), 1, to);
-			pos = str.find(from, pos + 1 + from.size());
-		}
-	}
-
-	return str;
-}
-}
-
-Json::Json(Node::Format format) :
-	format(format) {
-}
-
-void Json::ParseString(Node &node, std::string_view string) const {
+namespace serial {
+void Json::ParseString(Node &node, std::string_view string) {
 	// Tokenizes the string view into small views that are used to build a Node tree.
 	std::vector<Node::Token> tokens;
 
@@ -70,7 +24,7 @@ void Json::ParseString(Node &node, std::string_view string) const {
 		// When not reading a string tokens can be found.
 		// While in a string whitespace and tokens are added to the strings view.
 		if (quoteState == QuoteState::None) {
-			if (priv::IsWhitespace(c)) {
+			if (String::IsWhitespace(c)) {
 				// On whitespace start save current token.
 				AddToken(std::string_view(string.data() + tokenStart, index - tokenStart), tokens);
 				tokenStart = index + 1;
@@ -91,7 +45,7 @@ void Json::ParseString(Node &node, std::string_view string) const {
 	Convert(node, tokens, 0, k);
 }
 
-void Json::WriteStream(const Node &node, std::ostream &stream) const {
+void Json::WriteStream(const Node &node, std::ostream &stream, Node::Format format) {
 	stream << (node.GetType() == Node::Type::Array ? '[' : '{') << format.newLine;
 	AppendData(node, stream, format, 1);
 	stream << (node.GetType() == Node::Type::Array ? ']' : '}');
@@ -104,7 +58,7 @@ void Json::AddToken(std::string_view view, std::vector<Node::Token> &tokens) {
 			tokens.emplace_back(Node::Type::Null, std::string_view());
 		} else if (view == "true" || view == "false") {
 			tokens.emplace_back(Node::Type::Boolean, view);
-		} else if (priv::IsNumber(view)) {
+		} else if (String::IsNumber(view)) {
 			// This is a quick hack to get if the number is a decimal.
 			if (view.find('.') != std::string::npos) {
 				if (view.size() >= std::numeric_limits<long double>::digits)
@@ -155,48 +109,48 @@ void Json::Convert(Node &current, const std::vector<Node::Token> &tokens, int32_
 	} else {
 		std::string str(tokens[i].view);
 		if (tokens[i].type == Node::Type::String)
-			str = priv::UnfixEscapedChars(str);
+			str = String::UnfixEscapedChars(str);
 		current.SetValue(str);
 		current.SetType(tokens[i].type);
 		r = i + 1;
 	}
 }
 
-void Json::AppendData(const Node &source, std::ostream &stream, Node::Format format, int32_t indent) {
+void Json::AppendData(const Node &node, std::ostream &stream, Node::Format format, int32_t indent) {
 	auto indents = format.GetIndents(indent);
 
 	// Only output the value if no properties exist.
-	if (source.GetProperties().empty()) {
-		if (source.GetType() == Node::Type::String)
-			stream << '\"' << priv::FixEscapedChars(source.GetValue()) << '\"';
-		else if (source.GetType() == Node::Type::Null)
+	if (node.GetProperties().empty()) {
+		if (node.GetType() == Node::Type::String)
+			stream << '\"' << String::FixEscapedChars(node.GetValue()) << '\"';
+		else if (node.GetType() == Node::Type::Null)
 			stream << "null";
 		else
-			stream << source.GetValue();
+			stream << node.GetValue();
 	}
 
 	// Output each property.
-	for (auto it = source.GetProperties().begin(); it < source.GetProperties().end(); ++it) {
+	for (auto it = node.GetProperties().begin(); it < node.GetProperties().end(); ++it) {
 		stream << indents;
 		// Output name for property if it exists.
-		if (!it->first.empty()) {
-			stream << '\"' << it->first << "\":" << format.space;
+		if (!it->GetName().empty()) {
+			stream << '\"' << it->GetName() << "\":" << format.space;
 		}
 
 		bool isArray = false;
-		if (!it->second.GetProperties().empty()) {
+		if (!it->GetProperties().empty()) {
 			// If all properties have no names, then this must be an array.
-			for (const auto &property2 : it->second.GetProperties()) {
-				if (property2.first.empty()) {
+			for (const auto &property2 : it->GetProperties()) {
+				if (property2.GetName().empty()) {
 					isArray = true;
 					break;
 				}
 			}
 
 			stream << (isArray ? '[' : '{') << format.newLine;
-		} else if (it->second.GetType() == Node::Type::Object) {
+		} else if (it->GetType() == Node::Type::Object) {
 			stream << '{';
-		} else if (it->second.GetType() == Node::Type::Array) {
+		} else if (it->GetType() == Node::Type::Array) {
 			stream << '[';
 		}
 
@@ -206,25 +160,25 @@ void Json::AppendData(const Node &source, std::ostream &stream, Node::Format for
 		};
 
 		// Shorten primitive array output length.
-		if (isArray && format.inlineArrays && !it->second.GetProperties().empty() && IsPrimitive(it->second.GetProperties()[0].second.GetType())) {
+		if (isArray && format.inlineArrays && !it->GetProperties().empty() && IsPrimitive(it->GetProperties()[0].GetType())) {
 			stream << format.GetIndents(indent + 1);
 			// New lines are printed a a space, no spaces are ever emitted by primitives.
-			AppendData(it->second, stream, Node::Format(0, ' ', '\0', false), indent);
+			AppendData(*it, stream, Node::Format(0, ' ', '\0', false), indent);
 			stream << '\n';
 		} else {
-			AppendData(it->second, stream, format, indent + 1);
+			AppendData(*it, stream, format, indent + 1);
 		}
 
-		if (!it->second.GetProperties().empty()) {
+		if (!it->GetProperties().empty()) {
 			stream << indents << (isArray ? ']' : '}');
-		} else if (it->second.GetType() == Node::Type::Object) {
+		} else if (it->GetType() == Node::Type::Object) {
 			stream << '}';
-		} else if (it->second.GetType() == Node::Type::Array) {
+		} else if (it->GetType() == Node::Type::Array) {
 			stream << ']';
 		}
 
 		// Separate properties by comma.
-		if (it != source.GetProperties().end() - 1)
+		if (it != node.GetProperties().end() - 1)
 			stream << ',';
 		// No new line if the indent level is zero (if primitive array type).
 		stream << (indent != 0 ? format.newLine : format.space);

@@ -4,15 +4,13 @@
 
 #include "NodeView.hpp"
 
-namespace acid {
+namespace serial {
 /**
  * @brief Class that is used to represent a tree of UFT-8 values, used in serialization.
  */
 class Node final {
 public:
 	using Type = NodeConstView::Type;
-	/// key, member
-	using Properties = NodeConstView::Properties;
 
 	/**
 	 * @brief Class that is used to print a char, and ignore null char.
@@ -72,7 +70,7 @@ public:
 		virtual ~Formatter() = default;
 
 		virtual void ParseString(Node &node, std::string_view string) const = 0;
-		virtual void WriteStream(const Node &node, std::ostream &stream) const = 0;
+		virtual void WriteStream(const Node &node, std::ostream &stream, Format format) const = 0;
 	};
 
 	class Token {
@@ -101,16 +99,24 @@ public:
 	};
 
 	Node() = default;
+	explicit Node(const std::string &name);
 	Node(const Node &node) = default;
 	Node(Node &&node) = default;
 
-	void ParseString(std::string_view string, const Formatter &formatter);
-	void WriteStream(std::ostream &stream, const Formatter &formatter) const;
+	template<typename NodeParser>
+	void ParseString(std::string_view string);
+	template<typename NodeParser>
+	void WriteStream(std::ostream &stream, Format format = Format::Minified) const;
 
-	template<typename _Elem = char>
-	void ParseStream(std::basic_istream<_Elem> &stream, const Formatter &formatter);
-	template<typename _Elem = char>
-	std::basic_string<_Elem> WriteString(const Formatter &formatter) const;
+	template<typename NodeParser, typename _Elem = char>
+	void ParseStream(std::basic_istream<_Elem> &stream);
+	template<typename NodeParser, typename _Elem = char>
+	std::basic_string<_Elem> WriteString(Format format = Format::Minified) const;
+
+	template<typename T>
+	T GetName() const;
+	template<typename T>
+	void SetName(const T &value);
 
 	template<typename T>
 	T Get() const;
@@ -165,12 +171,12 @@ public:
 	NodeView operator[](const std::string &key);
 	NodeView operator[](uint32_t index);
 
-	Node &operator=(const Node &) = default;
-	Node &operator=(Node &&) = default;
+	Node &operator=(const Node &rhs);
+	Node &operator=(Node &&rhs) noexcept;
 	Node &operator=(const NodeConstView &rhs);
-	Node &operator=(NodeConstView &&rhs);
+	Node &operator=(NodeConstView &&rhs) noexcept;
 	Node &operator=(NodeView &rhs);
-	Node &operator=(NodeView &&rhs);
+	Node &operator=(NodeView &&rhs) noexcept;
 	template<typename T>
 	Node &operator=(const T &rhs);
 
@@ -178,8 +184,11 @@ public:
 	bool operator!=(const Node &rhs) const;
 	bool operator<(const Node &rhs) const;
 
-	const Properties &GetProperties() const { return properties; }
-	Properties &GetProperties() { return properties; }
+	const std::vector<Node> &GetProperties() const { return properties; }
+	std::vector<Node> &GetProperties() { return properties; }
+
+	const std::string &GetName() const { return name; }
+	void SetName(std::string name) { this->name = std::move(name); }
 
 	const std::string &GetValue() const { return value; }
 	void SetValue(std::string value) { this->value = std::move(value); }
@@ -188,7 +197,8 @@ public:
 	void SetType(Type type) { this->type = type; }
 
 protected:
-	Properties properties;
+	std::vector<Node> properties; // members
+	std::string name; // key
 	std::string value;
 	Type type = Type::Object;
 };

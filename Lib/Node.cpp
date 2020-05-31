@@ -2,18 +2,14 @@
 
 #include <algorithm>
 
-namespace acid {
+namespace serial {
 const Node::Format Node::Format::Beautified = Format(2, '\n', ' ', true);
 const Node::Format Node::Format::Minified = Format(0, '\0', '\0', false);
 
 static const Node NullNode = (Node() = nullptr);
 
-void Node::ParseString(std::string_view string, const Formatter &formatter) {
-	formatter.ParseString(*this, string);
-}
-
-void Node::WriteStream(std::ostream &stream, const Formatter &formatter) const {
-	formatter.WriteStream(*this, stream);
+Node::Node(const std::string &name) :
+	name(name) {
 }
 
 void Node::Clear() {
@@ -36,8 +32,8 @@ bool Node::IsValid() const {
 }
 
 bool Node::HasProperty(const std::string &name) const {
-	for (const auto &[propertyName, property] : properties) {
-		if (propertyName == name)
+	for (const auto &property : properties) {
+		if (property.name == name)
 			return true;
 	}
 
@@ -49,8 +45,8 @@ bool Node::HasProperty(uint32_t index) const {
 }
 
 NodeConstView Node::GetProperty(const std::string &name) const {
-	for (const auto &[propertyName, property] : properties) {
-		if (propertyName == name)
+	for (const auto &property : properties) {
+		if (property.name == name)
 			return {this, name, &property};
 	}
 
@@ -59,15 +55,15 @@ NodeConstView Node::GetProperty(const std::string &name) const {
 
 NodeConstView Node::GetProperty(uint32_t index) const {
 	if (index < properties.size())
-		return {this, index, &properties[index].second};
+		return {this, index, &properties[index]};
 
 	return {this, index, nullptr};
 }
 
 // TODO: Duplicate
 NodeView Node::GetProperty(const std::string &name) {
-	for (auto &[propertyName, property] : properties) {
-		if (propertyName == name)
+	for (auto &property : properties) {
+		if (property.name == name)
 			return {this, name, &property};
 	}
 
@@ -77,56 +73,55 @@ NodeView Node::GetProperty(const std::string &name) {
 // TODO: Duplicate
 NodeView Node::GetProperty(uint32_t index) {
 	if (index < properties.size())
-		return {this, index, &properties[index].second};
+		return {this, index, &properties[index]};
 
 	return {this, index, nullptr};
 }
 
 Node &Node::AddProperty() {
-	return properties.emplace_back().second;
+	return properties.emplace_back();
 }
 
 Node &Node::AddProperty(const std::string &name, const Node &node) {
-	if (HasProperty(name))
-		return GetProperty(name);
-	return properties.emplace_back(name, node).second;
+	Node newNode = node;
+	newNode.name = name;
+	return properties.emplace_back(std::move(newNode));
 }
 
 Node &Node::AddProperty(const std::string &name, Node &&node) {
-	if (HasProperty(name))
-		return GetProperty(name);
-	return properties.emplace_back(name, std::move(node)).second;
+	node.name = name;
+	return properties.emplace_back(std::move(node));
 }
 
 Node &Node::AddProperty(uint32_t index, const Node &node) {
-	properties.resize(std::max(properties.size(), static_cast<std::size_t>(index + 1)), {"", NullNode});
-	return properties[index].second = node;
+	properties.resize(std::max(properties.size(), static_cast<std::size_t>(index + 1)), NullNode);
+	return properties[index] = node;
 }
 
 Node &Node::AddProperty(uint32_t index, Node &&node) {
-	properties.resize(std::max(properties.size(), static_cast<std::size_t>(index + 1)), {"", NullNode});
-	return properties[index].second = std::move(node);
+	properties.resize(std::max(properties.size(), static_cast<std::size_t>(index + 1)), NullNode);
+	return properties[index] = std::move(node);
 }
 
 void Node::RemoveProperty(const std::string &name) {
 	//node.parent = nullptr;
 	properties.erase(std::remove_if(properties.begin(), properties.end(), [name](const auto &n) {
-		return n.first == name;
+		return n.name == name;
 	}), properties.end());
 }
 
 void Node::RemoveProperty(const Node &node) {
 	//node.parent = nullptr;
 	properties.erase(std::remove_if(properties.begin(), properties.end(), [node](const auto &n) {
-		return n.second == node;
+		return n == node;
 	}), properties.end());
 }
 
 std::vector<NodeConstView> Node::GetProperties(const std::string &name) const {
 	std::vector<NodeConstView> properties;
 
-	for (const auto &[propertyName, property] : this->properties) {
-		if (propertyName == name)
+	for (const auto &property : this->properties) {
+		if (property.name == name)
 			properties.emplace_back(NodeConstView(this, name, &property));
 	}
 
@@ -142,7 +137,7 @@ NodeConstView Node::GetPropertyWithBackup(const std::string &name, const std::st
 }
 
 NodeConstView Node::GetPropertyWithValue(const std::string &name, const std::string &value) const {
-	for (const auto &[propertyName, property] : properties) {
+	for (const auto &property : properties) {
 		auto properties1 = property.GetProperties(name);
 		if (properties1.empty())
 			return {this, name, nullptr};
@@ -160,8 +155,8 @@ NodeConstView Node::GetPropertyWithValue(const std::string &name, const std::str
 std::vector<NodeView> Node::GetProperties(const std::string &name) {
 	std::vector<NodeView> properties;
 
-	for (auto &[propertyName, property] : this->properties) {
-		if (propertyName == name)
+	for (auto &property : this->properties) {
+		if (property.name == name)
 			properties.emplace_back(NodeView(this, name, &property));
 	}
 
@@ -179,7 +174,7 @@ NodeView Node::GetPropertyWithBackup(const std::string &name, const std::string 
 
 // TODO: Duplicate
 NodeView Node::GetPropertyWithValue(const std::string &name, const std::string &value) {
-	for (auto &[propertyName, property] : properties) {
+	for (auto &property : properties) {
 		auto properties1 = property.GetProperties(name);
 		if (properties1.empty())
 			return {this, name, nullptr};
@@ -211,27 +206,35 @@ NodeView Node::operator[](uint32_t index) {
 	return GetProperty(index);
 }
 
+Node &Node::operator=(const Node &rhs) {
+	properties = rhs.properties;
+	//name = rhs.name;
+	value = rhs.value;
+	type = rhs.type;
+	return *this;
+}
+
+Node &Node::operator=(Node &&rhs) noexcept {
+	properties = std::move(rhs.properties);
+	//name = std::move(rhs.name);
+	value = std::move(rhs.value);
+	type = std::move(rhs.type);
+	return *this;
+}
+
 Node &Node::operator=(const NodeConstView &rhs) {
-	//if (!rhs.has_value())
-	//	throw std::runtime_error("Cannot assign Node to another Node that does not have a value");
 	return operator=(*rhs);
 }
 
-Node &Node::operator=(NodeConstView &&rhs) {
-	//if (!rhs.has_value())
-	//	throw std::runtime_error("Cannot assign Node to another Node that does not have a value");
+Node &Node::operator=(NodeConstView &&rhs) noexcept {
 	return operator=(*rhs);
 }
 
 Node &Node::operator=(NodeView &rhs) {
-	//if (!rhs.has_value())
-	//	throw std::runtime_error("Cannot assign Node to another Node that does not have a value");
 	return operator=(*rhs);
 }
 
-Node &Node::operator=(NodeView &&rhs) {
-	//if (!rhs.has_value())
-	//	throw std::runtime_error("Cannot assign Node to another Node that does not have a value");
+Node &Node::operator=(NodeView &&rhs) noexcept {
 	return operator=(*rhs);
 }
 

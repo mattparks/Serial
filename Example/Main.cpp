@@ -6,7 +6,7 @@
 #include <Json/Json.hpp>
 #include <Xml/Xml.hpp>
 
-using namespace acid;
+using namespace serial;
 
 namespace test {
 class Example1 {
@@ -155,6 +155,11 @@ int main(int argc, char **argv) {
 	user4 = test::User{"user4", "User Four", "High school student", true, "30/04/2002"};
 	node["users"][6] = std::move(user4);
 	//node["users"][7] = test::User{"köln", "'Etat de São Paulo", R"(\"Hello World\")", true, "01/00/2000"};
+
+	// TODO: Resizing a vector changes the internal addressed of each element. 
+	// NodeView holds a pointer and will not be aware that the value it holds has been reallocated.
+	// In this instance the left side of the assignment will invalidate the right without a resize before assignment.
+	//node["users"]->AddProperty(8); 
 	//node["users"][8] = node["users"][6];
 
 	Node numbers;
@@ -175,27 +180,28 @@ int main(int argc, char **argv) {
 	
 		// Test Json writer.
 		std::ofstream outStream1("Example/Test1.json");
-		json1.WriteStream(outStream1, Json(Node::Format::Beautified));
+		json1.WriteStream<Json>(outStream1, Node::Format::Beautified);
 		outStream1.close();
 
 		// Test Json reader.
 		std::ifstream inStream1("Example/Test1.json");
 		Node json2;
-		json2.ParseStream(inStream1, Json());
+		json2.ParseStream<Json>(inStream1);
 		inStream1.close();
 		
 		// Ensure Test1.json and Test2.json values are the same (ignore order changes).
 		std::ofstream outStream2("Example/Test2.json");
-		json2.WriteStream(outStream2, Json(Node::Format::Beautified));
+		json2.WriteStream<Json>(outStream2, Node::Format::Beautified);
 		outStream2.close();
 	}
 	{
 		// Make a copy of the node.
-		Node xml1 = node;
+		Node xml1("node");
+		xml1 = node;
 
 		// Test Xml writer.
 		std::ofstream outStream1("Example/Xml1.xml");
-		xml1.WriteStream(outStream1, Xml("node", Node::Format::Beautified));
+		xml1.WriteStream<Xml>(outStream1, Node::Format::Beautified);
 		outStream1.close();
 	}
 
