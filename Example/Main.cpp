@@ -196,8 +196,7 @@ int main(int argc, char **argv) {
 	}
 	{
 		// Make a copy of the node.
-		Node xml1("node");
-		xml1 = node;
+		Node xml1("node", node);
 
 		// Test Xml writer.
 		std::ofstream outStream1("Example/Xml1.xml");

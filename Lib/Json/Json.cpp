@@ -2,6 +2,8 @@
 
 #include "String.hpp"
 
+#define ATTRIBUTE_TEXT_SUPPORT 1
+
 namespace serial {
 void Json::ParseString(Node &node, std::string_view string) {
 	// Tokenizes the string view into small views that are used to build a Node tree.
@@ -86,7 +88,13 @@ void Json::Convert(Node &current, const std::vector<Node::Token> &tokens, int32_
 			if (tokens[k + 1].view != ":")
 				throw std::runtime_error("Missing object colon");
 			k += 2;
-			Convert(current.AddProperty(std::string(key)), tokens, k, k);
+#if ATTRIBUTE_TEXT_SUPPORT
+			// Write value string into current value, then continue parsing properties into current.
+			if (key == "#text")
+				Convert(current, tokens, k, k);
+			else
+#endif
+				Convert(current.AddProperty(std::string(key)), tokens, k, k);
 			if (tokens[k].view == ",")
 				k++;
 		}
@@ -128,6 +136,17 @@ void Json::AppendData(const Node &node, std::ostream &stream, Node::Format forma
 		else
 			stream << node.GetValue();
 	}
+
+#if ATTRIBUTE_TEXT_SUPPORT
+	// If the Json Node has both properties and a value, value will be written as a "#text" property.
+	// XML is the only format that allows a Node to have both a value and properties.
+	if (!node.GetProperties().empty() && !node.GetValue().empty()) {
+		stream << indents;
+		stream << "\"#text\":" << format.space << "\"" << node.GetValue() << "\",";
+		// No new line if the indent level is zero (if primitive array type).
+		stream << (indent != 0 ? format.newLine : format.space);
+	}
+#endif
 
 	// Output each property.
 	for (auto it = node.GetProperties().begin(); it < node.GetProperties().end(); ++it) {

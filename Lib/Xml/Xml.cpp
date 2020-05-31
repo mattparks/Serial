@@ -22,19 +22,18 @@ void Xml::Convert(Node &current, const std::vector<Node::Token> &tokens, int32_t
 void Xml::AppendData(const Node &node, std::ostream &stream, Node::Format format, int32_t indent) {
 	auto indents = format.GetIndents(indent);
 
-	auto tagName = String::ReplaceAll(node.GetName(), " ", "_");
-
 	int attributeCount = 0;
 	std::stringstream nameAttributes;
-	nameAttributes << tagName;
+	nameAttributes << node.GetName();
 
 	for (const auto &property : node.GetProperties()) {
-		if (property.GetName().rfind('_', 0) != 0) continue;
+		if (property.GetName().rfind('-', 0) != 0) continue;
 		nameAttributes << " " << property.GetName().substr(1) << "=\"" << property.GetValue() << "\"";
 		attributeCount++;
 	}
 
-	auto nameAndAttribs = String::Trim(nameAttributes.str());
+	auto nameAndAttribs = nameAttributes.str();
+	nameAndAttribs = String::Trim(nameAndAttribs);
 
 	stream << indents;
 
@@ -42,7 +41,7 @@ void Xml::AppendData(const Node &node, std::ostream &stream, Node::Format format
 		stream << "<" << nameAndAttribs << "?>" << format.newLine;
 
 		for (const auto &property : node.GetProperties()) {
-			if (property.GetName().rfind('_', 0) != 0)
+			if (property.GetName().rfind('-', 0) != 0)
 				AppendData(property, stream, format, indent);
 		}
 
@@ -64,13 +63,13 @@ void Xml::AppendData(const Node &node, std::ostream &stream, Node::Format format
 		stream << format.newLine;
 
 		for (const auto &property : node.GetProperties()) {
-			if (property.GetName().rfind('_', 0) != 0)
+			if (property.GetName().rfind('-', 0) != 0)
 				AppendData(property, stream, format, indent + 1);
 		}
 
 		stream << indents;
 	}
 
-	stream << "</" << tagName << '>' << format.newLine;
+	stream << "</" << node.GetName() << '>' << format.newLine;
 }
 }

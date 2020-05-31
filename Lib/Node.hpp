@@ -89,6 +89,7 @@ public:
 
 	Node() = default;
 	explicit Node(const std::string &name);
+	Node(const std::string &name, const Node &node);
 	Node(const Node &node) = default;
 	Node(Node &&node) = default;
 

@@ -12,6 +12,11 @@ Node::Node(const std::string &name) :
 	name(name) {
 }
 
+Node::Node(const std::string &name, const Node &node) :
+	Node(node) {
+	SetName(name);
+}
+
 void Node::Clear() {
 	properties.clear();
 }
