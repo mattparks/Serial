@@ -25,7 +25,7 @@ public:
 	enum class Type : uint8_t {
 		Object, Array, String, Boolean, Integer, Decimal, Null, Token, Unknown
 	};
-	/// key, members
+	/// key, member
 	using Properties = std::vector<std::pair<std::string, Node>>;
 
 	bool has_value() const noexcept { return value != nullptr; }

@@ -16,9 +16,9 @@ Node *NodeView::get() {
 		// This will build the tree of nodes from the return keys tree.
 		for (const auto &key : keys) {
 			if (const auto name = std::get_if<std::string>(&key))
-				value = &const_cast<Node *>(parent)->AddProperty(*name, {});
+				value = &const_cast<Node *>(parent)->AddProperty(*name);
 			else if (const auto index = std::get_if<std::uint32_t>(&key))
-				value = &const_cast<Node *>(parent)->AddProperty(*index, {});
+				value = &const_cast<Node *>(parent)->AddProperty(*index);
 			else
 				throw std::runtime_error("Key for node return is neither a int or a string");
 			

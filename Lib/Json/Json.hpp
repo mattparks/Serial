@@ -5,6 +5,7 @@
 namespace acid {
 class Json : public Node::Formatter {
 public:
+	/// Values only need to be specified where used as a writer.
 	explicit Json(Node::Format format = Node::Format::Minified);
 	
 	void ParseString(Node &node, std::string_view string) const override;

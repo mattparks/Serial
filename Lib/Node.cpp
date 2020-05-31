@@ -7,7 +7,6 @@ const Node::Format Node::Format::Beautified = Format(2, '\n', ' ', true);
 const Node::Format Node::Format::Minified = Format(0, '\0', '\0', false);
 
 static const Node NullNode = (Node() = nullptr);
-static const std::pair<std::string, Node> NullNodePair = {"", NullNode};
 
 void Node::ParseString(std::string_view string, const Formatter &formatter) {
 	formatter.ParseString(*this, string);
@@ -43,6 +42,10 @@ bool Node::HasProperty(const std::string &name) const {
 	}
 
 	return false;
+}
+
+bool Node::HasProperty(uint32_t index) const {
+	return index < properties.size();
 }
 
 NodeConstView Node::GetProperty(const std::string &name) const {
@@ -83,23 +86,26 @@ Node &Node::AddProperty() {
 	return properties.emplace_back().second;
 }
 
+Node &Node::AddProperty(const std::string &name, const Node &node) {
+	if (HasProperty(name))
+		return GetProperty(name);
+	return properties.emplace_back(name, node).second;
+}
+
 Node &Node::AddProperty(const std::string &name, Node &&node) {
+	if (HasProperty(name))
+		return GetProperty(name);
 	return properties.emplace_back(name, std::move(node)).second;
 }
 
-Node &Node::AddProperty(const std::string &name) {
-	Node node;
-	return properties.emplace_back(name, std::move(node)).second;
+Node &Node::AddProperty(uint32_t index, const Node &node) {
+	properties.resize(std::max(properties.size(), static_cast<std::size_t>(index + 1)), {"", NullNode});
+	return properties[index].second = node;
 }
 
 Node &Node::AddProperty(uint32_t index, Node &&node) {
-	properties.resize(std::max(properties.size(), static_cast<std::size_t>(index + 1)), NullNodePair);
+	properties.resize(std::max(properties.size(), static_cast<std::size_t>(index + 1)), {"", NullNode});
 	return properties[index].second = std::move(node);
-}
-
-Node &Node::AddProperty(uint32_t index) {
-	properties.resize(std::max(properties.size(), static_cast<std::size_t>(index + 1)), NullNodePair);
-	return properties[index].second;
 }
 
 void Node::RemoveProperty(const std::string &name) {
@@ -206,18 +212,26 @@ NodeView Node::operator[](uint32_t index) {
 }
 
 Node &Node::operator=(const NodeConstView &rhs) {
+	//if (!rhs.has_value())
+	//	throw std::runtime_error("Cannot assign Node to another Node that does not have a value");
 	return operator=(*rhs);
 }
 
 Node &Node::operator=(NodeConstView &&rhs) {
+	//if (!rhs.has_value())
+	//	throw std::runtime_error("Cannot assign Node to another Node that does not have a value");
 	return operator=(*rhs);
 }
 
 Node &Node::operator=(NodeView &rhs) {
+	//if (!rhs.has_value())
+	//	throw std::runtime_error("Cannot assign Node to another Node that does not have a value");
 	return operator=(*rhs);
 }
 
 Node &Node::operator=(NodeView &&rhs) {
+	//if (!rhs.has_value())
+	//	throw std::runtime_error("Cannot assign Node to another Node that does not have a value");
 	return operator=(*rhs);
 }
 

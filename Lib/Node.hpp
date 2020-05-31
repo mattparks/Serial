@@ -11,7 +11,7 @@ namespace acid {
 class Node final {
 public:
 	using Type = NodeConstView::Type;
-	/// key, members
+	/// key, member
 	using Properties = NodeConstView::Properties;
 
 	/**
@@ -19,7 +19,9 @@ public:
 	 */
 	class NullableChar {
 	public:
-		constexpr NullableChar(char val) : val(val) {}
+		constexpr NullableChar(char val) :
+			val(val) {
+		}
 
 		constexpr operator const char &() const noexcept { return val; }
 
@@ -62,6 +64,9 @@ public:
 		bool inlineArrays;
 	};
 
+	/**
+	 * @brief Class that is used to read a Node from a file format, or to write one.
+	 */
 	class Formatter {
 	public:
 		virtual ~Formatter() = default;
@@ -135,15 +140,16 @@ public:
 	Node &Append(const Args &...args);
 
 	bool HasProperty(const std::string &name) const;
+	bool HasProperty(uint32_t index) const;
 	NodeConstView GetProperty(const std::string &name) const;
 	NodeConstView GetProperty(uint32_t index) const;
 	NodeView GetProperty(const std::string &name);
 	NodeView GetProperty(uint32_t index);
 	Node &AddProperty();
-	Node &AddProperty(const std::string &name, Node &&node);
-	Node &AddProperty(const std::string &name);
-	Node &AddProperty(uint32_t index, Node &&node);
-	Node &AddProperty(uint32_t index);
+	Node &AddProperty(const std::string &name, const Node &node);
+	Node &AddProperty(const std::string &name, Node &&node = {});
+	Node &AddProperty(uint32_t index, const Node &node);
+	Node &AddProperty(uint32_t index, Node &&node = {});
 	void RemoveProperty(const std::string &name);
 	void RemoveProperty(const Node &node);
 

@@ -155,9 +155,7 @@ int main(int argc, char **argv) {
 	user4 = test::User{"user4", "User Four", "High school student", true, "30/04/2002"};
 	node["users"][6] = std::move(user4);
 	//node["users"][7] = test::User{"köln", "'Etat de São Paulo", R"(\"Hello World\")", true, "01/00/2000"};
-
-	auto &user8 = *node["users"][8];
-	node["users"][8] = node["users"][6];
+	//node["users"][8] = node["users"][6];
 
 	Node numbers;
 	numbers["a"] = std::vector{1, 2, 3, 4};
