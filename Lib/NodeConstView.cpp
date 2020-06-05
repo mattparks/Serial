@@ -51,9 +51,9 @@ std::vector<Node> NodeConstView::GetProperties() const {
 	return value->GetProperties();
 }
 
-NodeView::Type NodeConstView::GetType() const {
+std::string NodeConstView::GetName() const {
 	if (!has_value())
-		return Type::Unknown;
-	return value->GetType();
+		return "";
+	return value->GetName();
 }
 }

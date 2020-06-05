@@ -22,10 +22,6 @@ protected:
 	NodeConstView(const NodeConstView *parent, Key key);
 
 public:
-	enum class Type : uint8_t {
-		Object, Array, String, Boolean, Integer, Decimal, Null, Token, Unknown
-	};
-
 	bool has_value() const noexcept { return value != nullptr; }
 	const Node *get() const { return value; }
 
@@ -56,8 +52,8 @@ public:
 
 	std::vector<Node> GetProperties() const;
 
-	Type GetType() const;
-	
+	std::string GetName() const;
+
 protected:
 	const Node *parent = nullptr;
 	const Node *value = nullptr;

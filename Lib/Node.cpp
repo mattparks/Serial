@@ -83,8 +83,12 @@ NodeView Node::GetProperty(uint32_t index) {
 	return {this, index, nullptr};
 }
 
-Node &Node::AddProperty() {
-	return properties.emplace_back();
+Node &Node::AddProperty(const Node &node) {
+	return properties.emplace_back(node);
+}
+
+Node &Node::AddProperty(Node &&node) {
+	return properties.emplace_back(std::move(node));
 }
 
 Node &Node::AddProperty(const std::string &name, const Node &node) {

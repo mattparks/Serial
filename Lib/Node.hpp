@@ -10,7 +10,9 @@ namespace serial {
  */
 class Node final {
 public:
-	using Type = NodeConstView::Type;
+	enum class Type : uint8_t {
+		Object, Array, String, Boolean, Integer, Decimal, Null, Token, Unknown
+	};
 
 	/**
 	 * @brief Class that is used to print a char, and ignore null char.
@@ -141,7 +143,8 @@ public:
 	NodeConstView GetProperty(uint32_t index) const;
 	NodeView GetProperty(const std::string &name);
 	NodeView GetProperty(uint32_t index);
-	Node &AddProperty();
+	Node &AddProperty(const Node &node);
+	Node &AddProperty(Node &&node = {});
 	Node &AddProperty(const std::string &name, const Node &node);
 	Node &AddProperty(const std::string &name, Node &&node = {});
 	Node &AddProperty(uint32_t index, const Node &node);
