@@ -1,8 +1,7 @@
 #include "Xml.hpp"
 
-#include <sstream>
-
-#include "String.hpp"
+#include "Utils/String.hpp"
+#include "Utils/Enumerate.hpp"
 
 namespace serial {
 void Xml::ParseString(Node &node, std::string_view string) {
@@ -18,8 +17,7 @@ void Xml::ParseString(Node &node, std::string_view string) {
 	} tagState = TagState::None;
 
 	// Iterates over all the characters in the string view.
-	for (std::size_t index = 0; index < string.length(); ++index) {
-		auto c = string[index];
+	for (auto &&[index, c] : Enumerate(string)) {
 		// If the previous character was a backslash the quote will not break the string.
 		if (c == '\'' && quoteState != QuoteState::Double && string[index - 1] != '\\')
 			quoteState = quoteState == QuoteState::None ? QuoteState::Single : QuoteState::None;
@@ -34,20 +32,17 @@ void Xml::ParseString(Node &node, std::string_view string) {
 				AddToken(std::string_view(string.data() + tokenStart, index - tokenStart), tokens);
 				tokenStart = index + 1;
 			} else if (c == '=' || c == '<' || c == '>' || c == '?' || c == '/') {
+				// Tokens used to read XML nodes.
+				AddToken(std::string_view(string.data() + tokenStart, index - tokenStart), tokens);
+				tokens.emplace_back(Node::Type::Token, std::string_view(string.data() + index, 1));
 				if (c == '<')
 					tagState = TagState::Open;
 				else if (c == '>')
 					tagState = TagState::Close;
-				// Tokens used to read json nodes.
-				AddToken(std::string_view(string.data() + tokenStart, index - tokenStart), tokens);
-				tokens.emplace_back(Node::Type::Token, std::string_view(string.data() + index, 1));
 				tokenStart = index + 1;
 			}
 		}
 	}
-
-	if (tokens.empty())
-		throw std::runtime_error("No tokens found in document");
 
 	// Converts the tokens into nodes.
 	int32_t k = 0;
@@ -63,48 +58,66 @@ void Xml::WriteStream(const Node &node, std::ostream &stream, Node::Format forma
 		stream << " " << property.GetName().substr(1) << "=\"" << property.GetValue() << "\"";
 	}
 	stream << '>' << format.newLine;
-	AppendData(node, stream, format, 1);
+	AppendData(node, stream, format, 0);
 	stream << "</" << node.GetName() << ">";
 }
 
 void Xml::AddToken(std::string_view view, std::vector<Node::Token> &tokens) {
-	if (view.length() != 0)
+	if (view.length() != 0 && !std::all_of(view.cbegin(), view.cend(), String::IsWhitespace))
 		tokens.emplace_back(Node::Type::String, view);
 }
 
 void Xml::Convert(Node &current, const std::vector<Node::Token> &tokens, int32_t i, int32_t &r) {
-	// {"<", "name", "-property", "-", "value", ... , ">",}
-	// {"value",}
-	// {"</", "name", ">"}
-
+	// TODO: Cleanup and optimize.
+	// move child tags with same names into new array node with tag name as children
+	
 	if (tokens[i] == Node::Token(Node::Type::Token, "<")) {
 		auto k = i + 1;
-		auto key = tokens[k].view;
-		k++;
 
-		while (tokens[k] != Node::Token(Node::Type::Token, ">")) {
+		// Ignore prolog
+		if (tokens[k] == Node::Token(Node::Type::Token, "?")) {
+			k += 2;
+			while (tokens[k] != Node::Token(Node::Type::Token, ">"))
+				k++;
 			k++;
-		}
-
-		if (key == "?")
 			Convert(current, tokens, k, k);
+		} else {
+			auto name = tokens[k].view;
+			k += 1;
+			auto &property = current.AddProperty(std::string(name));
 
-		current.SetType(Node::Type::Object);
-		r = k + 1;
-	} else {
-		std::string str(tokens[i].view);
-		if (tokens[i].type == Node::Type::String)
-			str = String::UnfixEscapedChars(str);
-		current.SetValue(str);
-		current.SetType(tokens[i].type);
-		r = i + 1;
+			while (tokens[k] != Node::Token(Node::Type::Token, ">")) {
+				if (tokens[k] == Node::Token(Node::Type::Token, "=")) {
+					auto attributeName = tokens[k + 1].view;
+					property.AddProperty("-" + std::string(tokens[k - 1].view)) = attributeName.substr(1, attributeName.size() - 2);
+					k++;
+				}
+				k++;
+			}
+			k++;
+
+			if (tokens[k - 2] != Node::Token(Node::Type::Token, "/")) {
+				while (!(tokens[k] == Node::Token(Node::Type::Token, "<") && tokens[k + 1] == Node::Token(Node::Type::Token, "/") && tokens[k + 2].view == name)) {
+					if (tokens[k].type == Node::Type::String) {
+						property.SetValue(std::string(tokens[k].view));
+						property.SetType(Node::Type::String);
+						k++;
+					} else {
+						Convert(property, tokens, k, k);
+					}
+				}
+				k += 4;
+			}
+		}
+		
+		r = k;
 	}
 }
 
 void Xml::AppendData(const Node &node, std::ostream &stream, Node::Format format, int32_t indent) {
 	stream << node.GetValue();
 
-	auto indents = format.GetIndents(indent);
+	auto indents = format.GetIndents(indent + 1);
 	// Output each property.
 	for (auto it = node.GetProperties().begin(); it < node.GetProperties().end(); ++it) {
 		if (it->GetName().rfind('-', 0) == 0) continue;
@@ -116,7 +129,7 @@ void Xml::AppendData(const Node &node, std::ostream &stream, Node::Format format
 		}
 
 		// If the node is an array, then all properties will inherit the array name.
-		auto name = node.GetType() == Node::Type::Array ? node.GetName() : it->GetName();
+		const auto &name = node.GetType() == Node::Type::Array ? node.GetName() : it->GetName();
 		stream << indents << '<' << name;
 
 		// Add attributes to opening tag.

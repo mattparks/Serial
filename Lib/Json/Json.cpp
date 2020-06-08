@@ -1,6 +1,7 @@
 #include "Json.hpp"
 
-#include "String.hpp"
+#include "Utils/String.hpp"
+#include "Utils/Enumerate.hpp"
 
 #define ATTRIBUTE_TEXT_SUPPORT 1
 
@@ -15,8 +16,7 @@ void Json::ParseString(Node &node, std::string_view string) {
 	} quoteState = QuoteState::None;
 
 	// Iterates over all the characters in the string view.
-	for (std::size_t index = 0; index < string.length(); ++index) {
-		auto c = string[index];
+	for (auto &&[index, c] : Enumerate(string)) {
 		// If the previous character was a backslash the quote will not break the string.
 		if (c == '\'' && quoteState != QuoteState::Double && string[index - 1] != '\\')
 			quoteState = quoteState == QuoteState::None ? QuoteState::Single : QuoteState::None;

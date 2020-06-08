@@ -13,7 +13,7 @@
 #include <set>
 #include <sstream>
 
-#include "String.hpp"
+#include "Utils/String.hpp"
 
 namespace serial {
 template<typename NodeParser>
@@ -219,7 +219,7 @@ inline Node &operator<<(Node &node, const char *string) {
 //inline const Node &operator>>(const Node &node, std::string_view &string)
 
 inline Node &operator<<(Node &node, std::string_view string) {
-	node.SetValue(string.data());
+	node.SetValue(std::string(string));
 	node.SetType(Node::Type::String);
 	return node;
 }
