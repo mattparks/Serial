@@ -31,7 +31,7 @@ void Xml::ParseString(Node &node, std::string_view string) {
 				// On whitespace start save current token.
 				AddToken(std::string_view(string.data() + tokenStart, index - tokenStart), tokens);
 				tokenStart = index + 1;
-			} else if (c == '=' || c == '<' || c == '>' || c == '?' || c == '/') {
+			} else if (c == '<' || c == '>' || (tagState == TagState::Open && (c == '?' || c == '!' || c == '=' || c == '/'))) {
 				// Tokens used to read XML nodes.
 				AddToken(std::string_view(string.data() + tokenStart, index - tokenStart), tokens);
 				tokens.emplace_back(Node::Type::Token, std::string_view(string.data() + index, 1));
@@ -46,7 +46,7 @@ void Xml::ParseString(Node &node, std::string_view string) {
 
 	// Converts the tokens into nodes.
 	int32_t k = 0;
-	Convert(node, tokens, 0, k);
+	Convert(node, tokens, k);
 }
 
 void Xml::WriteStream(const Node &node, std::ostream &stream, Node::Format format) {
@@ -67,51 +67,71 @@ void Xml::AddToken(std::string_view view, std::vector<Node::Token> &tokens) {
 		tokens.emplace_back(Node::Type::String, view);
 }
 
-void Xml::Convert(Node &current, const std::vector<Node::Token> &tokens, int32_t i, int32_t &r) {
-	// TODO: Cleanup and optimize.
-	// move child tags with same names into new array node with tag name as children
-	
-	if (tokens[i] == Node::Token(Node::Type::Token, "<")) {
-		auto k = i + 1;
+void Xml::Convert(Node &current, const std::vector<Node::Token> &tokens, int32_t &k) {
+	// Only start to parse if we are at the start of a tag.
+	if (tokens[k] != Node::Token(Node::Type::Token, "<"))
+		return;
+	k++;
 
-		// Ignore prolog
-		if (tokens[k] == Node::Token(Node::Type::Token, "?")) {
-			k += 2;
-			while (tokens[k] != Node::Token(Node::Type::Token, ">"))
-				k++;
+	// Ignore prolog and DOCTYPE.
+	if (tokens[k] == Node::Token(Node::Type::Token, "?") || tokens[k] == Node::Token(Node::Type::Token, "!")) {
+		k += 2;
+		while (tokens[k] != Node::Token(Node::Type::Token, ">"))
 			k++;
-			Convert(current, tokens, k, k);
-		} else {
-			auto name = tokens[k].view;
-			k += 1;
-			auto &property = current.AddProperty(std::string(name));
-
-			while (tokens[k] != Node::Token(Node::Type::Token, ">")) {
-				if (tokens[k] == Node::Token(Node::Type::Token, "=")) {
-					auto attributeName = tokens[k + 1].view;
-					property.AddProperty("-" + std::string(tokens[k - 1].view)) = attributeName.substr(1, attributeName.size() - 2);
-					k++;
-				}
-				k++;
-			}
-			k++;
-
-			if (tokens[k - 2] != Node::Token(Node::Type::Token, "/")) {
-				while (!(tokens[k] == Node::Token(Node::Type::Token, "<") && tokens[k + 1] == Node::Token(Node::Type::Token, "/") && tokens[k + 2].view == name)) {
-					if (tokens[k].type == Node::Type::String) {
-						property.SetValue(std::string(tokens[k].view));
-						property.SetType(Node::Type::String);
-						k++;
-					} else {
-						Convert(property, tokens, k, k);
-					}
-				}
-				k += 4;
-			}
-		}
-		
-		r = k;
+		k++;
+		Convert(current, tokens, k);
+		return;
 	}
+
+	// The next token after the open tag is the name.
+	auto name = tokens[k].view;
+	k++;
+	// Create the property that will contain the attributes and children found in the tag.
+	auto &property = CreateProperty(current, std::string(name));
+
+	while (tokens[k] != Node::Token(Node::Type::Token, ">")) {
+		// Attributes are added as properties.
+		if (tokens[k] == Node::Token(Node::Type::Token, "=")) {
+			property.AddProperty("-" + std::string(tokens[k - 1].view)) = tokens[k + 1].view.substr(1, tokens[k + 1].view.size() - 2);
+			k++;
+		}
+		k++;
+	}
+	k++;
+
+	// Inline tag has no children.
+	if (tokens[k - 2] == Node::Token(Node::Type::Token, "/")) 
+		return;
+	// Continue through all children until the end tag is found.
+	while (!(tokens[k] == Node::Token(Node::Type::Token, "<") && tokens[k + 1] == Node::Token(Node::Type::Token, "/") && tokens[k + 2].view == name)) {
+		if (tokens[k].type == Node::Type::String) {
+			property = tokens[k].view;
+			k++;
+		} else {
+			// TODO: If the token at k is not a '<' this will cause a infinite loop, or if k + 2 > tokens.size() vector access will be violated.
+			Convert(property, tokens, k);
+		}
+	}
+	k += 4;
+}
+
+Node &Xml::CreateProperty(Node &current, const std::string &name) {
+	// Combine duplicate tags.
+	if (auto duplicate = current[name]) {
+		// If the node is already an array add the new property to it.
+		if (duplicate->GetType() == Node::Type::Array)
+			return duplicate->AddProperty();
+
+		// Copy the duplicate node so we can add it to the new array.
+		Node original("", duplicate);
+		current.RemoveProperty(duplicate);
+		auto &array = current.AddProperty(name);
+		array.SetType(Node::Type::Array);
+		array.AddProperty(std::move(original));
+		return array.AddProperty();
+	}
+
+	return current.AddProperty(name);
 }
 
 void Xml::AppendData(const Node &node, std::ostream &stream, Node::Format format, int32_t indent) {

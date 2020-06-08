@@ -41,7 +41,7 @@ void Json::ParseString(Node &node, std::string_view string) {
 
 	// Converts the tokens into nodes.
 	int32_t k = 0;
-	Convert(node, tokens, 0, k);
+	Convert(node, tokens, k);
 }
 
 void Json::WriteStream(const Node &node, std::ostream &stream, Node::Format format) {
@@ -74,9 +74,9 @@ void Json::AddToken(std::string_view view, std::vector<Node::Token> &tokens) {
 	}
 }
 
-void Json::Convert(Node &current, const std::vector<Node::Token> &tokens, int32_t i, int32_t &r) {
-	if (tokens[i] == Node::Token(Node::Type::Token, "{")) {
-		auto k = i + 1;
+void Json::Convert(Node &current, const std::vector<Node::Token> &tokens, int32_t &k) {
+	if (tokens[k] == Node::Token(Node::Type::Token, "{")) {
+		k++;
 
 		while (tokens[k] != Node::Token(Node::Type::Token, "}")) {
 			auto key = tokens[k].view;
@@ -88,36 +88,36 @@ void Json::Convert(Node &current, const std::vector<Node::Token> &tokens, int32_
 #if ATTRIBUTE_TEXT_SUPPORT
 			// Write value string into current value, then continue parsing properties into current.
 			if (key == "#text")
-				Convert(current, tokens, k, k);
+				Convert(current, tokens, k);
 			else
 #endif
-				Convert(current.AddProperty(std::string(key)), tokens, k, k);
+				Convert(current.AddProperty(std::string(key)), tokens, k);
 			if (tokens[k].view == ",")
 				k++;
 		}
+		k++;
 
 		current.SetType(Node::Type::Object);
-		r = k + 1;
-	} else if (tokens[i] == Node::Token(Node::Type::Token, "[")) {
-		auto k = i + 1;
+	} else if (tokens[k] == Node::Token(Node::Type::Token, "[")) {
+		k++;
 
 		while (tokens[k] != Node::Token(Node::Type::Token, "]")) {
 			if (k >= tokens.size())
 				throw std::runtime_error("Missing end of [] object");
-			Convert(current.AddProperty(), tokens, k, k);
+			Convert(current.AddProperty(), tokens, k);
 			if (tokens[k].view == ",")
 				k++;
 		}
+		k++;
 
 		current.SetType(Node::Type::Array);
-		r = k + 1;
 	} else {
-		std::string str(tokens[i].view);
-		if (tokens[i].type == Node::Type::String)
+		std::string str(tokens[k].view);
+		if (tokens[k].type == Node::Type::String)
 			str = String::UnfixEscapedChars(str);
 		current.SetValue(str);
-		current.SetType(tokens[i].type);
-		r = i + 1;
+		current.SetType(tokens[k].type);
+		k++;
 	}
 }
 
@@ -176,7 +176,7 @@ void Json::AppendData(const Node &node, std::ostream &stream, Node::Format forma
 		};
 
 		// Shorten primitive array output length.
-		if (isArray && format.inlineArrays && !it->GetProperties().empty() && IsPrimitive(it->GetProperties()[0].GetType())) {
+		if (isArray && format.inlineArrays && it->GetProperties().empty() && IsPrimitive(it->GetProperties()[0].GetType())) {
 			stream << format.GetIndents(indent + 1);
 			// New lines are printed a a space, no spaces are ever emitted by primitives.
 			AppendData(*it, stream, Node::Format(0, ' ', '\0', false), indent);
