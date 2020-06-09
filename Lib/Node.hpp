@@ -38,7 +38,7 @@ public:
 	 */
 	class Format {
 	public:
-		constexpr Format(int8_t spacesPerIndent, char newLine, char space, bool inlineArrays) :
+		constexpr Format(int8_t spacesPerIndent, NullableChar newLine, NullableChar space, bool inlineArrays) :
 			spacesPerIndent(spacesPerIndent),
 			newLine(newLine),
 			space(space),
@@ -89,7 +89,7 @@ public:
 		std::string_view view;
 	};
 
-	Node() = default;
+	Node();
 	explicit Node(const std::string &name);
 	Node(const std::string &name, const Node &node);
 	Node(const Node &node) = default;
@@ -193,7 +193,7 @@ protected:
 	std::vector<Node> properties; // members
 	std::string name; // key
 	std::string value;
-	Type type = Type::Object;
+	Type type;
 };
 }
 

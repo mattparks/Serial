@@ -8,8 +8,13 @@ const Node::Format Node::Format::Minified = Format(0, '\0', '\0', false);
 
 static const Node NullNode = (Node() = nullptr);
 
+Node::Node() :
+	type(Type::Object) {
+}
+
 Node::Node(const std::string &name) :
-	name(name) {
+	name(name),
+	type(Type::Object) {
 }
 
 Node::Node(const std::string &name, const Node &node) :

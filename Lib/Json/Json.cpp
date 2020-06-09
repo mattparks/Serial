@@ -171,12 +171,12 @@ void Json::AppendData(const Node &node, std::ostream &stream, Node::Format forma
 		}
 
 		// If a node type is a primitive type.
-		static constexpr auto IsPrimitive = [](Node::Type type) {
-			return type != Node::Type::Object && type != Node::Type::Array && type != Node::Type::Unknown;
+		static constexpr auto IsPrimitive = [](const Node &type) {
+			return type.GetProperties().empty() && type.GetType() != Node::Type::Object && type.GetType() != Node::Type::Array && type.GetType() != Node::Type::Unknown;
 		};
 
 		// Shorten primitive array output length.
-		if (isArray && format.inlineArrays && it->GetProperties().empty() && IsPrimitive(it->GetProperties()[0].GetType())) {
+		if (isArray && format.inlineArrays && !it->GetProperties().empty() && IsPrimitive(it->GetProperties()[0])) {
 			stream << format.GetIndents(indent + 1);
 			// New lines are printed a a space, no spaces are ever emitted by primitives.
 			AppendData(*it, stream, Node::Format(0, ' ', '\0', false), indent);
