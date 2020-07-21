@@ -185,8 +185,7 @@ int main(int argc, char **argv) {
 
 		// Test Json reader.
 		std::ifstream inStream1("Example/Test1.json");
-		Node json2;
-		Json::ParseStream(json2, inStream1);
+		Node json2 = Json::ParseStream(inStream1);
 		inStream1.close();
 		
 		// Ensure Test1.json and Test2.json values are the same (ignore order changes).

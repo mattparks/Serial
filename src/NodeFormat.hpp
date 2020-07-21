@@ -88,12 +88,12 @@ public:
 
 	virtual ~NodeFormat() = default;
 	
-	virtual void ParseString(Node &node, std::string_view string) = 0;
+	virtual Node ParseString(std::string_view string) = 0;
 	virtual void WriteStream(const Node &node, std::ostream &stream, Format format = Minified) const = 0;
 
 	// TODO: Duplicate templates from NodeFormatType.
 	template<typename _Elem = char>
-	void ParseStream(Node &node, std::basic_istream<_Elem> &stream) {
+	Node ParseStream(std::basic_istream<_Elem> &stream) {
 		// We must read as UTF8 chars.
 		if constexpr (!std::is_same_v<_Elem, char>) {
 #ifndef ACID_BUILD_MSVC
@@ -105,7 +105,7 @@ public:
 
 		// Reading into a string before iterating is much faster.
 		std::string s(std::istreambuf_iterator<_Elem>(stream), {});
-		ParseString(node, s);
+		return ParseString(s);
 	}
 	template<typename _Elem = char>
 	std::basic_string<_Elem> WriteString(const Node &node, Format format = Minified) const {
@@ -118,15 +118,15 @@ public:
 template<typename T>
 class NodeFormatType : public NodeFormat {
 public:
-	void ParseString(Node &node, std::string_view string) override {
-		T::ParseString(node, string);
+	Node ParseString(std::string_view string) override {
+		return T::ParseString(string);
 	}
 	void WriteStream(const Node &node, std::ostream &stream, Format format = Minified) const override {
 		T::WriteStream(node, stream, format);
 	}
 	
 	template<typename _Elem = char>
-	static void ParseStream(Node &node, std::basic_istream<_Elem> &stream) {
+	static Node ParseStream(std::basic_istream<_Elem> &stream) {
 		// We must read as UTF8 chars.
 		if constexpr (!std::is_same_v<_Elem, char>) {
 #ifndef ACID_BUILD_MSVC
@@ -138,7 +138,7 @@ public:
 
 		// Reading into a string before iterating is much faster.
 		std::string s(std::istreambuf_iterator<_Elem>(stream), {});
-		T::ParseString(node, s);
+		return T::ParseString(s);
 	}
 	template<typename _Elem = char>
 	static std::basic_string<_Elem> WriteString(const Node &node, Format format = Minified) {

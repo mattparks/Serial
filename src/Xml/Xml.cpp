@@ -6,7 +6,7 @@
 #include "Utils/String.hpp"
 
 namespace serial {
-void Xml::ParseString(Node &node, std::string_view string) {
+Node Xml::ParseString(std::string_view string) {
 	// Tokenizes the string view into small views that are used to build a Node tree.
 	std::vector<Token> tokens;
 
@@ -47,8 +47,10 @@ void Xml::ParseString(Node &node, std::string_view string) {
 	}
 
 	// Converts the tokens into nodes.
+	Node node;
 	int32_t k = 0;
 	Convert(node, tokens, k);
+	return node;
 }
 
 void Xml::WriteStream(const Node &node, std::ostream &stream, Format format) {

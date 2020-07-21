@@ -13,9 +13,9 @@ public:
 } serialData;
 
 TEST(serial, parseInMemory) {
-	serial::Json::ParseString(serialData.canada, MemoryData::canadaString);
-	serial::Json::ParseString(serialData.catalog, MemoryData::catalogString);
-	serial::Json::ParseString(serialData.twitter, MemoryData::twitterString);
+	serialData.canada = serial::Json::ParseString(MemoryData::canadaString);
+	serialData.catalog = serial::Json::ParseString(MemoryData::catalogString);
+	serialData.twitter = serial::Json::ParseString(MemoryData::twitterString);
 }
 
 inline const serial::Node &operator>>(const serial::Node &node, Status &status) {

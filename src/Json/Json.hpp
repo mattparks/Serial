@@ -5,7 +5,7 @@
 namespace serial {
 class Json : public NodeFormatType<Json> {
 public:
-	static void ParseString(Node &node, std::string_view string);
+	static Node ParseString(std::string_view string);
 	static void WriteStream(const Node &node, std::ostream &stream, Format format = Minified);
 
 private:
