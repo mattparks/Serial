@@ -44,7 +44,7 @@ void Json::ParseString(Node &node, std::string_view string) {
 	Convert(node, tokens, k);
 }
 
-void Json::WriteStream(const Node &node, std::ostream &stream, Format format) const {
+void Json::WriteStream(const Node &node, std::ostream &stream, Format format) {
 	stream << (node.GetType() == Node::Type::Array ? '[' : '{') << format.newLine;
 	AppendData(node, stream, format, 1);
 	stream << (node.GetType() == Node::Type::Array ? ']' : '}');

@@ -86,35 +86,65 @@ public:
 	/// Writes a node with no padding.
 	inline static const Format Minified = Format(0, '\0', '\0', false);
 
-	template<typename _Elem = char>
-	void ParseStream(Node &node, std::basic_istream<_Elem> &stream);
-	template<typename _Elem = char>
-	std::basic_string<_Elem> WriteString(const Node &node, Format format = Minified) const;
-
+	virtual ~NodeFormat() = default;
+	
 	virtual void ParseString(Node &node, std::string_view string) = 0;
 	virtual void WriteStream(const Node &node, std::ostream &stream, Format format = Minified) const = 0;
+
+	// TODO: Duplicate templates from NodeFormatType.
+	template<typename _Elem = char>
+	void ParseStream(Node &node, std::basic_istream<_Elem> &stream) {
+		// We must read as UTF8 chars.
+		if constexpr (!std::is_same_v<_Elem, char>) {
+#ifndef ACID_BUILD_MSVC
+			throw std::runtime_error("Cannot dynamicly parse wide streams on GCC or Clang");
+#else
+			stream.imbue(std::locale(stream.getloc(), new std::codecvt_utf8<char>));
+#endif
+		}
+
+		// Reading into a string before iterating is much faster.
+		std::string s(std::istreambuf_iterator<_Elem>(stream), {});
+		ParseString(node, s);
+	}
+	template<typename _Elem = char>
+	std::basic_string<_Elem> WriteString(const Node &node, Format format = Minified) const {
+		std::basic_ostringstream<_Elem> stream;
+		WriteStream(node, stream, format);
+		return stream.str();
+	}
 };
 
-template<typename _Elem>
-void NodeFormat::ParseStream(Node &node, std::basic_istream<_Elem> &stream) {
-	// We must read as UTF8 chars.
-	if constexpr (!std::is_same_v<_Elem, char>) {
-#ifndef ACID_BUILD_MSVC
-		throw std::runtime_error("Cannot dynamicly parse wide streams on GCC or Clang");
-#else
-		stream.imbue(std::locale(stream.getloc(), new std::codecvt_utf8<char>));
-#endif
+template<typename T>
+class NodeFormatType : public NodeFormat {
+public:
+	void ParseString(Node &node, std::string_view string) override {
+		T::ParseString(node, string);
 	}
+	void WriteStream(const Node &node, std::ostream &stream, Format format = Minified) const override {
+		T::WriteStream(node, stream, format);
+	}
+	
+	template<typename _Elem = char>
+	static void ParseStream(Node &node, std::basic_istream<_Elem> &stream) {
+		// We must read as UTF8 chars.
+		if constexpr (!std::is_same_v<_Elem, char>) {
+#ifndef ACID_BUILD_MSVC
+			throw std::runtime_error("Cannot dynamicly parse wide streams on GCC or Clang");
+#else
+			stream.imbue(std::locale(stream.getloc(), new std::codecvt_utf8<char>));
+#endif
+		}
 
-	// Reading into a string before iterating is much faster.
-	std::string s(std::istreambuf_iterator<_Elem>(stream), {});
-	ParseString(node, s);
-}
-
-template<typename _Elem>
-std::basic_string<_Elem> NodeFormat::WriteString(const Node &node, Format format) const {
-	std::basic_ostringstream<_Elem> stream;
-	WriteStream(node, stream, format);
-	return stream.str();
-}
+		// Reading into a string before iterating is much faster.
+		std::string s(std::istreambuf_iterator<_Elem>(stream), {});
+		T::ParseString(node, s);
+	}
+	template<typename _Elem = char>
+	static std::basic_string<_Elem> WriteString(const Node &node, Format format = Minified) {
+		std::basic_ostringstream<_Elem> stream;
+		T::WriteStream(node, stream, format);
+		return stream.str();
+	}
+};
 }

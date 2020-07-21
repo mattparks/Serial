@@ -51,7 +51,7 @@ void Xml::ParseString(Node &node, std::string_view string) {
 	Convert(node, tokens, k);
 }
 
-void Xml::WriteStream(const Node &node, std::ostream &stream, Format format) const {
+void Xml::WriteStream(const Node &node, std::ostream &stream, Format format) {
 	stream << R"(<?xml version="1.0" encoding="utf-8"?>)" << format.newLine;
 	// TODO: Taken from body of AppendData properties loop to write parent node tags.
 	stream << '<' << node.GetName();

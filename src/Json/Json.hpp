@@ -3,10 +3,10 @@
 #include "NodeFormat.hpp"
 
 namespace serial {
-class Json : public NodeFormat {
+class Json : public NodeFormatType<Json> {
 public:
-	void ParseString(Node &node, std::string_view string) override;
-	void WriteStream(const Node &node, std::ostream &stream, Format format = Minified) const override;
+	static void ParseString(Node &node, std::string_view string);
+	static void WriteStream(const Node &node, std::ostream &stream, Format format = Minified);
 
 private:
 	static void AddToken(std::string_view view, std::vector<Token> &tokens);

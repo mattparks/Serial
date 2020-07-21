@@ -3,10 +3,10 @@
 #include "NodeFormat.hpp"
 
 namespace serial {
-class Xml : public NodeFormat {
-public:	
-	void ParseString(Node &node, std::string_view string) override;
-	void WriteStream(const Node &node, std::ostream &stream, Format format = Minified) const override;
+class Xml : public NodeFormatType<Xml> {
+public:
+	static void ParseString(Node &node, std::string_view string);
+	static void WriteStream(const Node &node, std::ostream &stream, Format format = Minified);
 
 private:
 	static void AddToken(std::string_view view, std::vector<Token> &tokens);
