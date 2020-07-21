@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.11.0 FATAL_ERROR)
 project(Serial VERSION 0.0.1 LANGUAGES C CXX)
 
 option(BUILD_SHARED_LIBS "Build Shared Libraries" ON)
-option(SERIAL_BUILD_EXAMPLE "Build the Serial example" ON)
+option(SERIAL_BUILD_EXAMPLES "Build the Serial example" ON)
 option(BUILD_TESTS "Build test applications" ON)
 
 # Sets the install directories defined by GNU
@@ -27,15 +27,15 @@ if(WIN32)
 	set(CMAKE_SHARED_LIBRARY_PREFIX "")
 endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 	add_definitions(-D_CRT_SECURE_NO_WARNINGS=1)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
 endif()
 
-add_subdirectory(Lib)
+add_subdirectory(src)
 
-if(SERIAL_BUILD_EXAMPLE)
-	add_subdirectory(Example)
+if(SERIAL_BUILD_EXAMPLES)
+	add_subdirectory(examples)
 endif()
 
 # Allows automation of "BUILD_TESTING"
@@ -56,5 +56,5 @@ if(BUILD_TESTS)
 	endif()
 
 	enable_testing()
-	add_subdirectory(Test)
+	add_subdirectory(tests)
 endif()

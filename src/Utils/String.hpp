@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <string_view>
+#include <sstream>
 #include <vector>
 #include <optional>
 
@@ -16,7 +17,6 @@ public:
 
 	static std::string ReplaceAll(std::string str, std::string_view token, std::string_view to) {
 		auto pos = str.find(token);
-
 		while (pos != std::string::npos) {
 			str.replace(pos, token.size(), to);
 			pos = str.find(token, pos + token.size());
@@ -25,18 +25,14 @@ public:
 		return str;
 	}
 
-	static std::string Trim(std::string str, std::string_view whitespace = " \t\n\r") {
+	static std::string_view Trim(std::string_view str, std::string_view whitespace) {
 		auto strBegin = str.find_first_not_of(whitespace);
-
 		if (strBegin == std::string::npos)
 			return "";
 
 		auto strEnd = str.find_last_not_of(whitespace);
 		auto strRange = strEnd - strBegin + 1;
-
-		auto trimmed = str;
-		trimmed = trimmed.substr(strBegin, strRange);
-		return trimmed;
+		return str.substr(strBegin, strRange);
 	}
 	
 	static bool IsWhitespace(char c) noexcept {
@@ -44,8 +40,7 @@ public:
 	}
 
 	static bool IsNumber(std::string_view str) noexcept {
-		// This is the fastest way to tell if a string holds a decimal number.
-		return std::all_of(str.cbegin(), str.cend(), [](const auto c) {
+		return std::all_of(str.cbegin(), str.cend(), [](auto c) {
 			return (c >= '0' && c <= '9') || c == '.' || c == '-';
 		});
 	}
@@ -74,7 +69,7 @@ public:
 					str.erase(str.begin() + --pos);
 				else
 					str.replace(pos, from.size(), 1, to);
-				pos = str.find(from, pos + 1 + from.size());
+				pos = str.find(from, pos + 1);
 			}
 		}
 
@@ -102,6 +97,8 @@ public:
 			if (!val.has_value())
 				return "null";
 			return To(*val);
+		} else if constexpr (std::is_same_v<char, T>) {
+			return std::string(1, val);
 		} else {
 			return std::to_string(val);
 		}

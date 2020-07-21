@@ -176,22 +176,22 @@ int main(int argc, char **argv) {
 	{
 		// Make a copy of the node.
 		Node json1 = node;
-		//json1.WriteStream<Json>(std::cout);
+		//Json().WriteStream(json1, std::cout);
 	
 		// Test Json writer.
 		std::ofstream outStream1("Example/Test1.json");
-		json1.WriteStream<Json>(outStream1, Node::Format::Beautified);
+		Json().WriteStream(json1, outStream1, NodeFormat::Beautified);
 		outStream1.close();
 
 		// Test Json reader.
 		std::ifstream inStream1("Example/Test1.json");
 		Node json2;
-		json2.ParseStream<Json>(inStream1);
+		Json().ParseStream(json2, inStream1);
 		inStream1.close();
 		
 		// Ensure Test1.json and Test2.json values are the same (ignore order changes).
 		std::ofstream outStream2("Example/Test2.json");
-		json2.WriteStream<Json>(outStream2, Node::Format::Beautified);
+		Json().WriteStream(json2, outStream2, NodeFormat::Beautified);
 		outStream2.close();
 	}
 	{
@@ -200,13 +200,12 @@ int main(int argc, char **argv) {
 
 		// Test Xml writer.
 		std::ofstream outStream1("Example/Xml1.xml");
-		xml1.WriteStream<Xml>(outStream1, Node::Format::Beautified);
+		Xml().WriteStream(xml1, outStream1, NodeFormat::Beautified);
 		outStream1.close();
 	}
 
-	/*Yaml yaml2(node);
-	//yaml2.Write(std::cout, Node::Format::Beautified);
-	yaml2.Write(std::ofstream("Test.yml"));*/
+	/*Yaml().WriteStream(node, std::cout, NodeFormat::Beautified);
+	Yaml().WriteStream(node, std::ofstream("Test.yml"));*/
 
 	//std::cout << "\nPress enter to continue...";
 	//std::cin.get();

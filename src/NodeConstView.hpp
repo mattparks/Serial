@@ -53,7 +53,7 @@ public:
 	std::vector<Node> GetProperties() const;
 
 	std::string GetName() const;
-
+	
 protected:
 	const Node *parent = nullptr;
 	const Node *value = nullptr;

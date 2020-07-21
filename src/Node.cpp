@@ -3,9 +3,6 @@
 #include <algorithm>
 
 namespace serial {
-const Node::Format Node::Format::Beautified = Format(2, '\n', ' ', true);
-const Node::Format Node::Format::Minified = Format(0, '\0', '\0', false);
-
 static const Node NullNode = (Node() = nullptr);
 
 Node::Node() :
@@ -240,7 +237,7 @@ Node &Node::operator=(const NodeConstView &rhs) {
 	return operator=(*rhs);
 }
 
-Node &Node::operator=(NodeConstView &&rhs) noexcept {
+Node &Node::operator=(NodeConstView &&rhs) {
 	return operator=(*rhs);
 }
 
@@ -248,15 +245,15 @@ Node &Node::operator=(NodeView &rhs) {
 	return operator=(*rhs);
 }
 
-Node &Node::operator=(NodeView &&rhs) noexcept {
+Node &Node::operator=(NodeView &&rhs) {
 	return operator=(*rhs);
 }
 
 bool Node::operator==(const Node &rhs) const {
 	return value == rhs.value && properties.size() == rhs.properties.size() &&
 		std::equal(properties.begin(), properties.end(), rhs.properties.begin(), [](const auto &left, const auto &right) {
-			return left == right;
-		});
+		return left == right;
+	});
 }
 
 bool Node::operator!=(const Node &rhs) const {
@@ -269,7 +266,7 @@ bool Node::operator<(const Node &rhs) const {
 
 	if (properties < rhs.properties) return true;
 	if (rhs.properties < properties) return false;
-	
+
 	return false;
 }
 }

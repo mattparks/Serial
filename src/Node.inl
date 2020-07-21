@@ -2,53 +2,24 @@
 
 #include "Node.hpp"
 
+#include <array>
 #include <algorithm>
-#include <codecvt>
 #include <cstring>
 #include <filesystem>
+#include <forward_list>
+#include <list>
+#include <map>
 #include <memory>
 #include <optional>
-#include <vector>
-#include <map>
 #include <set>
-#include <sstream>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
 
+#include "Utils/Enumerate.hpp"
 #include "Utils/String.hpp"
 
 namespace serial {
-template<typename NodeParser>
-void Node::ParseString(std::string_view string) {
-	NodeParser::ParseString(*this, string);
-}
-
-template<typename NodeParser>
-void Node::WriteStream(std::ostream &stream, Format format) const {
-	NodeParser::WriteStream(*this, stream, format);
-}
-
-template<typename NodeParser, typename _Elem>
-void Node::ParseStream(std::basic_istream<_Elem> &stream) {
-	// We must read as UTF8 chars.
-	if constexpr (!std::is_same_v<_Elem, char>) {
-#ifndef _MSC_VER
-		throw std::runtime_error("Cannot dynamicly parse wide streams on GCC or Clang");
-#else
-		stream.imbue(std::locale(stream.getloc(), new std::codecvt_utf8<char>));
-#endif
-	}
-
-	// Reading into a string before iterating is much faster.
-	std::string s(std::istreambuf_iterator<_Elem>(stream), {});
-	ParseString<NodeParser>(s);
-}
-
-template<typename NodeParser, typename _Elem>
-std::basic_string<_Elem> Node::WriteString(Format format) const {
-	std::basic_stringstream<_Elem> stream;
-	WriteStream<NodeParser>(stream, format);
-	return stream.str();
-}
-
 template<typename T>
 T Node::GetName() const {
 	// String to basic type conversion.
@@ -288,11 +259,8 @@ const Node &operator>>(const Node &node, std::vector<T> &vector) {
 	vector.clear();
 	vector.reserve(node.GetProperties().size());
 
-	for (const auto &property : node.GetProperties()) {
-		T x;
-		property >> x;
-		vector.emplace_back(std::move(x));
-	}
+	for (const auto &property : node.GetProperties())
+		property >> vector.emplace_back();
 
 	return node;
 }
@@ -307,21 +275,154 @@ Node &operator<<(Node &node, const std::vector<T> &vector) {
 }
 
 template<typename T>
-const Node &operator>>(const Node &node, std::set<T> &vector) {
-	vector.clear();
+const Node &operator>>(const Node &node, std::set<T> &set) {
+	set.clear();
+	auto where = set.end();
 
 	for (const auto &property : node.GetProperties()) {
 		T x;
 		property >> x;
-		vector.emplace(std::move(x));
+		where = set.insert(where, std::move(x));
 	}
 
 	return node;
 }
 
 template<typename T>
-Node &operator<<(Node &node, const std::set<T> &vector) {
-	for (const auto &x : vector)
+Node &operator<<(Node &node, const std::set<T> &set) {
+	for (const auto &x : set)
+		node.AddProperty() << x;
+
+	node.SetType(Node::Type::Array);
+	return node;
+}
+
+template<typename T>
+const Node &operator>>(const Node &node, std::unordered_set<T> &set) {
+	set.clear();
+	auto where = set.end();
+
+	for (const auto &property : node.GetProperties()) {
+		T x;
+		property >> x;
+		where = set.insert(where, std::move(x));
+	}
+
+	return node;
+}
+
+template<typename T>
+Node &operator<<(Node &node, const std::unordered_set<T> &set) {
+	for (const auto &x : set)
+		node.AddProperty() << x;
+
+	node.SetType(Node::Type::Array);
+	return node;
+}
+
+template<typename T>
+const Node &operator>>(const Node &node, std::multiset<T> &set) {
+	set.clear();
+	auto where = set.end();
+
+	for (const auto &property : node.GetProperties()) {
+		T x;
+		property >> x;
+		where = set.insert(where, std::move(x));
+	}
+
+	return node;
+}
+
+template<typename T>
+Node &operator<<(Node &node, const std::multiset<T> &set) {
+	for (const auto &x : set)
+		node.AddProperty() << x;
+
+	node.SetType(Node::Type::Array);
+	return node;
+}
+
+template<typename T>
+const Node &operator>>(const Node &node, std::unordered_multiset<T> &set) {
+	set.clear();
+	auto where = set.end();
+
+	for (const auto &property : node.GetProperties()) {
+		T x;
+		property >> x;
+		where = set.insert(where, std::move(x));
+	}
+
+	return node;
+}
+
+template<typename T>
+Node &operator<<(Node &node, const std::unordered_multiset<T> &set) {
+	for (const auto &x : set)
+		node.AddProperty() << x;
+
+	node.SetType(Node::Type::Array);
+	return node;
+}
+
+template<typename T, std::size_t Size>
+const Node &operator>>(const Node &node, std::array<T, Size> &array) {
+	array = {};
+
+	for (auto &&[i, property] : Enumerate(node.GetProperties()))
+		property >> array[i];
+
+	return node;
+}
+
+template<typename T, std::size_t Size>
+Node &operator<<(Node &node, const std::array<T, Size> &array) {
+	for (const auto &x : array)
+		node.AddProperty() << x;
+
+	node.SetType(Node::Type::Array);
+	return node;
+}
+
+template<typename T>
+const Node &operator>>(const Node &node, std::list<T> &list) {
+	list.clear();
+
+	for (const auto &property : node.GetProperties()) {
+		T x;
+		property >> x;
+		list.emplace_back(std::move(x));
+	}
+
+	return node;
+}
+
+template<typename T>
+Node &operator<<(Node &node, const std::list<T> &list) {
+	for (const auto &x : list)
+		node.AddProperty() << x;
+
+	node.SetType(Node::Type::Array);
+	return node;
+}
+
+template<typename T>
+const Node &operator>>(const Node &node, std::forward_list<T> &list) {
+	list.clear();
+
+	for (auto it = node.GetProperties().rbegin(); it != node.GetProperties().rend(); ++it) {
+		T x;
+		*it >> x;
+		list.emplace_front(std::move(x));
+	}
+
+	return node;
+}
+
+template<typename T>
+Node &operator<<(Node &node, const std::forward_list<T> &list) {
+	for (const auto &x : list)
 		node.AddProperty() << x;
 
 	node.SetType(Node::Type::Array);
@@ -331,11 +432,12 @@ Node &operator<<(Node &node, const std::set<T> &vector) {
 template<typename T, typename K>
 const Node &operator>>(const Node &node, std::map<T, K> &map) {
 	map.clear();
+	auto where = map.end();
 
 	for (const auto &property : node.GetProperties()) {
 		std::pair<T, K> pair;
 		property >> pair;
-		map.emplace(std::move(pair));
+		where = map.insert(where, std::move(pair));
 	}
 
 	return node;
@@ -343,6 +445,75 @@ const Node &operator>>(const Node &node, std::map<T, K> &map) {
 
 template<typename T, typename K>
 Node &operator<<(Node &node, const std::map<T, K> &map) {
+	for (const auto &x : map)
+		node.AddProperty() << x;
+
+	node.SetType(Node::Type::Array);
+	return node;
+}
+
+template<typename T, typename K>
+const Node &operator>>(const Node &node, std::unordered_map<T, K> &map) {
+	map.clear();
+	auto where = map.end();
+
+	for (const auto &property : node.GetProperties()) {
+		std::pair<T, K> pair;
+		property >> pair;
+		where = map.insert(where, std::move(pair));
+	}
+
+	return node;
+}
+
+template<typename T, typename K>
+Node &operator<<(Node &node, const std::unordered_map<T, K> &map) {
+	for (const auto &x : map)
+		node.AddProperty() << x;
+
+	node.SetType(Node::Type::Array);
+	return node;
+}
+
+template<typename T, typename K>
+const Node &operator>>(const Node &node, std::multimap<T, K> &map) {
+	map.clear();
+	auto where = map.end();
+
+	for (const auto &property : node.GetProperties()) {
+		std::pair<T, K> pair;
+		property >> pair;
+		where = map.insert(where, std::move(pair));
+	}
+
+	return node;
+}
+
+template<typename T, typename K>
+Node &operator<<(Node &node, const std::multimap<T, K> &map) {
+	for (const auto &x : map)
+		node.AddProperty() << x;
+
+	node.SetType(Node::Type::Array);
+	return node;
+}
+
+template<typename T, typename K>
+const Node &operator>>(const Node &node, std::unordered_multimap<T, K> &map) {
+	map.clear();
+	auto where = map.end();
+
+	for (const auto &property : node.GetProperties()) {
+		std::pair<T, K> pair;
+		property >> pair;
+		where = map.insert(where, std::move(pair));
+	}
+
+	return node;
+}
+
+template<typename T, typename K>
+Node &operator<<(Node &node, const std::unordered_multimap<T, K> &map) {
 	for (const auto &x : map)
 		node.AddProperty() << x;
 
