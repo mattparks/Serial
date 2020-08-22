@@ -1,12 +1,14 @@
 #pragma once
 
-#include "NodeFormat.hpp"
+#include <vector>
+
+#include "Node.hpp"
 
 namespace serial {
 class Xml : public NodeFormatType<Xml> {
 public:
-	static Node ParseString(std::string_view string);
-	static void WriteStream(const Node &node, std::ostream &stream, Format format = Minified);
+	static void Load(Node &node, std::string_view string);
+	static void Write(const Node &node, std::ostream &stream, Format format = Minified);
 
 private:
 	static void AddToken(std::string_view view, std::vector<Token> &tokens);
