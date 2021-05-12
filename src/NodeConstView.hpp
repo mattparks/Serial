@@ -41,12 +41,16 @@ public:
 	template<typename T>
 	T Get() const;
 	template<typename T>
-	T Get(const T &fallback) const;
+	T GetWithFallback(const T &fallback) const;
 	template<typename T>
 	bool Get(T &dest) const;
 	template<typename T, typename K>
-	bool Get(T &dest, const K &fallback) const;
-
+	bool GetWithFallback(T &dest, const K &fallback) const;
+	template<typename T>
+	bool Get(T &&dest) const;
+	template<typename T, typename K>
+	bool GetWithFallback(T &&dest, const K &fallback) const;
+	
 	std::vector<NodeConstView> GetProperties(const std::string &name) const;
 	NodeConstView GetPropertyWithBackup(const std::string &name, const std::string &backupName) const;
 	NodeConstView GetPropertyWithValue(const std::string &propertyName, const std::string &propertyValue) const;
@@ -57,6 +61,8 @@ public:
 	std::vector<Node> GetProperties() const;
 
 	std::string GetName() const;
+
+	NodeType GetType() const;
 	
 protected:
 	const Node *parent = nullptr;

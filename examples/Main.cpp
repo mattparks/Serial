@@ -40,7 +40,7 @@ public:
 
 		friend const Node &operator>>(const Node &node, Objects &objects) {
 			node["url"].Get(objects.url);
-			node["key"].Get(objects.key, "failed to get key");
+			node["key"].GetWithFallback(objects.key, "failed to get key");
 			node["values"].Get(objects.values);
 			return node;
 		}

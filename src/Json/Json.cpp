@@ -39,6 +39,9 @@ void Json::Load(Node &node, std::string_view string) {
 		}
 	}
 
+	//if (tokens.empty())
+	//	throw std::runtime_error("No tokens found in document");
+
 	// Converts the tokens into nodes.
 	int32_t k = 0;
 	Convert(node, tokens, k);
@@ -171,7 +174,7 @@ void Json::AppendData(const Node &node, std::ostream &stream, Format format, int
 		}
 
 		// If a node type is a primitive type.
-		static constexpr auto IsPrimitive = [](const Node &type) {
+		constexpr static auto IsPrimitive = [](const Node &type) {
 			return type.GetProperties().empty() && type.GetType() != NodeType::Object && type.GetType() != NodeType::Array && type.GetType() != NodeType::Unknown;
 		};
 

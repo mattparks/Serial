@@ -35,14 +35,20 @@ public:
 	template<typename T>
 	T Get() const;
 	template<typename T>
-	T Get(const T &fallback) const;
+	T GetWithFallback(const T &fallback) const;
 	template<typename T>
 	bool Get(T &dest) const;
 	template<typename T, typename K>
-	bool Get(T &dest, const K &fallback) const;
+	bool GetWithFallback(T &dest, const K &fallback) const;
+	template<typename T>
+	bool Get(T &&dest) const;
+	template<typename T, typename K>
+	bool GetWithFallback(T &&dest, const K &fallback) const;
 	template<typename T>
 	void Set(const T &value);
-
+	template<typename T>
+	void Set(T &&value);
+	
 	/**
 	 * Clears all properties from this node.
 	 */

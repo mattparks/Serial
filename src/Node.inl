@@ -4,6 +4,7 @@
 
 #include <array>
 #include <algorithm>
+#include <chrono>
 #include <cstring>
 #include <filesystem>
 #include <forward_list>
@@ -35,7 +36,7 @@ template<typename T, typename _Elem, typename>
 void Node::ParseStream(std::basic_istream<_Elem> &stream) {
 	// We must read as UTF8 chars.
 	if constexpr (!std::is_same_v<_Elem, char>) {
-#ifndef ACID_BUILD_MSVC
+#ifndef _MSC_VER
 		throw std::runtime_error("Cannot dynamicly parse wide streams on GCC or Clang");
 #else
 		stream.imbue(std::locale(stream.getloc(), new std::codecvt_utf8<char>));
@@ -74,7 +75,7 @@ T Node::Get() const {
 }
 
 template<typename T>
-T Node::Get(const T &fallback) const {
+T Node::GetWithFallback(const T &fallback) const {
 	if (!IsValid())
 		return fallback;
 	
@@ -91,7 +92,27 @@ bool Node::Get(T &dest) const {
 }
 
 template<typename T, typename K>
-bool Node::Get(T &dest, const K &fallback) const {
+bool Node::GetWithFallback(T &dest, const K &fallback) const {
+	if (!IsValid()) {
+		dest = fallback;
+		return false;
+	}
+
+	*this >> dest;
+	return true;
+}
+
+template<typename T>
+bool Node::Get(T &&dest) const {
+	if (!IsValid())
+		return false;
+
+	*this >> dest;
+	return true;
+}
+
+template<typename T, typename K>
+bool Node::GetWithFallback(T &&dest, const K &fallback) const {
 	if (!IsValid()) {
 		dest = fallback;
 		return false;
@@ -103,6 +124,11 @@ bool Node::Get(T &dest, const K &fallback) const {
 
 template<typename T>
 void Node::Set(const T &value) {
+	*this << value;
+}
+
+template<typename T>
+void Node::Set(T &&value) {
 	*this << value;
 }
 
@@ -254,6 +280,32 @@ inline Node &operator<<(Node &node, const std::filesystem::path &object) {
 }
 
 template<typename T, typename K>
+const Node &operator>>(const Node &node, std::chrono::duration<T, K> &duration) {
+	T x;
+	node >> x;
+	duration = std::chrono::duration<T, K>(x);
+	return node;
+}
+
+template<typename T, typename K>
+Node &operator<<(Node &node, const std::chrono::duration<T, K> &duration) {
+	return node << duration.count();
+}
+
+template<typename T>
+const Node &operator>>(const Node &node, std::chrono::time_point<T> &timePoint) {
+	typename std::chrono::time_point<T>::duration x;
+	node >> x;
+	timePoint = std::chrono::time_point<T>(x);
+	return node;
+}
+
+template<typename T>
+Node &operator<<(Node &node, const std::chrono::time_point<T> &timePoint) {
+	return node << timePoint.time_since_epoch();
+}
+
+template<typename T, typename K>
 const Node &operator>>(const Node &node, std::pair<T, K> &pair) {
 	pair.first = node.GetName<T>();
 	node >> pair.second;
@@ -269,7 +321,7 @@ Node &operator<<(Node &node, const std::pair<T, K> &pair) {
 
 template<typename T>
 const Node &operator>>(const Node &node, std::optional<T> &optional) {
-	if (node.GetValue() != "null") {
+	if (node.GetType() != NodeType::Null) {
 		T x;
 		node >> x;
 		optional = std::move(x);
@@ -482,7 +534,7 @@ Node &operator<<(Node &node, const std::map<T, K> &map) {
 	for (const auto &x : map)
 		node.AddProperty() << x;
 
-	node.SetType(NodeType::Array);
+	node.SetType(NodeType::Object);
 	return node;
 }
 
@@ -505,7 +557,7 @@ Node &operator<<(Node &node, const std::unordered_map<T, K> &map) {
 	for (const auto &x : map)
 		node.AddProperty() << x;
 
-	node.SetType(NodeType::Array);
+	node.SetType(NodeType::Object);
 	return node;
 }
 
@@ -528,7 +580,7 @@ Node &operator<<(Node &node, const std::multimap<T, K> &map) {
 	for (const auto &x : map)
 		node.AddProperty() << x;
 
-	node.SetType(NodeType::Array);
+	node.SetType(NodeType::Object);
 	return node;
 }
 
@@ -551,7 +603,7 @@ Node &operator<<(Node &node, const std::unordered_multimap<T, K> &map) {
 	for (const auto &x : map)
 		node.AddProperty() << x;
 
-	node.SetType(NodeType::Array);
+	node.SetType(NodeType::Object);
 	return node;
 }
 }

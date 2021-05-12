@@ -26,7 +26,9 @@ public:
 
 	template<typename T>
 	void Set(const T &value);
-
+	template<typename T>
+	void Set(T &&value);
+	
 	std::vector<NodeView> GetProperties(const std::string &name);
 	NodeView GetPropertyWithBackup(const std::string &name, const std::string &backupName);
 	NodeView GetPropertyWithValue(const std::string &propertyName, const std::string &propertyValue);
