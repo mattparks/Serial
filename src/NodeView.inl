@@ -4,11 +4,6 @@
 
 namespace serial {
 template<typename T>
-void NodeView::SetName(const T &value) {
-	return get()->SetName<T>(value);
-}
-
-template<typename T>
 void NodeView::Set(const T &value) {
 	get()->Set<T>(value);
 }

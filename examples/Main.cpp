@@ -194,7 +194,7 @@ int main(int argc, char **argv) {
 		json2.WriteStream<Json>(outStream2, NodeFormat::Beautified);
 		outStream2.close();
 	}
-	{
+	/*{
 		// Make a copy of the node.
 		Node xml1("node", node);
 
@@ -202,7 +202,7 @@ int main(int argc, char **argv) {
 		std::ofstream outStream1("Example/Xml1.xml");
 		xml1.WriteStream<Xml>(outStream1, NodeFormat::Beautified);
 		outStream1.close();
-	}
+	}*/
 
 	/*node.WriteStream<Yaml>(std::cout, NodeFormat::Beautified);
 	node.WriteStream<Yaml>(std::ofstream("Test.yml"));*/

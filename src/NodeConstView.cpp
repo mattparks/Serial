@@ -3,58 +3,40 @@
 #include "Node.hpp"
 
 namespace serial {
-NodeConstView::NodeConstView(const Node *parent, Key key, const Node *value) :
+NodeConstView::NodeConstView(const Node *parent, NodeKey key, const Node *value) :
 	parent(parent),
 	value(value),
 	keys{std::move(key)} {
 }
 
-NodeConstView::NodeConstView(const NodeConstView *parent, Key key) :
+NodeConstView::NodeConstView(const NodeConstView *parent, NodeKey key) :
 	parent(parent->parent),
 	keys(parent->keys) {
 	keys.emplace_back(std::move(key));
 }
 
-std::vector<NodeConstView> NodeConstView::GetProperties(const std::string &name) const {
+/*NodeConstView NodeConstView::GetPropertyWithBackup(const NodeKey &key, const NodeKey &backupKey) const {
 	if (!has_value())
-		return {};
-	return value->GetProperties(name);
+		return {this, key};
+	return value->GetPropertyWithBackup(key, backupKey);
 }
 
-NodeConstView NodeConstView::GetPropertyWithBackup(const std::string &name, const std::string &backupName) const {
+NodeConstView NodeConstView::GetPropertyWithValue(const NodeKey &key, const std::string &propertyValue) const {
 	if (!has_value())
-		return {this, name};
-	return value->GetPropertyWithBackup(name, backupName);
-}
+		return {this, key};
+	return value->GetPropertyWithValue(key, propertyValue);
+}*/
 
-NodeConstView NodeConstView::GetPropertyWithValue(const std::string &propertyName, const std::string &propertyValue) const {
-	if (!has_value())
-		return {this, propertyName};
-	return value->GetPropertyWithValue(propertyName, propertyValue);
-}
-
-NodeConstView NodeConstView::operator[](const std::string &key) const {
+NodeConstView NodeConstView::operator[](const NodeKey &key) const {
 	if (!has_value())
 		return {this, key};
 	return value->operator[](key);
 }
 
-NodeConstView NodeConstView::operator[](uint32_t index) const {
-	if (!has_value())
-		return {this, index};
-	return value->operator[](index);
-}
-
-std::vector<Node> NodeConstView::GetProperties() const {
+std::map<NodeKey, Node> NodeConstView::GetProperties() const {
 	if (!has_value())
 		return {};
 	return value->GetProperties();
-}
-
-std::string NodeConstView::GetName() const {
-	if (!has_value())
-		return "";
-	return value->GetName();
 }
 
 NodeType NodeConstView::GetType() const {

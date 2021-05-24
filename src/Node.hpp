@@ -11,9 +11,7 @@ namespace serial {
  */
 class Node final {
 public:
-	Node();
-	explicit Node(const std::string &name);
-	Node(const std::string &name, const Node &node);
+	Node() = default;
 	Node(const Node &node) = default;
 	Node(Node &&node) noexcept = default;
 
@@ -26,11 +24,6 @@ public:
 	void ParseStream(std::basic_istream<_Elem> &stream);
 	template<typename T, typename _Elem = char, typename = std::enable_if_t<std::is_convertible_v<T *, NodeFormat *>>>
 	std::basic_string<_Elem> WriteString(NodeFormat::Format format = NodeFormat::Minified) const;
-
-	template<typename T>
-	T GetName() const;
-	template<typename T>
-	void SetName(const T &value);
 
 	template<typename T>
 	T Get() const;
@@ -65,35 +58,26 @@ public:
 	template<typename ...Args>
 	Node &Append(const Args &...args);
 
-	bool HasProperty(const std::string &name) const;
-	bool HasProperty(uint32_t index) const;
-	NodeConstView GetProperty(const std::string &name) const;
-	NodeConstView GetProperty(uint32_t index) const;
-	NodeView GetProperty(const std::string &name);
-	NodeView GetProperty(uint32_t index);
+	bool HasProperty(const NodeKey &key) const;
+	NodeConstView GetProperty(const NodeKey &key) const;
+	NodeView GetProperty(const NodeKey &key);
 	Node &AddProperty(const Node &node);
 	Node &AddProperty(Node &&node = {});
-	Node &AddProperty(const std::string &name, const Node &node);
-	Node &AddProperty(const std::string &name, Node &&node = {});
-	Node &AddProperty(uint32_t index, const Node &node);
-	Node &AddProperty(uint32_t index, Node &&node = {});
-	void RemoveProperty(const std::string &name);
+	Node &AddProperty(const NodeKey &key, const Node &node);
+	Node &AddProperty(const NodeKey &key, Node &&node = {});
+	void RemoveProperty(const NodeKey &key);
 	void RemoveProperty(const Node &node);
 
-	std::vector<NodeConstView> GetProperties(const std::string &name) const;
-	NodeConstView GetPropertyWithBackup(const std::string &name, const std::string &backupName) const;
-	NodeConstView GetPropertyWithValue(const std::string &name, const std::string &value) const;
-	std::vector<NodeView> GetProperties(const std::string &name);
-	NodeView GetPropertyWithBackup(const std::string &name, const std::string &backupName);
-	NodeView GetPropertyWithValue(const std::string &name, const std::string &value);
+	/*NodeConstView GetPropertyWithBackup(const NodeKey &key, const NodeKey &backupKey) const;
+	NodeConstView GetPropertyWithValue(const NodeKey &key, const std::string &propertyValue) const;
+	NodeView GetPropertyWithBackup(const NodeKey &key, const NodeKey &backupKey);
+	NodeView GetPropertyWithValue(const NodeKey &key, const std::string &propertyValue);*/
 
-	NodeConstView operator[](const std::string &key) const;
-	NodeConstView operator[](uint32_t index) const;
-	NodeView operator[](const std::string &key);
-	NodeView operator[](uint32_t index);
+	NodeConstView operator[](const NodeKey &key) const;
+	NodeView operator[](const NodeKey &key);
 
-	Node &operator=(const Node &rhs);
-	Node &operator=(Node &&rhs) noexcept;
+	Node &operator=(const Node &rhs) = default;
+	Node &operator=(Node &&rhs) noexcept = default;
 	Node &operator=(const NodeConstView &rhs);
 	Node &operator=(NodeConstView &&rhs);
 	Node &operator=(NodeView &rhs);
@@ -105,11 +89,8 @@ public:
 	bool operator!=(const Node &rhs) const;
 	bool operator<(const Node &rhs) const;
 
-	const std::vector<Node> &GetProperties() const { return properties; }
-	std::vector<Node> &GetProperties() { return properties; }
-
-	const std::string &GetName() const { return name; }
-	void SetName(std::string name) { this->name = std::move(name); }
+	const std::map<NodeKey, Node> &GetProperties() const { return properties; }
+	std::map<NodeKey, Node> &GetProperties() { return properties; }
 
 	const std::string &GetValue() const { return value; }
 	void SetValue(std::string value) { this->value = std::move(value); }
@@ -118,10 +99,9 @@ public:
 	void SetType(NodeType type) { this->type = type; }
 
 protected:
-	std::vector<Node> properties; // members
-	std::string name; // key
+	std::map<NodeKey, Node> properties; // members
 	std::string value;
-	NodeType type;
+	NodeType type = NodeType::Object;
 };
 }
 

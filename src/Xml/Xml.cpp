@@ -7,6 +7,7 @@
 #include "Utils/String.hpp"
 
 namespace serial {
+#if 0
 void Xml::Load(Node &node, std::string_view string) {
 	// Tokenizes the string view into small views that are used to build a Node tree.
 	std::vector<Token> tokens;
@@ -183,4 +184,5 @@ void Xml::AppendData(const Node &node, std::ostream &stream, Format format, int3
 		}
 	}
 }
+#endif
 }

@@ -3,10 +3,13 @@
 #include <cstdint>
 #include <variant>
 #include <string>
+#include <map>
 #include <vector>
 
 namespace serial {
 class Node;
+
+using NodeKey = std::variant<std::string, uint32_t>; // name or index
 
 enum class NodeType : uint8_t {
 	Object, Array, String, Boolean, Integer, Decimal, Null, Token, Unknown
@@ -19,11 +22,9 @@ enum class NodeType : uint8_t {
 class NodeConstView {
 	friend class Node;
 protected:
-	using Key = std::variant<std::string, uint32_t>;
-
 	NodeConstView() = default;
-	NodeConstView(const Node *parent, Key key, const Node *value);
-	NodeConstView(const NodeConstView *parent, Key key);
+	NodeConstView(const Node *parent, NodeKey key, const Node *value);
+	NodeConstView(const NodeConstView *parent, NodeKey key);
 
 public:
 	bool has_value() const noexcept { return value != nullptr; }
@@ -34,9 +35,6 @@ public:
 
 	const Node &operator*() const { return *value; }
 	const Node *operator->() const { return value; }
-
-	template<typename T>
-	T GetName() const;
 
 	template<typename T>
 	T Get() const;
@@ -51,22 +49,18 @@ public:
 	template<typename T, typename K>
 	bool GetWithFallback(T &&dest, const K &fallback) const;
 	
-	std::vector<NodeConstView> GetProperties(const std::string &name) const;
-	NodeConstView GetPropertyWithBackup(const std::string &name, const std::string &backupName) const;
-	NodeConstView GetPropertyWithValue(const std::string &propertyName, const std::string &propertyValue) const;
+	//NodeConstView GetPropertyWithBackup(const NodeKey &key, const NodeKey &backupKey) const;
+	//NodeConstView GetPropertyWithValue(const NodeKey &key, const std::string &propertyValue) const;
 
-	NodeConstView operator[](const std::string &key) const;
-	NodeConstView operator[](uint32_t index) const;
+	NodeConstView operator[](const NodeKey &key) const;
 
-	std::vector<Node> GetProperties() const;
-
-	std::string GetName() const;
+	std::map<NodeKey, Node> GetProperties() const;
 
 	NodeType GetType() const;
 	
 protected:
 	const Node *parent = nullptr;
 	const Node *value = nullptr;
-	std::vector<Key> keys;
+	std::vector<NodeKey> keys;
 };
 }

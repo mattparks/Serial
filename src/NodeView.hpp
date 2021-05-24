@@ -10,8 +10,8 @@ class NodeView : public NodeConstView {
 	friend class Node;
 protected:
 	NodeView() = default;
-	NodeView(Node *parent, Key key, Node *value);
-	NodeView(NodeView *parent, Key key);
+	NodeView(Node *parent, NodeKey key, Node *value);
+	NodeView(NodeView *parent, NodeKey key);
 
 public:
 	Node *get();
@@ -22,19 +22,14 @@ public:
 	Node *operator->() { return get(); }
 
 	template<typename T>
-	void SetName(const T &value);
-
-	template<typename T>
 	void Set(const T &value);
 	template<typename T>
 	void Set(T &&value);
 	
-	std::vector<NodeView> GetProperties(const std::string &name);
-	NodeView GetPropertyWithBackup(const std::string &name, const std::string &backupName);
-	NodeView GetPropertyWithValue(const std::string &propertyName, const std::string &propertyValue);
+	//NodeView GetPropertyWithBackup(const NodeKey &key, const NodeKey &backupKey);
+	//NodeView GetPropertyWithValue(const NodeKey &key, const std::string &propertyValue);
 
-	NodeView operator[](const std::string &key);
-	NodeView operator[](uint32_t index);
+	NodeView operator[](const NodeKey &key);
 
 	NodeView operator=(const NodeConstView &) = delete;
 	NodeView operator=(const NodeView &) = delete;
@@ -43,6 +38,6 @@ public:
 	template<typename T>
 	Node &operator=(T &&rhs);
 
-	std::vector<Node> &GetProperties();
+	std::map<NodeKey, Node> &GetProperties();
 };
 }

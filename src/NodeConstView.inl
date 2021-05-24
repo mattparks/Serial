@@ -4,13 +4,6 @@
 
 namespace serial {
 template<typename T>
-T NodeConstView::GetName() const {
-	if (!has_value())
-		return {};
-	return value->GetName<T>();
-}
-
-template<typename T>
 T NodeConstView::Get() const {
 	if (!has_value())
 		return {};
