@@ -150,12 +150,12 @@ void Json::AppendData(const Node &node, std::ostream &stream, Format format, int
 
 	// Output each property.
 	for (auto it = node.GetProperties().begin(); it != node.GetProperties().end(); ++it) {
-		const auto &[key, property] = *it;
+		const auto &[propertyKey, property] = *it;
 		// TODO: if this *it is in an array and there are elements missing between *(it-1) and *it fill with null.
 		
 		stream << indents;
 		// Output name for property if it exists.
-		if (const auto name = std::get_if<std::string>(&key); name && !name->empty()) {
+		if (const auto name = std::get_if<std::string>(&propertyKey); name && !name->empty()) {
 			stream << '\"' << *name << "\":" << format.space;
 		}
 

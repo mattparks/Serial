@@ -15,7 +15,7 @@ NodeConstView::NodeConstView(const NodeConstView *parent, NodeKey key) :
 	keys.emplace_back(std::move(key));
 }
 
-/*NodeConstView NodeConstView::GetPropertyWithBackup(const NodeKey &key, const NodeKey &backupKey) const {
+NodeConstView NodeConstView::GetPropertyWithBackup(const NodeKey &key, const NodeKey &backupKey) const {
 	if (!has_value())
 		return {this, key};
 	return value->GetPropertyWithBackup(key, backupKey);
@@ -25,7 +25,7 @@ NodeConstView NodeConstView::GetPropertyWithValue(const NodeKey &key, const std:
 	if (!has_value())
 		return {this, key};
 	return value->GetPropertyWithValue(key, propertyValue);
-}*/
+}
 
 NodeConstView NodeConstView::operator[](const NodeKey &key) const {
 	if (!has_value())

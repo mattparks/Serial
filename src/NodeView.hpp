@@ -26,8 +26,8 @@ public:
 	template<typename T>
 	void Set(T &&value);
 	
-	//NodeView GetPropertyWithBackup(const NodeKey &key, const NodeKey &backupKey);
-	//NodeView GetPropertyWithValue(const NodeKey &key, const std::string &propertyValue);
+	NodeView GetPropertyWithBackup(const NodeKey &key, const NodeKey &backupKey);
+	NodeView GetPropertyWithValue(const NodeKey &key, const std::string &propertyValue);
 
 	NodeView operator[](const NodeKey &key);
 

@@ -57,6 +57,8 @@ public:
 	Node &Append(const T &value);
 	template<typename ...Args>
 	Node &Append(const Args &...args);
+	
+	//Node &Merge(Node &&node);
 
 	bool HasProperty(const NodeKey &key) const;
 	NodeConstView GetProperty(const NodeKey &key) const;
@@ -65,13 +67,13 @@ public:
 	Node &AddProperty(Node &&node = {});
 	Node &AddProperty(const NodeKey &key, const Node &node);
 	Node &AddProperty(const NodeKey &key, Node &&node = {});
-	void RemoveProperty(const NodeKey &key);
-	void RemoveProperty(const Node &node);
+	Node RemoveProperty(const NodeKey &key);
+	Node RemoveProperty(const Node &node);
 
-	/*NodeConstView GetPropertyWithBackup(const NodeKey &key, const NodeKey &backupKey) const;
+	NodeConstView GetPropertyWithBackup(const NodeKey &key, const NodeKey &backupKey) const;
 	NodeConstView GetPropertyWithValue(const NodeKey &key, const std::string &propertyValue) const;
 	NodeView GetPropertyWithBackup(const NodeKey &key, const NodeKey &backupKey);
-	NodeView GetPropertyWithValue(const NodeKey &key, const std::string &propertyValue);*/
+	NodeView GetPropertyWithValue(const NodeKey &key, const std::string &propertyValue);
 
 	NodeConstView operator[](const NodeKey &key) const;
 	NodeView operator[](const NodeKey &key);
@@ -99,7 +101,7 @@ public:
 	void SetType(NodeType type) { this->type = type; }
 
 protected:
-	std::map<NodeKey, Node> properties; // members
+	std::map<NodeKey, Node> properties;
 	std::string value;
 	NodeType type = NodeType::Object;
 };

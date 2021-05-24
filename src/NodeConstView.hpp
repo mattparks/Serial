@@ -49,8 +49,8 @@ public:
 	template<typename T, typename K>
 	bool GetWithFallback(T &&dest, const K &fallback) const;
 	
-	//NodeConstView GetPropertyWithBackup(const NodeKey &key, const NodeKey &backupKey) const;
-	//NodeConstView GetPropertyWithValue(const NodeKey &key, const std::string &propertyValue) const;
+	NodeConstView GetPropertyWithBackup(const NodeKey &key, const NodeKey &backupKey) const;
+	NodeConstView GetPropertyWithValue(const NodeKey &key, const std::string &propertyValue) const;
 
 	NodeConstView operator[](const NodeKey &key) const;
 

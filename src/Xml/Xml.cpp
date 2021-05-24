@@ -7,7 +7,6 @@
 #include "Utils/String.hpp"
 
 namespace serial {
-#if 0
 void Xml::Load(Node &node, std::string_view string) {
 	// Tokenizes the string view into small views that are used to build a Node tree.
 	std::vector<Token> tokens;
@@ -57,6 +56,11 @@ void Xml::Load(Node &node, std::string_view string) {
 }
 
 void Xml::Write(const Node &node, std::ostream &stream, Format format) {
+	// TODO: if no XMLDecl write default: R"(<?xml version="1.0" encoding="utf-8"?>)"
+	
+	AppendData(node, stream, format, 0);
+	
+#if 0
 	stream << R"(<?xml version="1.0" encoding="utf-8"?>)" << format.newLine;
 	// TODO: Taken from body of AppendData properties loop to write parent node tags.
 	stream << '<' << node.GetName();
@@ -67,6 +71,7 @@ void Xml::Write(const Node &node, std::ostream &stream, Format format) {
 	stream << '>' << format.newLine;
 	AppendData(node, stream, format, 0);
 	stream << "</" << node.GetName() << ">";
+#endif
 }
 
 void Xml::AddToken(std::string_view view, std::vector<Token> &tokens) {
@@ -80,21 +85,27 @@ void Xml::Convert(Node &current, const std::vector<Token> &tokens, int32_t &k) {
 		return;
 	k++;
 
-	// Ignore prolog and DOCTYPE.
-	if (tokens[k] == Token(NodeType::Token, "?") || tokens[k] == Token(NodeType::Token, "!")) {
+	// Ignore comments.
+	if (tokens[k] == Token(NodeType::Token, "!") && tokens[k + 1] == Token(NodeType::String, "--")) {
 		k += 2;
-		while (tokens[k] != Token(NodeType::Token, ">"))
+		while (tokens[k] != Token(NodeType::String, "--") && tokens[k + 1] != Token(NodeType::Token, ">"))
 			k++;
-		k++;
+		k += 2;
 		Convert(current, tokens, k);
 		return;
 	}
 
 	// The next token after the open tag is the name.
-	auto name = tokens[k].view;
+	std::string name(tokens[k].view);
+	// First token in tag might have been prolog or XMLDecl char, name will be in the following token.
+	if (tokens[k] == Token(NodeType::Token, "?") || tokens[k] == Token(NodeType::Token, "!")) {
+		name += tokens[k + 1].view;
+		k++;
+	}
 	k++;
+
 	// Create the property that will contain the attributes and children found in the tag.
-	auto &property = CreateProperty(current, std::string(name));
+	auto &property = CreateProperty(current, name);
 
 	while (tokens[k] != Token(NodeType::Token, ">")) {
 		// Attributes are added as properties.
@@ -106,6 +117,11 @@ void Xml::Convert(Node &current, const std::vector<Token> &tokens, int32_t &k) {
 	}
 	k++;
 
+	// More tags will follow after prolog and XMLDecl.
+	if (tokens[k - 2] == Token(NodeType::Token, "?") || name[0] == '!') {
+		Convert(current, tokens, k);
+		return;
+	}
 	// Inline tag has no children.
 	if (tokens[k - 2] == Token(NodeType::Token, "/"))
 		return;
@@ -130,8 +146,7 @@ Node &Xml::CreateProperty(Node &current, const std::string &name) {
 			return duplicate->AddProperty();
 
 		// Copy the duplicate node so we can add it to the new array.
-		Node original("", duplicate);
-		current.RemoveProperty(duplicate);
+		auto original = current.RemoveProperty(duplicate);
 		auto &array = current.AddProperty(name);
 		array.SetType(NodeType::Array);
 		array.AddProperty(std::move(original));
@@ -142,6 +157,7 @@ Node &Xml::CreateProperty(Node &current, const std::string &name) {
 }
 
 void Xml::AppendData(const Node &node, std::ostream &stream, Format format, int32_t indent) {
+#if 0
 	stream << node.GetValue();
 
 	auto indents = format.GetIndents(indent + 1);
@@ -183,6 +199,6 @@ void Xml::AppendData(const Node &node, std::ostream &stream, Format format, int3
 			stream << "/>" << format.newLine;
 		}
 	}
-}
 #endif
+}
 }

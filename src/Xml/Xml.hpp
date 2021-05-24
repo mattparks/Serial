@@ -5,7 +5,6 @@
 #include "Node.hpp"
 
 namespace serial {
-#if 0
 class Xml : public NodeFormatType<Xml> {
 public:
 	// Do not call Load and Write directly, use Node::ParseString<Xml> and Node::WriteStream<Xml>.
@@ -19,5 +18,4 @@ private:
 	
 	static void AppendData(const Node &node, std::ostream &stream, Format format, int32_t indent);
 };
-#endif
 }

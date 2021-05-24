@@ -57,22 +57,28 @@ Node &Node::AddProperty(const NodeKey &key, Node &&node) {
 	return properties.emplace(key, std::move(node)).first->second;
 }
 
-void Node::RemoveProperty(const NodeKey &key) {
-	//node.parent = nullptr;
-	properties.erase(key);
-}
-
-void Node::RemoveProperty(const Node &node) {
-	//node.parent = nullptr;
-	for (auto it = properties.begin(); it != properties.end(); ) {
-		if (it->second == node)
-			it = properties.erase(it);
-		else
-			++it;
+Node Node::RemoveProperty(const NodeKey &key) {
+	if (auto it = properties.find(key); it != properties.end()) {
+		auto result = std::move(it->second);
+		properties.erase(it);
+		return result;
 	}
+	return {};
 }
 
-/*NodeConstView Node::GetPropertyWithBackup(const NodeKey &key, const NodeKey &backupKey) const {
+Node Node::RemoveProperty(const Node &node) {
+	for (auto it = properties.begin(); it != properties.end(); ) {
+		if (it->second == node) {
+			auto result = std::move(it->second);
+			it = properties.erase(it);
+			return result;
+		}
+		++it;
+	}
+	return {};
+}
+
+NodeConstView Node::GetPropertyWithBackup(const NodeKey &key, const NodeKey &backupKey) const {
 	if (auto p1 = GetProperty(key))
 		return p1;
 	if (auto p2 = GetProperty(backupKey))
@@ -81,15 +87,11 @@ void Node::RemoveProperty(const Node &node) {
 }
 
 NodeConstView Node::GetPropertyWithValue(const NodeKey &key, const std::string &propertyValue) const {
-	for (const auto &property : properties) {
-		auto properties1 = property.GetProperties(key);
-		if (properties1.empty())
-			return {this, key, nullptr};
-
-		for (auto &property1 : properties1) {
-			if (property1 && property1->GetValue() == propertyValue)
-				return {this, key, &property};
-		}
+	// TODO: previous implementation was confusing, why does this method exist?
+	for (const auto &[propertyKey, property] : properties) {
+		if (auto property1 = property.GetProperty(key); property1->GetValue() == propertyValue)
+			return {this, key, &property};
+		return {this, key, nullptr};
 	}
 
 	return {this, key, nullptr};
@@ -106,19 +108,14 @@ NodeView Node::GetPropertyWithBackup(const NodeKey &key, const NodeKey &backupKe
 
 // TODO: Duplicate
 NodeView Node::GetPropertyWithValue(const NodeKey &key, const std::string &propertyValue) {
-	for (auto &property : properties) {
-		auto properties1 = property.GetProperties(key);
-		if (properties1.empty())
-			return {this, key, nullptr};
-
-		for (auto &property1 : properties1) {
-			if (property1 && property1->GetValue() == propertyValue)
-				return {this, key, &property};
-		}
+	for (auto &[propertyKey, property] : properties) {
+		if (auto property1 = property.GetProperty(key); property1->GetValue() == propertyValue)
+			return {this, key, &property};
+		return {this, key, nullptr};
 	}
 
 	return {this, key, nullptr};
-}*/
+}
 
 NodeConstView Node::operator[](const NodeKey &key) const {
 	return GetProperty(key);
