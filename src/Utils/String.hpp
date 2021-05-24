@@ -11,6 +11,11 @@ template<typename T> struct is_optional : std::false_type {};
 template<typename T> struct is_optional<std::optional<T>> : std::true_type {};
 template<typename T> inline constexpr bool is_optional_v = is_optional<T>::value;
 
+template <typename Container> struct is_container : std::false_type {};
+template <typename... Ts> struct is_container<std::list<Ts...>> : std::true_type {};
+template <typename... Ts> struct is_container<std::vector<Ts...>> : std::true_type {};
+template<typename T> inline constexpr bool is_container_v = is_container<T>::value;
+
 class String {
 public:
 	String() = delete;

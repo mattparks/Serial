@@ -12,7 +12,7 @@ void Json::Load(Node &node, std::string_view string) {
 
 	std::size_t tokenStart = 0;
 	enum class QuoteState : char {
-		None = '\0', Single = '\'', Double = '"'
+		None, Single, Double
 	} quoteState = QuoteState::None;
 
 	// Iterates over all the characters in the string view.

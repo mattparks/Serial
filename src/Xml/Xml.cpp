@@ -13,10 +13,10 @@ void Xml::Load(Node &node, std::string_view string) {
 
 	std::size_t tokenStart = 0;
 	enum class QuoteState : char {
-		None = '\0', Single = '\'', Double = '"'
+		None, Single, Double
 	} quoteState = QuoteState::None;
 	enum class TagState : char {
-		None = '\0', Open = '<', Close = '>'
+		None, Open, Close
 	} tagState = TagState::None;
 
 	// Iterates over all the characters in the string view.
@@ -57,8 +57,10 @@ void Xml::Load(Node &node, std::string_view string) {
 
 void Xml::Write(const Node &node, std::ostream &stream, Format format) {
 	// TODO: if no XMLDecl write default: R"(<?xml version="1.0" encoding="utf-8"?>)"
-	
-	AppendData(node, stream, format, 0);
+
+	for (const auto &[propertyKey, property] : node.GetProperties()) {
+		AppendData(propertyKey, property, stream, format, 0);
+	}
 	
 #if 0
 	stream << R"(<?xml version="1.0" encoding="utf-8"?>)" << format.newLine;
@@ -86,9 +88,9 @@ void Xml::Convert(Node &current, const std::vector<Token> &tokens, int32_t &k) {
 	k++;
 
 	// Ignore comments.
-	if (tokens[k] == Token(NodeType::Token, "!") && tokens[k + 1] == Token(NodeType::String, "--")) {
+	if (tokens[k] == Token(NodeType::Token, "!") && (tokens[k + 1].view.find("--") == 0)) {
 		k += 2;
-		while (tokens[k] != Token(NodeType::String, "--") && tokens[k + 1] != Token(NodeType::Token, ">"))
+		while (tokens[k + 1] != Token(NodeType::Token, ">") && (tokens[k].view.find("--") == std::string::npos))
 			k++;
 		k += 2;
 		Convert(current, tokens, k);
@@ -156,49 +158,53 @@ Node &Xml::CreateProperty(Node &current, const std::string &name) {
 	return current.AddProperty(name);
 }
 
-void Xml::AppendData(const Node &node, std::ostream &stream, Format format, int32_t indent) {
-#if 0
-	stream << node.GetValue();
+void Xml::AppendData(const NodeKey &nodeKey, const Node &node, std::ostream &stream, Format format, int32_t indent) {
+	auto nodeName = std::get_if<std::string>(&nodeKey);
+	if (!nodeName || nodeName->rfind('-', 0) == 0) return;
 
-	auto indents = format.GetIndents(indent + 1);
-	// Output each property.
-	for (auto it = node.GetProperties().begin(); it < node.GetProperties().end(); ++it) {
-		if (it->GetName().rfind('-', 0) == 0) continue;
-
-		// Skip property tag for arrays and move onto appending its properties.
-		if (it->GetType() == NodeType::Array) {
-			AppendData(*it, stream, format, indent);
-			continue;
-		}
-
+	if (node.GetType() == NodeType::Array) {
 		// If the node is an array, then all properties will inherit the array name.
-		const auto &name = node.GetType() == NodeType::Array ? node.GetName() : it->GetName();
-		stream << indents << '<' << name;
-
-		// Add attributes to opening tag.
-		int attributeCount = 0;
-		for (const auto &property : it->GetProperties()) {
-			if (property.GetName().rfind('-', 0) != 0) continue;
-			stream << " " << property.GetName().substr(1) << "=\"" << property.GetValue() << "\"";
-			attributeCount++;
-		}
-
-		// When the property has a value or children recursively append them, otherwise shorten tag ending.
-		if (it->GetProperties().size() - attributeCount != 0 || !it->GetValue().empty()) {
-			stream << '>';
-
-			if (it->GetProperties().size() - attributeCount != 0) {
-				stream << format.newLine;
-				AppendData(*it, stream, format, indent + 1);
-				stream << indents;
-			} else {
-				AppendData(*it, stream, format, indent + 1);
-			}
-			stream << "</" << name << '>' << format.newLine;
-		} else {
-			stream << "/>" << format.newLine;
-		}
+		for (const auto &[propertyKey, property] : node.GetProperties())
+			AppendData(nodeKey, property, stream, format, indent);
+		return;
 	}
-#endif
+
+	auto indents = format.GetIndents(indent);
+	const auto &name = *nodeName;
+	stream << indents << '<' << name;
+
+	// Add attributes to opening tag.
+	int attributeCount = 0;
+	for (const auto &[propertyKey, property] : node.GetProperties()) {
+		auto propertyName = std::get_if<std::string>(&propertyKey);
+		if (!propertyName || propertyName->rfind('-', 0) != 0) continue;
+		stream << " " << propertyName->substr(1) << "=\"" << property.GetValue() << "\"";
+		attributeCount++;
+	}
+
+	// When the property has a value or children recursively append them, otherwise shorten tag ending.
+	if (node.GetProperties().size() - attributeCount != 0 || !node.GetValue().empty()) {
+		stream << '>';
+		stream << node.GetValue();
+
+		if (node.GetProperties().size() - attributeCount != 0) {
+			stream << format.newLine;
+			// Output each property.
+			for (const auto &[propertyKey, property] : node.GetProperties())
+				AppendData(propertyKey, property, stream, format, indent + 1);
+			stream << indents;
+		} else {
+			// Output each property.
+			for (const auto &[propertyKey, property] : node.GetProperties())
+				AppendData(propertyKey, property, stream, format, indent + 1);
+		}
+		stream << "</" << name << '>' << format.newLine;
+	} else if (name[0] == '?') {
+		stream << "?>" << format.newLine;
+	} else if (name[0] == '!') {
+		stream << '>' << format.newLine;
+	} else {
+		stream << "/>" << format.newLine;
+	}
 }
 }
