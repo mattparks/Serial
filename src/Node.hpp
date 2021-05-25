@@ -91,8 +91,8 @@ public:
 	bool operator!=(const Node &rhs) const;
 	bool operator<(const Node &rhs) const;
 
-	const std::map<NodeKey, Node> &GetProperties() const { return properties; }
-	std::map<NodeKey, Node> &GetProperties() { return properties; }
+	const NodePropertiesMap &GetProperties() const { return properties; }
+	NodePropertiesMap &GetProperties() { return properties; }
 
 	const std::string &GetValue() const { return value; }
 	void SetValue(std::string value) { this->value = std::move(value); }
@@ -101,7 +101,7 @@ public:
 	void SetType(NodeType type) { this->type = type; }
 
 protected:
-	std::map<NodeKey, Node> properties;
+	NodePropertiesMap properties;
 	std::string value;
 	NodeType type = NodeType::Object;
 };

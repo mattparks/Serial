@@ -1,58 +1,18 @@
 #include "Xml.hpp"
 
-#include <sstream>
-
-#include "Node.hpp"
-#include "Utils/Enumerate.hpp"
-#include "Utils/String.hpp"
+#include "XmlTokenizer.hpp"
 
 namespace serial {
 void Xml::Load(Node &node, std::string_view string) {
-	// Tokenizes the string view into small views that are used to build a Node tree.
+	XmlTokenizer tokenizer(string);
+#if 0
 	std::vector<Token> tokens;
-
-	std::size_t tokenStart = 0;
-	enum class QuoteState : char {
-		None, Single, Double
-	} quoteState = QuoteState::None;
-	enum class TagState : char {
-		None, Open, Close
-	} tagState = TagState::None;
-
-	// Iterates over all the characters in the string view.
-	for (auto &&[index, c] : Enumerate(string)) {
-		// If the previous character was a backslash the quote will not break the string.
-		if (c == '\'' && quoteState != QuoteState::Double && string[index - 1] != '\\')
-			quoteState = quoteState == QuoteState::None ? QuoteState::Single : QuoteState::None;
-		else if (c == '"' && quoteState != QuoteState::Single && string[index - 1] != '\\')
-			quoteState = quoteState == QuoteState::None ? QuoteState::Double : QuoteState::None;
-
-		// When not reading a string tokens can be found.
-		// While in a string whitespace and tokens are added to the strings view.
-		if (quoteState == QuoteState::None) {
-			if (tagState == TagState::Open && String::IsWhitespace(c)) {
-				// On whitespace start save current token.
-				AddToken(std::string_view(string.data() + tokenStart, index - tokenStart), tokens);
-				tokenStart = index + 1;
-			} else if (c == '<' || c == '>' || (tagState == TagState::Open && (c == '?' || c == '!' || c == '=' || c == '/'))) {
-				// Tokens used to read XML nodes.
-				AddToken(std::string_view(string.data() + tokenStart, index - tokenStart), tokens);
-				tokens.emplace_back(NodeType::Token, std::string_view(string.data() + index, 1));
-				if (c == '<')
-					tagState = TagState::Open;
-				else if (c == '>')
-					tagState = TagState::Close;
-				tokenStart = index + 1;
-			}
-		}
-	}
-
-	//if (tokens.empty())
-	//	throw std::runtime_error("No tokens found in document");
-	
-	// Converts the tokens into nodes.
-	int32_t k = 0;
-	Convert(node, tokens, k);
+	while (!tokenizer.EndOfInput())
+		tokens.emplace_back(tokenizer.Next());
+#else
+	tokenizer.Next();
+	Convert(node, tokenizer);
+#endif
 }
 
 void Xml::Write(const Node &node, std::ostream &stream, Format format) {
@@ -61,36 +21,84 @@ void Xml::Write(const Node &node, std::ostream &stream, Format format) {
 	for (const auto &[propertyKey, property] : node.GetProperties()) {
 		AppendData(propertyKey, property, stream, format, 0);
 	}
-	
-#if 0
-	stream << R"(<?xml version="1.0" encoding="utf-8"?>)" << format.newLine;
-	// TODO: Taken from body of AppendData properties loop to write parent node tags.
-	stream << '<' << node.GetName();
-	for (const auto &property : node.GetProperties()) {
-		if (property.GetName().rfind('-', 0) != 0) continue;
-		stream << " " << property.GetName().substr(1) << "=\"" << property.GetValue() << "\"";
+}
+
+void Xml::Convert(Node &current, XmlTokenizer &tokenizer) {
+	// Ignore comments.
+	if (tokenizer.Current() == Token(NodeType::Token, "<!--")) {
+		tokenizer.Next();
+		while (tokenizer.Next() != Token(NodeType::Token, "-->")) {
+		}
+		tokenizer.Next();
 	}
-	stream << '>' << format.newLine;
-	AppendData(node, stream, format, 0);
-	stream << "</" << node.GetName() << ">";
-#endif
-}
 
-void Xml::AddToken(std::string_view view, std::vector<Token> &tokens) {
-	if (view.length() != 0 && !std::all_of(view.cbegin(), view.cend(), String::IsWhitespace))
-		tokens.emplace_back(NodeType::String, view);
-}
+	// Only start to parse if we are at the start of a tag.
+	if (tokenizer.Current() != Token(NodeType::Token, "<"))
+		return;
+	tokenizer.Next();
 
-void Xml::Convert(Node &current, const std::vector<Token> &tokens, int32_t &k) {
+	// The next token after the open tag is the name.
+	std::string name(tokenizer.Current().view);
+	// First token in tag might have been prolog or XMLDecl char, name will be in the following token.
+	if (tokenizer.Current() == Token(NodeType::Token, "?") || tokenizer.Current() == Token(NodeType::Token, "!")) {
+		name += tokenizer.Next().view;
+	}
+	tokenizer.Next();
+
+	// Create the property that will contain the attributes and children found in the tag.
+	auto &property = CreateProperty(current, name);
+	Token lastToken;
+	while (tokenizer.Current() != Token(NodeType::Token, ">") && tokenizer.Current() != Token(NodeType::Token, "/>")) {
+		// Attributes are added as properties.
+		if (tokenizer.Current() == Token(NodeType::Token, "=")) {
+			tokenizer.Next();
+			property.AddProperty("-" + std::string(lastToken.view)) = tokenizer.Current().view;
+		}
+		lastToken = tokenizer.Current();
+		tokenizer.Next();
+	}
+	// Inline tag has no children.
+	if (tokenizer.Current() == Token(NodeType::Token, "/>")) {
+		tokenizer.Next();
+		return;
+	}
+	tokenizer.Next();
+
+	// More tags will follow after prolog and XMLDecl.
+	// Prolog tag must end with ?>, XMLDecl does not need any token before closing the tag.
+	if (lastToken == Token(NodeType::Token, "?") || name[0] == '!') {
+		Convert(current, tokenizer);
+		return;
+	}
+
+	// Continue through all children until the end tag is found.
+	while (true) {
+		if (tokenizer.Current() == Token(NodeType::Token, "</")) {
+			if (tokenizer.Next().view != name)
+				continue;
+			tokenizer.Next(); // '>'
+			tokenizer.Next(); // eof or '<'
+			break;
+		}
+		
+		if (tokenizer.Current().type == NodeType::String) {
+			property = tokenizer.Current().view;
+			tokenizer.Next();
+		} else {
+			Convert(property, tokenizer);
+		}
+	}
+
+#if 0
 	// Only start to parse if we are at the start of a tag.
 	if (tokens[k] != Token(NodeType::Token, "<"))
 		return;
 	k++;
 
 	// Ignore comments.
-	if (tokens[k] == Token(NodeType::Token, "!") && (tokens[k + 1].view.find("--") == 0)) {
+	if (tokens[k] == Token(NodeType::Token, "!") && tokens[k + 1] == Token(NodeType::Token, "--") == 0) {
 		k += 2;
-		while (tokens[k + 1] != Token(NodeType::Token, ">") && (tokens[k].view.find("--") == std::string::npos))
+		while (tokens[k + 1] != Token(NodeType::Token, ">") && tokens[k] == Token(NodeType::Token, "--"))
 			k++;
 		k += 2;
 		Convert(current, tokens, k);
@@ -138,6 +146,7 @@ void Xml::Convert(Node &current, const std::vector<Token> &tokens, int32_t &k) {
 		}
 	}
 	k += 4;
+#endif
 }
 
 Node &Xml::CreateProperty(Node &current, const std::string &name) {

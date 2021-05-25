@@ -24,6 +24,8 @@ private:
 
 // TODO: XmlVectorRef for Node::Get(T &)
 
+class XmlTokenizer;
+
 class Xml : public NodeFormatType<Xml> {
 public:
 	// Do not call Load and Write directly, use Node::ParseString<Xml> and Node::WriteStream<Xml>.
@@ -31,8 +33,7 @@ public:
 	static void Write(const Node &node, std::ostream &stream, Format format = Minified);
 
 private:
-	static void AddToken(std::string_view view, std::vector<Token> &tokens);
-	static void Convert(Node &current, const std::vector<Token> &tokens, int32_t &k);
+	static void Convert(Node &current, XmlTokenizer &tokenizer);
 	static Node &CreateProperty(Node &current, const std::string &name);
 	
 	static void AppendData(const NodeKey &nodeKey, const Node &node, std::ostream &stream, Format format, int32_t indent);

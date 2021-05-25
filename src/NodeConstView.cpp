@@ -33,9 +33,9 @@ NodeConstView NodeConstView::operator[](const NodeKey &key) const {
 	return value->operator[](key);
 }
 
-std::map<NodeKey, Node> NodeConstView::GetProperties() const {
+NodePropertiesMap NodeConstView::GetProperties() const {
 	if (!has_value())
-		return {};
+		return NodePropertiesMap{};
 	return value->GetProperties();
 }
 

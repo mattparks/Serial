@@ -157,8 +157,8 @@ bool Node::operator<(const Node &rhs) const {
 	if (value < rhs.value) return true;
 	if (rhs.value < value) return false;
 
-	if (properties < rhs.properties) return true;
-	if (rhs.properties < properties) return false;
+//	if (properties < rhs.properties) return true;
+//	if (rhs.properties < properties) return false;
 
 	return false;
 }

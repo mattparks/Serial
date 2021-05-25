@@ -44,7 +44,7 @@ NodeView NodeView::operator[](const NodeKey &key) {
 	return const_cast<Node *>(value)->operator[](key);
 }
 
-std::map<NodeKey, Node> &NodeView::GetProperties() {
+NodePropertiesMap &NodeView::GetProperties() {
 	if (!has_value())
 		return get()->GetProperties();
 	return const_cast<Node *>(value)->GetProperties();

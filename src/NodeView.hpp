@@ -38,6 +38,6 @@ public:
 	template<typename T>
 	Node &operator=(T &&rhs);
 
-	std::map<NodeKey, Node> &GetProperties();
+	NodePropertiesMap &GetProperties();
 };
 }
