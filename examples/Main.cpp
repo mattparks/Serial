@@ -1,10 +1,10 @@
 #include <iostream>
 
 #include <fstream>
-#include <unordered_map>
 #include <Node.hpp>
 #include <Json/Json.hpp>
 #include <Xml/Xml.hpp>
+#include <Xml/XmlContainer.hpp>
 
 using namespace serial;
 
@@ -172,11 +172,11 @@ int main(int argc, char **argv) {
 	auto users = node["users"].Get<std::vector<std::optional<test::User>>>();
 
 	std::filesystem::create_directory("Example");
-	
+
 	{
 		// Make a copy of the node.
 		Node json1 = node;
-		//Json::WriteStream(json1, std::cout);
+		//json1.WriteStream<Json>(std::cout, NodeFormat::Beautified);
 	
 		// Test Json writer.
 		std::ofstream outStream1("Example/Test1.json");
@@ -194,19 +194,57 @@ int main(int argc, char **argv) {
 		json2.WriteStream<Json>(outStream2, NodeFormat::Beautified);
 		outStream2.close();
 	}
-	/*{
+	{
+		Node xml1;
+		xml1["?xml"]["@version"] = "1.0";
+		xml1["?xml"]["@encoding"] = "utf-8";
 		// Make a copy of the node.
-		Node xml1("node", node);
+		xml1["node"] = node;
 
 		// Test Xml writer.
 		std::ofstream outStream1("Example/Xml1.xml");
 		xml1.WriteStream<Xml>(outStream1, NodeFormat::Beautified);
 		outStream1.close();
+
+		/*// Test Xml reader.
+		std::ifstream inStream1("Example/Xml1.xml");
+		Node xml2;
+		xml2.ParseStream<Xml>(inStream1);
+		inStream1.close();
+
+		// Ensure Test1.json and Test2.json values are the same (ignore order changes).
+		std::ofstream outStream2("Example/Xml1.json");
+		xml2.WriteStream<Xml>(outStream2, NodeFormat::Beautified);
+		outStream2.close();*/
+	}
+	/*{
+		// Make a copy of the node.
+		Node yaml1 = node;
+		//yaml1.WriteStream<Yaml>(std::cout, NodeFormat::Beautified);
+
+		// Test Yaml writer.
+		std::ofstream outStream1("Example/Yaml1.yaml");
+		node.WriteStream<Yaml>(outStream1);
 	}*/
+	/*{
+		Node xml1;
 
-	/*node.WriteStream<Yaml>(std::cout, NodeFormat::Beautified);
-	node.WriteStream<Yaml>(std::ofstream("Test.yml"));*/
+		// Test Xml reader.
+		std::ifstream inStream1("41, 41-1048, Day 1, 2 Hours Post-Dose, 20Feb2020, 12.40.xml");
+		xml1.ParseStream<Xml>(inStream1);
+		inStream1.close();
 
+		auto components = *xml1["AnnotatedECG"]["component"]["series"]["component"].Get<XmlContainer<std::vector<Node>>>();
+
+		std::vector<Node> components1;
+		xml1["AnnotatedECG"]["component"]["series"]["component"].GetWithFallback(XmlContainerRef(components1), std::vector<Node>{});
+
+		// Test Json writer.
+		std::ofstream outStream1("41, 41-1048, Day 1, 2 Hours Post-Dose, 20Feb2020, 12.40.json");
+		xml1.WriteStream<Json>(outStream1, NodeFormat::Beautified);
+		outStream1.close();
+	}*/
+	
 	//std::cout << "\nPress enter to continue...";
 	//std::cin.get();
 	return 0;

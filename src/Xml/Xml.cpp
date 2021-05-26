@@ -52,7 +52,7 @@ void Xml::Convert(Node &current, XmlTokenizer &tokenizer) {
 		// Attributes are added as properties.
 		if (tokenizer.Current() == Token(NodeType::Token, "=")) {
 			tokenizer.Next();
-			property.AddProperty("-" + std::string(lastToken.view)) = tokenizer.Current().view;
+			property.AddProperty(AttributePrefix + std::string(lastToken.view)) = tokenizer.Current().view;
 		}
 		lastToken = tokenizer.Current();
 		tokenizer.Next();
@@ -88,65 +88,6 @@ void Xml::Convert(Node &current, XmlTokenizer &tokenizer) {
 			Convert(property, tokenizer);
 		}
 	}
-
-#if 0
-	// Only start to parse if we are at the start of a tag.
-	if (tokens[k] != Token(NodeType::Token, "<"))
-		return;
-	k++;
-
-	// Ignore comments.
-	if (tokens[k] == Token(NodeType::Token, "!") && tokens[k + 1] == Token(NodeType::Token, "--") == 0) {
-		k += 2;
-		while (tokens[k + 1] != Token(NodeType::Token, ">") && tokens[k] == Token(NodeType::Token, "--"))
-			k++;
-		k += 2;
-		Convert(current, tokens, k);
-		return;
-	}
-
-	// The next token after the open tag is the name.
-	std::string name(tokens[k].view);
-	// First token in tag might have been prolog or XMLDecl char, name will be in the following token.
-	if (tokens[k] == Token(NodeType::Token, "?") || tokens[k] == Token(NodeType::Token, "!")) {
-		name += tokens[k + 1].view;
-		k++;
-	}
-	k++;
-
-	// Create the property that will contain the attributes and children found in the tag.
-	auto &property = CreateProperty(current, name);
-
-	while (tokens[k] != Token(NodeType::Token, ">")) {
-		// Attributes are added as properties.
-		if (tokens[k] == Token(NodeType::Token, "=")) {
-			property.AddProperty("-" + std::string(tokens[k - 1].view)) = tokens[k + 1].view.substr(1, tokens[k + 1].view.size() - 2);
-			k++;
-		}
-		k++;
-	}
-	k++;
-
-	// More tags will follow after prolog and XMLDecl.
-	if (tokens[k - 2] == Token(NodeType::Token, "?") || name[0] == '!') {
-		Convert(current, tokens, k);
-		return;
-	}
-	// Inline tag has no children.
-	if (tokens[k - 2] == Token(NodeType::Token, "/"))
-		return;
-	// Continue through all children until the end tag is found.
-	while (!(tokens[k] == Token(NodeType::Token, "<") && tokens[k + 1] == Token(NodeType::Token, "/") && tokens[k + 2].view == name)) {
-		if (tokens[k].type == NodeType::String) {
-			property = tokens[k].view;
-			k++;
-		} else {
-			// TODO: If the token at k is not a '<' this will cause a infinite loop, or if k + 2 > tokens.size() vector access will be violated.
-			Convert(property, tokens, k);
-		}
-	}
-	k += 4;
-#endif
 }
 
 Node &Xml::CreateProperty(Node &current, const std::string &name) {
@@ -169,7 +110,7 @@ Node &Xml::CreateProperty(Node &current, const std::string &name) {
 
 void Xml::AppendData(const NodeKey &nodeKey, const Node &node, std::ostream &stream, Format format, int32_t indent) {
 	auto nodeName = std::get_if<std::string>(&nodeKey);
-	if (!nodeName || nodeName->rfind('-', 0) == 0) return;
+	if (!nodeName || nodeName->rfind(AttributePrefix, 0) == 0) return;
 
 	if (node.GetType() == NodeType::Array) {
 		// If the node is an array, then all properties will inherit the array name.
@@ -186,7 +127,7 @@ void Xml::AppendData(const NodeKey &nodeKey, const Node &node, std::ostream &str
 	int attributeCount = 0;
 	for (const auto &[propertyKey, property] : node.GetProperties()) {
 		auto propertyName = std::get_if<std::string>(&propertyKey);
-		if (!propertyName || propertyName->rfind('-', 0) != 0) continue;
+		if (!propertyName || propertyName->rfind(AttributePrefix, 0) != 0) continue;
 		stream << " " << propertyName->substr(1) << "=\"" << property.GetValue() << "\"";
 		attributeCount++;
 	}
