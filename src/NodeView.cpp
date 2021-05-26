@@ -32,7 +32,7 @@ NodeView NodeView::GetPropertyWithBackup(const NodeKey &key, const NodeKey &back
 	return const_cast<Node *>(value)->GetPropertyWithBackup(key, backupKey);
 }
 
-NodeView NodeView::GetPropertyWithValue(const NodeKey &key, const std::string &propertyValue) {
+NodeView NodeView::GetPropertyWithValue(const NodeKey &key, const NodeValue &propertyValue) {
 	if (!has_value())
 		return {this, key};
 	return const_cast<Node *>(value)->GetPropertyWithValue(key, propertyValue);

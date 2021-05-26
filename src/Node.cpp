@@ -23,45 +23,71 @@ bool Node::IsValid() const {
 }
 
 bool Node::HasProperty(const NodeKey &key) const {
-	return properties.find(key) != properties.end();
+	//return properties.find(key) != properties.end();
+	for (const auto &[propertyKey, property] : properties) {
+		if (propertyKey == key)
+			return true;
+	}
+
+	return false;
 }
 
 NodeConstView Node::GetProperty(const NodeKey &key) const {
-	if (auto it = properties.find(key); it != properties.end())
-		return {this, key, &it->second};
+	//if (auto it = properties.find(key); it != properties.end())
+	//	return {this, key, &it->second};
+	for (const auto &[propertyKey, property] : properties) {
+		if (propertyKey == key)
+			return {this, key, &property};
+	}
 	return {this, key, nullptr};
 }
 
 // TODO: Duplicate
 NodeView Node::GetProperty(const NodeKey &key) {
-	if (auto it = properties.find(key); it != properties.end())
-		return {this, key, &it->second};
+	//if (auto it = properties.find(key); it != properties.end())
+	//	return {this, key, &it->second};
+	for (auto &[propertyKey, property] : properties) {
+		if (propertyKey == key)
+			return {this, key, &property};
+	}
 	return {this, key, nullptr};
 }
 
 Node &Node::AddProperty(const Node &node) {
 	// TODO: generate a real key
-	return properties.emplace(properties.size(), node).first->second;
+	//return properties.emplace(properties.size(), node).first->second;
+	return properties.emplace_back(std::make_pair(properties.size(), node)).second;
 }
 
 Node &Node::AddProperty(Node &&node) {
 	// TODO: generate a real key
-	return properties.emplace(properties.size(), std::move(node)).first->second;
+	//return properties.emplace(properties.size(), std::move(node)).first->second;
+	return properties.emplace_back(std::make_pair(properties.size(), std::move(node))).second;
 }
 
 Node &Node::AddProperty(const NodeKey &key, const Node &node) {
-	return properties.emplace(key, node).first->second;
+	//return properties.emplace(key, node).first->second;
+	return properties.emplace_back(std::make_pair(key, node)).second;
 }
 
 Node &Node::AddProperty(const NodeKey &key, Node &&node) {
-	return properties.emplace(key, std::move(node)).first->second;
+	//return properties.emplace(key, std::move(node)).first->second;
+	return properties.emplace_back(std::make_pair(key, std::move(node))).second;
 }
 
 Node Node::RemoveProperty(const NodeKey &key) {
-	if (auto it = properties.find(key); it != properties.end()) {
+	/*if (auto it = properties.find(key); it != properties.end()) {
 		auto result = std::move(it->second);
 		properties.erase(it);
 		return result;
+	}*/
+	for (auto it = properties.begin(); it != properties.end(); ) {
+		if (it->first == key) {
+			auto result = std::move(it->second);
+			properties.erase(it);
+			return result;
+		}
+		++it;
 	}
 	return {};
 }
@@ -86,7 +112,7 @@ NodeConstView Node::GetPropertyWithBackup(const NodeKey &key, const NodeKey &bac
 	return {this, key, nullptr};
 }
 
-NodeConstView Node::GetPropertyWithValue(const NodeKey &key, const std::string &propertyValue) const {
+NodeConstView Node::GetPropertyWithValue(const NodeKey &key, const NodeValue &propertyValue) const {
 	// TODO: previous implementation was confusing, why does this method exist?
 	for (const auto &[propertyKey, property] : properties) {
 		if (auto property1 = property.GetProperty(key); property1->GetValue() == propertyValue)
@@ -107,7 +133,7 @@ NodeView Node::GetPropertyWithBackup(const NodeKey &key, const NodeKey &backupKe
 }
 
 // TODO: Duplicate
-NodeView Node::GetPropertyWithValue(const NodeKey &key, const std::string &propertyValue) {
+NodeView Node::GetPropertyWithValue(const NodeKey &key, const NodeValue &propertyValue) {
 	for (auto &[propertyKey, property] : properties) {
 		if (auto property1 = property.GetProperty(key); property1->GetValue() == propertyValue)
 			return {this, key, &property};
@@ -157,8 +183,8 @@ bool Node::operator<(const Node &rhs) const {
 	if (value < rhs.value) return true;
 	if (rhs.value < value) return false;
 
-//	if (properties < rhs.properties) return true;
-//	if (rhs.properties < properties) return false;
+	if (properties < rhs.properties) return true;
+	if (rhs.properties < properties) return false;
 
 	return false;
 }

@@ -27,7 +27,7 @@ public:
 	void Set(T &&value);
 	
 	NodeView GetPropertyWithBackup(const NodeKey &key, const NodeKey &backupKey);
-	NodeView GetPropertyWithValue(const NodeKey &key, const std::string &propertyValue);
+	NodeView GetPropertyWithValue(const NodeKey &key, const NodeValue &propertyValue);
 
 	NodeView operator[](const NodeKey &key);
 

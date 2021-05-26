@@ -71,9 +71,9 @@ public:
 	Node RemoveProperty(const Node &node);
 
 	NodeConstView GetPropertyWithBackup(const NodeKey &key, const NodeKey &backupKey) const;
-	NodeConstView GetPropertyWithValue(const NodeKey &key, const std::string &propertyValue) const;
+	NodeConstView GetPropertyWithValue(const NodeKey &key, const NodeValue &propertyValue) const;
 	NodeView GetPropertyWithBackup(const NodeKey &key, const NodeKey &backupKey);
-	NodeView GetPropertyWithValue(const NodeKey &key, const std::string &propertyValue);
+	NodeView GetPropertyWithValue(const NodeKey &key, const NodeValue &propertyValue);
 
 	NodeConstView operator[](const NodeKey &key) const;
 	NodeView operator[](const NodeKey &key);
@@ -94,15 +94,15 @@ public:
 	const NodePropertiesMap &GetProperties() const { return properties; }
 	NodePropertiesMap &GetProperties() { return properties; }
 
-	const std::string &GetValue() const { return value; }
-	void SetValue(std::string value) { this->value = std::move(value); }
+	const NodeValue &GetValue() const { return value; }
+	void SetValue(NodeValue value) { this->value = std::move(value); }
 
 	const NodeType &GetType() const { return type; }
 	void SetType(NodeType type) { this->type = type; }
 
 protected:
 	NodePropertiesMap properties;
-	std::string value;
+	NodeValue value;
 	NodeType type = NodeType::Object;
 };
 }

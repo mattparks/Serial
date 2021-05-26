@@ -3,17 +3,16 @@
 #include <cstdint>
 #include <variant>
 #include <string>
-#include <map>
 #include <vector>
-
-//#include "Utils/sparsehash/sparse_hash_map"
 
 namespace serial {
 class Node;
-using NodeKey = std::variant<std::string, uint32_t>; // name or index
-using NodePropertiesMap = std::map<NodeKey, Node>; // map of name or index key to property
+using NodeKey = std::variant<std::string, uint32_t>; // Name or index.
+using NodeValue = std::string;
+using NodePropertiesMap = std::vector<std::pair<NodeKey, Node>>; // List of key property pairs.
 enum class NodeType : uint8_t {
-	Object, Array, String, Boolean, Integer, Decimal, Null, Token, Unknown, EndOfFile
+	Object, Array, String, Boolean, Integer, Decimal, Null, // Type of node value.
+	Unknown, Token, EndOfFile, // Used in tokenizers.
 };
 
 /**
@@ -51,7 +50,7 @@ public:
 	bool GetWithFallback(T &&dest, const K &fallback) const;
 	
 	NodeConstView GetPropertyWithBackup(const NodeKey &key, const NodeKey &backupKey) const;
-	NodeConstView GetPropertyWithValue(const NodeKey &key, const std::string &propertyValue) const;
+	NodeConstView GetPropertyWithValue(const NodeKey &key, const NodeValue &propertyValue) const;
 
 	NodeConstView operator[](const NodeKey &key) const;
 

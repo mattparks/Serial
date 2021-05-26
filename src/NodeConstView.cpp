@@ -21,7 +21,7 @@ NodeConstView NodeConstView::GetPropertyWithBackup(const NodeKey &key, const Nod
 	return value->GetPropertyWithBackup(key, backupKey);
 }
 
-NodeConstView NodeConstView::GetPropertyWithValue(const NodeKey &key, const std::string &propertyValue) const {
+NodeConstView NodeConstView::GetPropertyWithValue(const NodeKey &key, const NodeValue &propertyValue) const {
 	if (!has_value())
 		return {this, key};
 	return value->GetPropertyWithValue(key, propertyValue);

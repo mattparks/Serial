@@ -11,6 +11,9 @@ namespace serial {
  */
 class NodeFormat {
 public:
+	/**
+	 * @brief Tokens used in tokenizers.
+	 */
 	class Token {
 	public:
 		constexpr Token() = default;
