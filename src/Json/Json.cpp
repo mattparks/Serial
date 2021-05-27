@@ -1,21 +1,47 @@
 #include "Json.hpp"
 
-#include "Utils/String.hpp"
-#include "JsonTokenizer.hpp"
-
 #define ATTRIBUTE_TEXT_SUPPORT 1
 
 namespace serial {
 void Json::Load(Node &node, std::string_view string) {
-	JsonTokenizer tokenizer(string);
-#if 0
+	// Tokenizes the string view into small views that are used to build a Node tree.
 	std::vector<Token> tokens;
-	while (!tokenizer.EndOfInput())
-		tokens.emplace_back(tokenizer.Next());
-#else
-	tokenizer.Next();
-	Convert(node, tokenizer);
-#endif
+
+	std::size_t tokenStart = 0;
+	enum class QuoteState : char {
+		None, Single, Double
+	} quoteState = QuoteState::None;
+
+	// Iterates over all the characters in the string view.
+	for (auto &&[index, c] : Enumerate(string)) {
+		// If the previous character was a backslash the quote will not break the string.
+		if (c == '\'' && quoteState != QuoteState::Double && string[index - 1] != '\\')
+			quoteState = quoteState == QuoteState::None ? QuoteState::Single : QuoteState::None;
+		else if (c == '"' && quoteState != QuoteState::Single && string[index - 1] != '\\')
+			quoteState = quoteState == QuoteState::None ? QuoteState::Double : QuoteState::None;
+
+		// When not reading a string tokens can be found.
+		// While in a string whitespace and tokens are added to the strings view.
+		if (quoteState == QuoteState::None) {
+			if (String::IsWhitespace(c)) {
+				// On whitespace start save current token.
+				AddToken(std::string_view(string.data() + tokenStart, index - tokenStart), tokens);
+				tokenStart = index + 1;
+			} else if (c == ':' || c == '{' || c == '}' || c == ',' || c == '[' || c == ']') {
+				// Tokens used to read json nodes.
+				AddToken(std::string_view(string.data() + tokenStart, index - tokenStart), tokens);
+				tokens.emplace_back(NodeType::Token, std::string_view(string.data() + index, 1));
+				tokenStart = index + 1;
+			}
+		}
+	}
+
+	//if (tokens.empty())
+	//	throw std::runtime_error("No tokens found in document");
+
+	// Converts the tokens into nodes.
+	int32_t k = 0;
+	Convert(node, tokens, k);
 }
 
 void Json::Write(const Node &node, std::ostream &stream, Format format) {
@@ -24,50 +50,74 @@ void Json::Write(const Node &node, std::ostream &stream, Format format) {
 	stream << (node.GetType() == NodeType::Array ? ']' : '}');
 }
 
-void Json::Convert(Node &current, JsonTokenizer &tokenizer) {
-	if (tokenizer.Current() == Token(NodeType::Token, "{")) {
-		tokenizer.Next();
+void Json::AddToken(std::string_view view, std::vector<Token> &tokens) {
+	if (view.length() != 0) {
+		// Finds the node value type of the string and adds it to the tokens vector.
+		if (view == "null") {
+			tokens.emplace_back(NodeType::Null, std::string_view());
+		} else if (view == "true" || view == "false") {
+			tokens.emplace_back(NodeType::Boolean, view);
+		} else if (String::IsNumber(view)) {
+			// This is a quick hack to get if the number is a decimal.
+			if (view.find('.') != std::string::npos) {
+				if (view.size() >= std::numeric_limits<long double>::digits)
+					throw std::runtime_error("Decimal number is too long");
+				tokens.emplace_back(NodeType::Decimal, view);
+			} else {
+				if (view.size() >= std::numeric_limits<uint64_t>::digits)
+					throw std::runtime_error("Integer number is too long");
+				tokens.emplace_back(NodeType::Integer, view);
+			}
+		} else { // if (view.front() == view.back() == '\"')
+			tokens.emplace_back(NodeType::String, view.substr(1, view.length() - 2));
+		}
+	}
+}
 
-		while (tokenizer.Current() != Token(NodeType::Token, "}")) {
-			auto key = tokenizer.Current().view;
-			//if (k + 2 >= tokens.size())
-			//	throw std::runtime_error("Missing end of {} array");
-			if (tokenizer.Next().view != ":")
+void Json::Convert(Node &current, const std::vector<Token> &tokens, int32_t &k) {
+	if (tokens[k] == Token(NodeType::Token, "{")) {
+		k++;
+
+		while (tokens[k] != Token(NodeType::Token, "}")) {
+			auto key = tokens[k].view;
+			if (k + 2 >= tokens.size())
+				throw std::runtime_error("Missing end of {} array");
+			if (tokens[k + 1].view != ":")
 				throw std::runtime_error("Missing object colon");
-			tokenizer.Next();
+			k += 2;
 #if ATTRIBUTE_TEXT_SUPPORT
 			// Write value string into current value, then continue parsing properties into current.
 			if (key == "#text")
-				Convert(current, tokenizer);
+				Convert(current, tokens, k);
 			else
 #endif
-				Convert(current.AddProperty(std::string(key)), tokenizer);
-			if (tokenizer.Current().view == ",")
-				tokenizer.Next();
+				Convert(current.AddProperty(std::string(key)), tokens, k);
+			if (tokens[k].view == ",")
+				k++;
 		}
-		tokenizer.Next();
+		k++;
 
 		current.SetType(NodeType::Object);
-	} else if (tokenizer.Current() == Token(NodeType::Token, "[")) {
-		tokenizer.Next();
+	} else if (tokens[k] == Token(NodeType::Token, "[")) {
+		k++;
 
-		while (tokenizer.Current() != Token(NodeType::Token, "]")) {
-			//if (k >= tokens.size())
-			//	throw std::runtime_error("Missing end of [] object");
-			Convert(current.AddProperty(), tokenizer);
-			if (tokenizer.Current().view == ",")
-				tokenizer.Next();
+		while (tokens[k] != Token(NodeType::Token, "]")) {
+			if (k >= tokens.size())
+				throw std::runtime_error("Missing end of [] object");
+			Convert(current.AddProperty(), tokens, k);
+			if (tokens[k].view == ",")
+				k++;
 		}
-		tokenizer.Next();
+		k++;
 
 		current.SetType(NodeType::Array);
 	} else {
-		std::string str(tokenizer.Current().view);
-		if (tokenizer.Current().type == NodeType::String)
+		std::string str(tokens[k].view);
+		if (tokens[k].type == NodeType::String)
 			str = String::UnfixEscapedChars(str);
 		current.SetValue(str);
-		current.SetType(tokenizer.Current().type);
-		tokenizer.Next();
+		current.SetType(tokens[k].type);
+		k++;
 	}
 }
 
@@ -97,21 +147,21 @@ void Json::AppendData(const Node &node, std::ostream &stream, Format format, int
 
 	// Output each property.
 	for (auto it = node.GetProperties().begin(); it != node.GetProperties().end(); ++it) {
-		const auto &[propertyKey, property] = *it;
+		const auto &[propertyName, property] = *it;
 		// TODO: if this *it is in an array and there are elements missing between *(it-1) and *it fill with null.
-		
+
 		stream << indents;
 		// Output name for property if it exists.
-		if (const auto name = std::get_if<std::string>(&propertyKey); name && !name->empty()) {
-			stream << '\"' << *name << "\":" << format.space;
+		if (!propertyName.empty()) {
+			stream << '\"' << propertyName << "\":" << format.space;
 		}
 
 		bool isArray = false;
 		if (!property.GetProperties().empty()) {
 			// If all properties have no names, then this must be an array.
 			// TODO: this does not look over all properties, handle where we have mixed mapped names and array elements.
-			for (const auto &[key2, property2] : property.GetProperties()) {
-				if (const auto name2 = std::get_if<std::string>(&key2); !name2 || name2->empty()) {
+			for (const auto &[name2, property2] : property.GetProperties()) {
+				if (name2.empty()) {
 					isArray = true;
 					break;
 				}
