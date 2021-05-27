@@ -1,19 +1,21 @@
 #pragma once
 
 #include <cstdint>
-#include <variant>
 #include <string>
+#include <variant>
 #include <vector>
 
 namespace serial {
 class Node;
-using NodeKey = std::variant<std::string, uint32_t>; // Name or index.
-using NodeValue = std::string;
-using NodePropertiesMap = std::vector<std::pair<NodeKey, Node>>; // List of key property pairs.
+
 enum class NodeType : uint8_t {
 	Object, Array, String, Boolean, Integer, Decimal, Null, // Type of node value.
 	Unknown, Token, EndOfFile, // Used in tokenizers.
 };
+using NodeValue = std::string;
+
+using NodeProperty = std::pair<std::string, Node>;
+using NodeProperties = std::vector<NodeProperty>;
 
 /**
  * @brief Class that is returned from a {@link Node} when getting constant properties. This represents a key tree from a parent,
@@ -22,9 +24,11 @@ enum class NodeType : uint8_t {
 class NodeConstView {
 	friend class Node;
 protected:
+	using Key = std::variant<std::string, uint32_t>;
+
 	NodeConstView() = default;
-	NodeConstView(const Node *parent, NodeKey key, const Node *value);
-	NodeConstView(const NodeConstView *parent, NodeKey key);
+	NodeConstView(const Node *parent, Key key, const Node *value);
+	NodeConstView(const NodeConstView *parent, Key key);
 
 public:
 	bool has_value() const noexcept { return value != nullptr; }
@@ -49,18 +53,19 @@ public:
 	template<typename T, typename K>
 	bool GetWithFallback(T &&dest, const K &fallback) const;
 	
-	NodeConstView GetPropertyWithBackup(const NodeKey &key, const NodeKey &backupKey) const;
-	NodeConstView GetPropertyWithValue(const NodeKey &key, const NodeValue &propertyValue) const;
+	NodeConstView GetPropertyWithBackup(const std::string &key, const std::string &backupKey) const;
+	NodeConstView GetPropertyWithValue(const std::string &key, const NodeValue &propertyValue) const;
 
-	NodeConstView operator[](const NodeKey &key) const;
+	NodeConstView operator[](const std::string &key) const;
+	NodeConstView operator[](uint32_t index) const;
 
-	NodePropertiesMap GetProperties() const;
+	NodeProperties GetProperties() const;
 
 	NodeType GetType() const;
 	
 protected:
 	const Node *parent = nullptr;
 	const Node *value = nullptr;
-	std::vector<NodeKey> keys;
+	std::vector<Key> keys;
 };
 }

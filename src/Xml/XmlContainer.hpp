@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Utils/String.hpp"
 #include "Node.hpp"
 
 namespace serial {

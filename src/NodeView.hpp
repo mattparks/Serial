@@ -10,8 +10,8 @@ class NodeView : public NodeConstView {
 	friend class Node;
 protected:
 	NodeView() = default;
-	NodeView(Node *parent, NodeKey key, Node *value);
-	NodeView(NodeView *parent, NodeKey key);
+	NodeView(Node *parent, Key key, Node *value);
+	NodeView(NodeView *parent, Key key);
 
 public:
 	Node *get();
@@ -26,10 +26,11 @@ public:
 	template<typename T>
 	void Set(T &&value);
 	
-	NodeView GetPropertyWithBackup(const NodeKey &key, const NodeKey &backupKey);
-	NodeView GetPropertyWithValue(const NodeKey &key, const NodeValue &propertyValue);
+	NodeView GetPropertyWithBackup(const std::string &key, const std::string &backupKey);
+	NodeView GetPropertyWithValue(const std::string &key, const NodeValue &propertyValue);
 
-	NodeView operator[](const NodeKey &key);
+	NodeView operator[](const std::string &key);
+	NodeView operator[](uint32_t index);
 
 	NodeView operator=(const NodeConstView &) = delete;
 	NodeView operator=(const NodeView &) = delete;
@@ -38,6 +39,6 @@ public:
 	template<typename T>
 	Node &operator=(T &&rhs);
 
-	NodePropertiesMap &GetProperties();
+	NodeProperties &GetProperties();
 };
 }

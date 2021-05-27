@@ -196,8 +196,6 @@ int main(int argc, char **argv) {
 	}
 	{
 		Node xml1;
-		xml1["?xml"]["@version"] = "1.0";
-		xml1["?xml"]["@encoding"] = "utf-8";
 		// Make a copy of the node.
 		xml1["node"] = node;
 

@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <string_view>
 #include <sstream>
+#include <list>
 #include <vector>
 #include <optional>
 

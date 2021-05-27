@@ -293,7 +293,7 @@ Node &operator<<(Node &node, const std::chrono::time_point<T> &timePoint) {
 	return node << timePoint.time_since_epoch();
 }
 
-/*template<typename T, typename K>
+template<typename T, typename K>
 const Node &operator>>(const Node &node, std::pair<T, K> &pair) {
 	node["first"].Get(pair.first);
 	node["second"].Get(pair.second);
@@ -305,7 +305,7 @@ Node &operator<<(Node &node, const std::pair<T, K> &pair) {
 	node["first"].Set(pair.first);
 	node["second"].Set(pair.second);
 	return node;
-}*/
+}
 
 template<typename T>
 const Node &operator>>(const Node &node, std::optional<T> &optional) {
@@ -333,7 +333,7 @@ const Node &operator>>(const Node &node, std::vector<T> &vector) {
 	vector.clear();
 	vector.reserve(node.GetProperties().size());
 
-	for (const auto &[propertyKey, property] : node.GetProperties())
+	for (const auto &[propertyName, property] : node.GetProperties())
 		property >> vector.emplace_back();
 
 	return node;
@@ -353,7 +353,7 @@ const Node &operator>>(const Node &node, std::set<T> &set) {
 	set.clear();
 	auto where = set.end();
 
-	for (const auto &[propertyKey, property] : node.GetProperties()) {
+	for (const auto &[propertyName, property] : node.GetProperties()) {
 		T x;
 		property >> x;
 		where = set.insert(where, std::move(x));
@@ -376,7 +376,7 @@ const Node &operator>>(const Node &node, std::unordered_set<T> &set) {
 	set.clear();
 	auto where = set.end();
 
-	for (const auto &[propertyKey, property] : node.GetProperties()) {
+	for (const auto &[propertyName, property] : node.GetProperties()) {
 		T x;
 		property >> x;
 		where = set.insert(where, std::move(x));
@@ -399,7 +399,7 @@ const Node &operator>>(const Node &node, std::multiset<T> &set) {
 	set.clear();
 	auto where = set.end();
 
-	for (const auto &[propertyKey, property] : node.GetProperties()) {
+	for (const auto &[propertyName, property] : node.GetProperties()) {
 		T x;
 		property >> x;
 		where = set.insert(where, std::move(x));
@@ -422,7 +422,7 @@ const Node &operator>>(const Node &node, std::unordered_multiset<T> &set) {
 	set.clear();
 	auto where = set.end();
 
-	for (const auto &[propertyKey, property] : node.GetProperties()) {
+	for (const auto &[propertyName, property] : node.GetProperties()) {
 		T x;
 		property >> x;
 		where = set.insert(where, std::move(x));
@@ -463,7 +463,7 @@ template<typename T>
 const Node &operator>>(const Node &node, std::list<T> &list) {
 	list.clear();
 
-	for (const auto &[propertyKey, property] : node.GetProperties()) {
+	for (const auto &[propertyName, property] : node.GetProperties()) {
 		T x;
 		property >> x;
 		list.emplace_back(std::move(x));
@@ -508,9 +508,9 @@ const Node &operator>>(const Node &node, std::map<T, K> &map) {
 	map.clear();
 	auto where = map.end();
 
-	for (const auto &[propertyKey, property] : node.GetProperties()) {
+	for (const auto &[propertyName, property] : node.GetProperties()) {
 		std::pair<T, K> pair;
-		pair.first = String::From<T>(*std::get_if<std::string>(&propertyKey));
+		pair.first = String::From<T>(propertyName);
 		property >> pair.second;
 		where = map.insert(where, std::move(pair));
 	}
@@ -532,9 +532,9 @@ const Node &operator>>(const Node &node, std::unordered_map<T, K> &map) {
 	map.clear();
 	auto where = map.end();
 
-	for (const auto &[propertyKey, property] : node.GetProperties()) {
+	for (const auto &[propertyName, property] : node.GetProperties()) {
 		std::pair<T, K> pair;
-		pair.first = String::From<T>(*std::get_if<std::string>(&propertyKey));
+		pair.first = String::From<T>(propertyName);
 		property >> pair.second;
 		where = map.insert(where, std::move(pair));
 	}
@@ -556,9 +556,9 @@ const Node &operator>>(const Node &node, std::multimap<T, K> &map) {
 	map.clear();
 	auto where = map.end();
 
-	for (const auto &[propertyKey, property] : node.GetProperties()) {
+	for (const auto &[propertyName, property] : node.GetProperties()) {
 		std::pair<T, K> pair;
-		pair.first = String::From<T>(*std::get_if<std::string>(&propertyKey));
+		pair.first = String::From<T>(propertyName);
 		property >> pair.second;
 		where = map.insert(where, std::move(pair));
 	}
@@ -580,9 +580,9 @@ const Node &operator>>(const Node &node, std::unordered_multimap<T, K> &map) {
 	map.clear();
 	auto where = map.end();
 
-	for (const auto &[propertyKey, property] : node.GetProperties()) {
+	for (const auto &[propertyName, property] : node.GetProperties()) {
 		std::pair<T, K> pair;
-		pair.first = String::From<T>(*std::get_if<std::string>(&propertyKey));
+		pair.first = String::From<T>(propertyName);
 		property >> pair.second;
 		where = map.insert(where, std::move(pair));
 	}

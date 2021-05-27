@@ -60,23 +60,30 @@ public:
 	
 	//Node &Merge(Node &&node);
 
-	bool HasProperty(const NodeKey &key) const;
-	NodeConstView GetProperty(const NodeKey &key) const;
-	NodeView GetProperty(const NodeKey &key);
+	bool HasProperty(const std::string &name) const;
+	bool HasProperty(uint32_t index) const;
+	NodeConstView GetProperty(const std::string &name) const;
+	NodeConstView GetProperty(uint32_t index) const;
+	NodeView GetProperty(const std::string &name);
+	NodeView GetProperty(uint32_t index);
 	Node &AddProperty(const Node &node);
 	Node &AddProperty(Node &&node = {});
-	Node &AddProperty(const NodeKey &key, const Node &node);
-	Node &AddProperty(const NodeKey &key, Node &&node = {});
-	Node RemoveProperty(const NodeKey &key);
+	Node &AddProperty(const std::string &name, const Node &node);
+	Node &AddProperty(const std::string &name, Node &&node = {});
+	Node &AddProperty(uint32_t index, const Node &node);
+	Node &AddProperty(uint32_t index, Node &&node = {});
+	Node RemoveProperty(const std::string &name);
 	Node RemoveProperty(const Node &node);
 
-	NodeConstView GetPropertyWithBackup(const NodeKey &key, const NodeKey &backupKey) const;
-	NodeConstView GetPropertyWithValue(const NodeKey &key, const NodeValue &propertyValue) const;
-	NodeView GetPropertyWithBackup(const NodeKey &key, const NodeKey &backupKey);
-	NodeView GetPropertyWithValue(const NodeKey &key, const NodeValue &propertyValue);
+	NodeConstView GetPropertyWithBackup(const std::string &name, const std::string &backupName) const;
+	NodeConstView GetPropertyWithValue(const std::string &name, const NodeValue &propertyValue) const;
+	NodeView GetPropertyWithBackup(const std::string &name, const std::string &backupName);
+	NodeView GetPropertyWithValue(const std::string &name, const NodeValue &propertyValue);
 
-	NodeConstView operator[](const NodeKey &key) const;
-	NodeView operator[](const NodeKey &key);
+	NodeConstView operator[](const std::string &name) const;
+	NodeConstView operator[](uint32_t index) const;
+	NodeView operator[](const std::string &name);
+	NodeView operator[](uint32_t index);
 
 	Node &operator=(const Node &rhs) = default;
 	Node &operator=(Node &&rhs) noexcept = default;
@@ -91,8 +98,8 @@ public:
 	bool operator!=(const Node &rhs) const;
 	bool operator<(const Node &rhs) const;
 
-	const NodePropertiesMap &GetProperties() const { return properties; }
-	NodePropertiesMap &GetProperties() { return properties; }
+	const NodeProperties &GetProperties() const { return properties; }
+	NodeProperties &GetProperties() { return properties; }
 
 	const NodeValue &GetValue() const { return value; }
 	void SetValue(NodeValue value) { this->value = std::move(value); }
@@ -101,7 +108,7 @@ public:
 	void SetType(NodeType type) { this->type = type; }
 
 protected:
-	NodePropertiesMap properties;
+	NodeProperties properties;
 	NodeValue value;
 	NodeType type = NodeType::Object;
 };
