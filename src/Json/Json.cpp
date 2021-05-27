@@ -1,6 +1,5 @@
 #include "Json.hpp"
 
-#include "Utils/String.hpp"
 #include "JsonTokenizer.hpp"
 
 #define ATTRIBUTE_TEXT_SUPPORT 1
@@ -97,21 +96,21 @@ void Json::AppendData(const Node &node, std::ostream &stream, Format format, int
 
 	// Output each property.
 	for (auto it = node.GetProperties().begin(); it != node.GetProperties().end(); ++it) {
-		const auto &[propertyKey, property] = *it;
+		const auto &[propertyName, property] = *it;
 		// TODO: if this *it is in an array and there are elements missing between *(it-1) and *it fill with null.
 		
 		stream << indents;
 		// Output name for property if it exists.
-		if (const auto name = std::get_if<std::string>(&propertyKey); name && !name->empty()) {
-			stream << '\"' << *name << "\":" << format.space;
+		if (!propertyName.empty()) {
+			stream << '\"' << propertyName << "\":" << format.space;
 		}
 
 		bool isArray = false;
 		if (!property.GetProperties().empty()) {
 			// If all properties have no names, then this must be an array.
 			// TODO: this does not look over all properties, handle where we have mixed mapped names and array elements.
-			for (const auto &[key2, property2] : property.GetProperties()) {
-				if (const auto name2 = std::get_if<std::string>(&key2); !name2 || name2->empty()) {
+			for (const auto &[name2, property2] : property.GetProperties()) {
+				if (name2.empty()) {
 					isArray = true;
 					break;
 				}

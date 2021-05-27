@@ -16,10 +16,15 @@ void Xml::Load(Node &node, std::string_view string) {
 }
 
 void Xml::Write(const Node &node, std::ostream &stream, Format format) {
-	// TODO: if no XMLDecl write default: R"(<?xml version="1.0" encoding="utf-8"?>)"
+	if (!node.HasProperty("?xml")) {
+		Node xmldecl;
+		xmldecl["@version"] = "1.0";
+		xmldecl["@encoding"] = "utf-8";
+		AppendData("?xml", xmldecl, stream, format, 0);
+	}
 
-	for (const auto &[propertyKey, property] : node.GetProperties()) {
-		AppendData(propertyKey, property, stream, format, 0);
+	for (const auto &[propertyName, property] : node.GetProperties()) {
+		AppendData(propertyName, property, stream, format, 0);
 	}
 }
 
@@ -108,27 +113,24 @@ Node &Xml::CreateProperty(Node &current, const std::string &name) {
 	return current.AddProperty(name);
 }
 
-void Xml::AppendData(const NodeKey &nodeKey, const Node &node, std::ostream &stream, Format format, int32_t indent) {
-	auto nodeName = std::get_if<std::string>(&nodeKey);
-	if (!nodeName || nodeName->rfind(AttributePrefix, 0) == 0) return;
+void Xml::AppendData(const std::string &nodeName, const Node &node, std::ostream &stream, Format format, int32_t indent) {
+	if (nodeName.rfind(AttributePrefix, 0) == 0) return;
 
 	if (node.GetType() == NodeType::Array) {
 		// If the node is an array, then all properties will inherit the array name.
-		for (const auto &[propertyKey, property] : node.GetProperties())
-			AppendData(nodeKey, property, stream, format, indent);
+		for (const auto &[propertyName, property] : node.GetProperties())
+			AppendData(nodeName, property, stream, format, indent);
 		return;
 	}
 
 	auto indents = format.GetIndents(indent);
-	const auto &name = *nodeName;
-	stream << indents << '<' << name;
+	stream << indents << '<' << nodeName;
 
 	// Add attributes to opening tag.
 	int attributeCount = 0;
-	for (const auto &[propertyKey, property] : node.GetProperties()) {
-		auto propertyName = std::get_if<std::string>(&propertyKey);
-		if (!propertyName || propertyName->rfind(AttributePrefix, 0) != 0) continue;
-		stream << " " << propertyName->substr(1) << "=\"" << property.GetValue() << "\"";
+	for (const auto &[propertyName, property] : node.GetProperties()) {
+		if (propertyName.rfind(AttributePrefix, 0) != 0) continue;
+		stream << " " << propertyName.substr(1) << "=\"" << property.GetValue() << "\"";
 		attributeCount++;
 	}
 
@@ -140,18 +142,18 @@ void Xml::AppendData(const NodeKey &nodeKey, const Node &node, std::ostream &str
 		if (node.GetProperties().size() - attributeCount != 0) {
 			stream << format.newLine;
 			// Output each property.
-			for (const auto &[propertyKey, property] : node.GetProperties())
-				AppendData(propertyKey, property, stream, format, indent + 1);
+			for (const auto &[propertyName, property] : node.GetProperties())
+				AppendData(propertyName, property, stream, format, indent + 1);
 			stream << indents;
 		} else {
 			// Output each property.
-			for (const auto &[propertyKey, property] : node.GetProperties())
-				AppendData(propertyKey, property, stream, format, indent + 1);
+			for (const auto &[propertyName, property] : node.GetProperties())
+				AppendData(propertyName, property, stream, format, indent + 1);
 		}
-		stream << "</" << name << '>' << format.newLine;
-	} else if (name[0] == '?') {
+		stream << "</" << nodeName << '>' << format.newLine;
+	} else if (nodeName[0] == '?') {
 		stream << "?>" << format.newLine;
-	} else if (name[0] == '!') {
+	} else if (nodeName[0] == '!') {
 		stream << '>' << format.newLine;
 	} else {
 		stream << "/>" << format.newLine;

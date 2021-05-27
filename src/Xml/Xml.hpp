@@ -17,6 +17,6 @@ private:
 	static void Convert(Node &current, XmlTokenizer &tokenizer);
 	static Node &CreateProperty(Node &current, const std::string &name);
 	
-	static void AppendData(const NodeKey &nodeKey, const Node &node, std::ostream &stream, Format format, int32_t indent);
+	static void AppendData(const std::string &nodeName, const Node &node, std::ostream &stream, Format format, int32_t indent);
 };
 }
