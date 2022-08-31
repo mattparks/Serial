@@ -1,4 +1,4 @@
-#include "Node.hpp"
+#include "serial/Node.hpp"
 
 #include <algorithm>
 
@@ -132,11 +132,9 @@ NodeConstView Node::GetPropertyWithBackup(const std::string &name, const std::st
 }
 
 NodeConstView Node::GetPropertyWithValue(const std::string &name, const NodeValue &propertyValue) const {
-	// TODO: previous implementation was confusing, why does this method exist?
 	for (const auto &[propertyName, property] : properties) {
 		if (auto property1 = property.GetProperty(name); property1->GetValue() == propertyValue)
 			return {this, name, &property};
-		return {this, name, nullptr};
 	}
 
 	return {this, name, nullptr};
@@ -156,7 +154,6 @@ NodeView Node::GetPropertyWithValue(const std::string &name, const NodeValue &pr
 	for (auto &[propertyName, property] : properties) {
 		if (auto property1 = property.GetProperty(name); property1->GetValue() == propertyValue)
 			return {this, name, &property};
-		return {this, name, nullptr};
 	}
 
 	return {this, name, nullptr};

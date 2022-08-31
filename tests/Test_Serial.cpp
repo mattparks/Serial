@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <fstream>
-#include <Json/Json.hpp>
+#include <serial/Json.hpp>
 
 #include "MemoryData.hpp"
 

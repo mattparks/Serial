@@ -7,12 +7,12 @@ namespace serial {
  * @brief Class that allows {@link Node::Get()} to handle returning XML container types (std::vector, std::array)
  * where the XML array may contain 1 or n objects.
  */
-template<typename T, std::enable_if_t<is_container_v<std::remove_reference_t<T>>, int> = 1>
+template<typename T, typename = std::enable_if_t<utils::is_container_v<std::remove_reference_t<T>>>>
 class XmlContainer {
 public:
 	constexpr XmlContainer(const T &value = {}) : value(value) {}
-	template<typename = std::enable_if_t<!std::is_reference_v<T>>>
-	constexpr XmlContainer(T &&value) : value(std::move(value)) {}
+	template<typename T1 = T, typename = std::enable_if_t<!std::is_reference_v<T1>>>
+	constexpr XmlContainer(T1 &&value) : value(std::move(value)) {}
 	
 	friend const Node &operator>>(const Node &node, XmlContainer<T> &object) {
 		if (node.GetType() == NodeType::Array)

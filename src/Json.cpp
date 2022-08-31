@@ -1,8 +1,39 @@
-#include "Json.hpp"
+#include "serial/Json.hpp"
 
 #define ATTRIBUTE_TEXT_SUPPORT 1
 
 namespace serial {
+static std::string FixEscapedChars(std::string str) {
+	static const std::vector<std::pair<char, std::string_view>> replaces = {{'\\', "\\\\"}, {'\n', "\\n"}, {'\r', "\\r"}, {'\t', "\\t"}, {'\"', "\\\""}};
+
+	for (const auto &[from, to] : replaces) {
+		auto pos = str.find(from);
+		while (pos != std::string::npos) {
+			str.replace(pos, 1, to);
+			pos = str.find(from, pos + 2);
+		}
+	}
+
+	return str;
+}
+
+static std::string UnfixEscapedChars(std::string str) {
+	static const std::vector<std::pair<std::string_view, char>> replaces = {{"\\n", '\n'}, {"\\r", '\r'}, {"\\t", '\t'}, {"\\\"", '\"'}, {"\\\\", '\\'}};
+
+	for (const auto &[from, to] : replaces) {
+		auto pos = str.find(from);
+		while (pos != std::string::npos) {
+			if (pos != 0 && str[pos - 1] == '\\')
+				str.erase(str.begin() + --pos);
+			else
+				str.replace(pos, from.size(), 1, to);
+			pos = str.find(from, pos + 1);
+		}
+	}
+
+	return str;
+}
+
 void Json::Load(Node &node, std::string_view string) {
 	// Tokenizes the string view into small views that are used to build a Node tree.
 	std::vector<Token> tokens;
@@ -13,7 +44,7 @@ void Json::Load(Node &node, std::string_view string) {
 	} quoteState = QuoteState::None;
 
 	// Iterates over all the characters in the string view.
-	for (auto &&[index, c] : Enumerate(string)) {
+	for (const auto [index, c] : utils::Enumerate(string)) {
 		// If the previous character was a backslash the quote will not break the string.
 		if (c == '\'' && quoteState != QuoteState::Double && string[index - 1] != '\\')
 			quoteState = quoteState == QuoteState::None ? QuoteState::Single : QuoteState::None;
@@ -23,7 +54,7 @@ void Json::Load(Node &node, std::string_view string) {
 		// When not reading a string tokens can be found.
 		// While in a string whitespace and tokens are added to the strings view.
 		if (quoteState == QuoteState::None) {
-			if (String::IsWhitespace(c)) {
+			if (utils::IsWhitespace(c)) {
 				// On whitespace start save current token.
 				AddToken(std::string_view(string.data() + tokenStart, index - tokenStart), tokens);
 				tokenStart = index + 1;
@@ -57,7 +88,7 @@ void Json::AddToken(std::string_view view, std::vector<Token> &tokens) {
 			tokens.emplace_back(NodeType::Null, std::string_view());
 		} else if (view == "true" || view == "false") {
 			tokens.emplace_back(NodeType::Boolean, view);
-		} else if (String::IsNumber(view)) {
+		} else if (utils::IsNumber(view)) {
 			// This is a quick hack to get if the number is a decimal.
 			if (view.find('.') != std::string::npos) {
 				if (view.size() >= std::numeric_limits<long double>::digits)
@@ -114,7 +145,7 @@ void Json::Convert(Node &current, const std::vector<Token> &tokens, int32_t &k) 
 	} else {
 		std::string str(tokens[k].view);
 		if (tokens[k].type == NodeType::String)
-			str = String::UnfixEscapedChars(str);
+			str = UnfixEscapedChars(str);
 		current.SetValue(str);
 		current.SetType(tokens[k].type);
 		k++;
@@ -127,7 +158,7 @@ void Json::AppendData(const Node &node, std::ostream &stream, Format format, int
 	// Only output the value if no properties exist.
 	if (node.GetProperties().empty()) {
 		if (node.GetType() == NodeType::String)
-			stream << '\"' << String::FixEscapedChars(node.GetValue()) << '\"';
+			stream << '\"' << FixEscapedChars(node.GetValue()) << '\"';
 		else if (node.GetType() == NodeType::Null)
 			stream << "null";
 		else

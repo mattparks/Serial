@@ -1,4 +1,4 @@
-#include "Xml.hpp"
+#include "serial/Xml.hpp"
 
 namespace serial {
 void Xml::Load(Node &node, std::string_view string) {
@@ -14,7 +14,7 @@ void Xml::Load(Node &node, std::string_view string) {
 	} tagState = TagState::None;
 
 	// Iterates over all the characters in the string view.
-	for (auto &&[index, c] : Enumerate(string)) {
+	for (const auto [index, c] : utils::Enumerate(string)) {
 		// If the previous character was a backslash the quote will not break the string.
 		if (c == '\'' && quoteState != QuoteState::Double && string[index - 1] != '\\')
 			quoteState = quoteState == QuoteState::None ? QuoteState::Single : QuoteState::None;
@@ -24,7 +24,7 @@ void Xml::Load(Node &node, std::string_view string) {
 		// When not reading a string tokens can be found.
 		// While in a string whitespace and tokens are added to the strings view.
 		if (quoteState == QuoteState::None) {
-			if (tagState == TagState::Open && String::IsWhitespace(c)) {
+			if (tagState == TagState::Open && utils::IsWhitespace(c)) {
 				// On whitespace start save current token.
 				AddToken(std::string_view(string.data() + tokenStart, index - tokenStart), tokens);
 				tokenStart = index + 1;
@@ -63,7 +63,7 @@ void Xml::Write(const Node &node, std::ostream &stream, Format format) {
 }
 
 void Xml::AddToken(std::string_view view, std::vector<Token> &tokens) {
-	if (view.length() != 0 && !std::all_of(view.cbegin(), view.cend(), String::IsWhitespace))
+	if (view.length() != 0 && !std::all_of(view.cbegin(), view.cend(), utils::IsWhitespace))
 		tokens.emplace_back(NodeType::String, view);
 }
 

@@ -1,10 +1,10 @@
 #include <iostream>
 
 #include <fstream>
-#include <Node.hpp>
-#include <Json/Json.hpp>
-#include <Xml/Xml.hpp>
-#include <Xml/XmlContainer.hpp>
+#include <serial/Node.hpp>
+#include <serial/Json.hpp>
+#include <serial/Xml.hpp>
+#include <serial/XmlContainer.hpp>
 
 using namespace serial;
 
@@ -154,7 +154,7 @@ int main(int argc, char **argv) {
 	Node user4;
 	user4 = test::User{"user4", "User Four", "High school student", true, "30/04/2002"};
 	node["users"][6] = std::move(user4);
-	//node["users"][7] = test::User{"köln", "'Etat de São Paulo", R"(\"Hello World\")", true, "01/00/2000"};
+	//node["users"][7] = test::User{"kï¿½ln", "'Etat de Sï¿½o Paulo", R"(\"Hello World\")", true, "01/00/2000"};
 
 	// TODO: Resizing a vector changes the internal addressed of each element. 
 	// NodeView holds a pointer and will not be aware that the value it holds has been reallocated.

@@ -1,6 +1,6 @@
-#include "NodeView.hpp"
+#include "serial/NodeView.hpp"
 
-#include "Node.hpp"
+#include "serial/Node.hpp"
 
 namespace serial {
 NodeView::NodeView(Node *parent, Key key, Node *value) :

@@ -7,7 +7,7 @@
 namespace serial {
 class Xml : public NodeFormatType<Xml> {
 public:
-	static constexpr char AttributePrefix = '@';
+	constexpr static char AttributePrefix = '@';
 
 	// Do not call Load and Write directly, use Node::ParseString<Xml> and Node::WriteStream<Xml>.
 	static void Load(Node &node, std::string_view string);

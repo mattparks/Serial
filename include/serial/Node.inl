@@ -17,8 +17,8 @@
 #include <unordered_set>
 #include <vector>
 
-#include "Utils/Enumerate.hpp"
-#include "Utils/String.hpp"
+#include "Enumerate.hpp"
+#include "String.hpp"
 
 namespace serial {
 template<typename T, typename>
@@ -35,13 +35,8 @@ void Node::WriteStream(std::ostream &stream, NodeFormat::Format format) const {
 template<typename T, typename _Elem, typename>
 void Node::ParseStream(std::basic_istream<_Elem> &stream) {
 	// We must read as UTF8 chars.
-	if constexpr (!std::is_same_v<_Elem, char>) {
-#ifndef _MSC_VER
-		throw std::runtime_error("Cannot dynamicly parse wide streams on GCC or Clang");
-#else
+	if constexpr (!std::is_same_v<_Elem, char>)
 		stream.imbue(std::locale(stream.getloc(), new std::codecvt_utf8<char>));
-#endif
-	}
 
 	// Reading into a string before iterating is much faster.
 	std::string s(std::istreambuf_iterator<_Elem>(stream), {});
@@ -201,25 +196,25 @@ Node &operator<<(Node &node, const std::shared_ptr<T> &object) {
 }
 
 inline const Node &operator>>(const Node &node, bool &object) {
-	object = String::From<bool>(node.GetValue());
+	object = utils::From<bool>(node.GetValue());
 	return node;
 }
 
 inline Node &operator<<(Node &node, bool object) {
-	node.SetValue(String::To(object));
+	node.SetValue(utils::To(object));
 	node.SetType(NodeType::Boolean);
 	return node;
 }
 
 template<typename T, std::enable_if_t<std::is_arithmetic_v<T> || std::is_enum_v<T>, int> = 0>
 const Node &operator>>(const Node &node, T &object) {
-	object = String::From<T>(node.GetValue());
+	object = utils::From<T>(node.GetValue());
 	return node;
 }
 
 template<typename T, std::enable_if_t<std::is_arithmetic_v<T> || std::is_enum_v<T>, int> = 0>
 Node &operator<<(Node &node, T object) {
-	node.SetValue(String::To(object));
+	node.SetValue(utils::To(object));
 	node.SetType(std::is_floating_point_v<T> ? NodeType::Decimal : NodeType::Integer);
 	return node;
 }
@@ -250,6 +245,17 @@ inline const Node &operator>>(const Node &node, std::string &string) {
 
 inline Node &operator<<(Node &node, const std::string &string) {
 	node.SetValue(string);
+	node.SetType(NodeType::String);
+	return node;
+}
+
+inline const Node &operator>>(const Node &node, std::wstring &string) {
+	string = utils::ConvertUtf16(node.GetValue());
+	return node;
+}
+
+inline Node &operator<<(Node &node, const std::wstring &string) {
+	node.SetValue(utils::ConvertUtf8(string));
 	node.SetType(NodeType::String);
 	return node;
 }
@@ -444,7 +450,7 @@ template<typename T, std::size_t Size>
 const Node &operator>>(const Node &node, std::array<T, Size> &array) {
 	array = {};
 
-	for (auto &&[i, propertyPair] : Enumerate(node.GetProperties()))
+	for (auto [i, propertyPair] : utils::Enumerate(node.GetProperties()))
 		propertyPair.second >> array[i];
 
 	return node;
@@ -510,7 +516,7 @@ const Node &operator>>(const Node &node, std::map<T, K> &map) {
 
 	for (const auto &[propertyName, property] : node.GetProperties()) {
 		std::pair<T, K> pair;
-		pair.first = String::From<T>(propertyName);
+		pair.first = utils::From<T>(propertyName);
 		property >> pair.second;
 		where = map.insert(where, std::move(pair));
 	}
@@ -521,7 +527,7 @@ const Node &operator>>(const Node &node, std::map<T, K> &map) {
 template<typename T, typename K>
 Node &operator<<(Node &node, const std::map<T, K> &map) {
 	for (const auto &pair : map)
-		node.AddProperty(String::To(pair.first)) << pair.second;
+		node.AddProperty(utils::To(pair.first)) << pair.second;
 
 	node.SetType(NodeType::Object);
 	return node;
@@ -534,7 +540,7 @@ const Node &operator>>(const Node &node, std::unordered_map<T, K> &map) {
 
 	for (const auto &[propertyName, property] : node.GetProperties()) {
 		std::pair<T, K> pair;
-		pair.first = String::From<T>(propertyName);
+		pair.first = utils::From<T>(propertyName);
 		property >> pair.second;
 		where = map.insert(where, std::move(pair));
 	}
@@ -545,7 +551,7 @@ const Node &operator>>(const Node &node, std::unordered_map<T, K> &map) {
 template<typename T, typename K>
 Node &operator<<(Node &node, const std::unordered_map<T, K> &map) {
 	for (const auto &pair : map)
-		node.AddProperty(String::To(pair.first)) << pair.second;
+		node.AddProperty(utils::To(pair.first)) << pair.second;
 
 	node.SetType(NodeType::Object);
 	return node;
@@ -558,7 +564,7 @@ const Node &operator>>(const Node &node, std::multimap<T, K> &map) {
 
 	for (const auto &[propertyName, property] : node.GetProperties()) {
 		std::pair<T, K> pair;
-		pair.first = String::From<T>(propertyName);
+		pair.first = utils::From<T>(propertyName);
 		property >> pair.second;
 		where = map.insert(where, std::move(pair));
 	}
@@ -569,7 +575,7 @@ const Node &operator>>(const Node &node, std::multimap<T, K> &map) {
 template<typename T, typename K>
 Node &operator<<(Node &node, const std::multimap<T, K> &map) {
 	for (const auto &pair : map)
-		node.AddProperty(String::To(pair.first)) << pair.second;
+		node.AddProperty(utils::To(pair.first)) << pair.second;
 
 	node.SetType(NodeType::Object);
 	return node;
@@ -582,7 +588,7 @@ const Node &operator>>(const Node &node, std::unordered_multimap<T, K> &map) {
 
 	for (const auto &[propertyName, property] : node.GetProperties()) {
 		std::pair<T, K> pair;
-		pair.first = String::From<T>(propertyName);
+		pair.first = utils::From<T>(propertyName);
 		property >> pair.second;
 		where = map.insert(where, std::move(pair));
 	}
@@ -593,7 +599,7 @@ const Node &operator>>(const Node &node, std::unordered_multimap<T, K> &map) {
 template<typename T, typename K>
 Node &operator<<(Node &node, const std::unordered_multimap<T, K> &map) {
 	for (const auto &pair : map)
-		node.AddProperty(String::To(pair.first)) << pair.second;
+		node.AddProperty(utils::To(pair.first)) << pair.second;
 
 	node.SetType(NodeType::Object);
 	return node;
