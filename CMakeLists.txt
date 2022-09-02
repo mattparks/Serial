@@ -32,36 +32,13 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
 endif()
 
-file(GLOB_RECURSE _serial_headers
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/**.hpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/include/**.inl
-        )
-file(GLOB_RECURSE _serial_sources
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/**.cpp
-        )
-add_library(serial STATIC
-        ${_serial_headers}
-        ${_serial_sources}
-        )
-target_compile_features(serial PUBLIC cxx_std_17)
-target_compile_definitions(serial PUBLIC
-        $<$<PLATFORM_ID:Windows>:UNICODE _CRT_SECURE_NO_WARNINGS _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING>
-        $<$<CXX_COMPILER_ID:GNU>:__USE_MINGW_ANSI_STDIO=0>
-        )
-target_compile_options(serial PUBLIC
-        $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>>:-Wno-unused-function>
-        )
-target_include_directories(serial PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        )
-source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/include" PREFIX "" FILES ${_serial_headers})
-source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" PREFIX "" FILES ${_serial_sources})
+add_subdirectory(src)
 
 if(SERIAL_BUILD_EXAMPLES)
     add_executable(serial_example
-            ${CMAKE_CURRENT_SOURCE_DIR}/examples/Main.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/example/Main.cpp
             )
-    target_include_directories(serial_example PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/examples>)
+    target_include_directories(serial_example PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/example>)
     target_link_libraries(serial_example PUBLIC serial)
 endif()
 
@@ -81,21 +58,17 @@ if(SERIAL_BUILD_TESTS)
         add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR})
     endif()
 
-    file(GLOB_RECURSE _serial_test_headers
-            ${CMAKE_CURRENT_SOURCE_DIR}/tests/**.h
-            ${CMAKE_CURRENT_SOURCE_DIR}/tests/**.hpp
-            )
     file(GLOB_RECURSE _serial_test_sources
-            ${CMAKE_CURRENT_SOURCE_DIR}/tests/**.c
-            ${CMAKE_CURRENT_SOURCE_DIR}/tests/**.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/test/**.h
+            ${CMAKE_CURRENT_SOURCE_DIR}/test/**.hpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/test/**.c
+            ${CMAKE_CURRENT_SOURCE_DIR}/test/**.cpp
             )
     set(SERIAL_TEST_SOURCES
-            ${_serial_test_headers}
             ${_serial_test_sources}
             )
     add_executable(serial_test ${SERIAL_TEST_SOURCES})
-    target_compile_features(serial_test PUBLIC cxx_std_17)
-    target_include_directories(serial_test PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/tests>)
+    target_include_directories(serial_test PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/test>)
     target_link_libraries(serial_test PUBLIC serial gtest_main)
 
     # Allows automation of "BUILD_TESTING"

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <algorithm>
+#include <iterator>
+#include <tuple>
 #include <string_view>
 #include <sstream>
 #include <list>
@@ -12,9 +14,9 @@ template<typename T> struct is_optional : std::false_type {};
 template<typename T> struct is_optional<std::optional<T>> : std::true_type {};
 template<typename T> inline constexpr bool is_optional_v = is_optional<T>::value;
 
-template <typename Container> struct is_container : std::false_type {};
-template <typename... Ts> struct is_container<std::list<Ts...>> : std::true_type {};
-template <typename... Ts> struct is_container<std::vector<Ts...>> : std::true_type {};
+template<typename Container> struct is_container : std::false_type {};
+template<typename... Ts> struct is_container<std::list<Ts...>> : std::true_type {};
+template<typename... Ts> struct is_container<std::vector<Ts...>> : std::true_type {};
 template<typename T> inline constexpr bool is_container_v = is_container<T>::value;
 
 static std::string ReplaceAll(std::string str, std::string_view token, std::string_view to) {
@@ -90,7 +92,7 @@ static std::string To(T val) {
     } else if constexpr (std::is_same_v<std::nullptr_t, T>) {
         return "null";
     } else if constexpr (is_optional_v<T>) {
-        if (!val.has_value())
+        if (!val.hasObject())
             return "null";
         return To(*val);
     } else if constexpr (std::is_same_v<char, T>) {
@@ -143,4 +145,25 @@ static wchar_t ConvertUtf16(char c) {
     return Utf8ToUtf16Converter.from_bytes(c)[0];
 }
 
+/**
+ * http://reedbeta.com/blog/python-like-enumerate-in-cpp17/
+ */
+template<typename T,
+    typename TIter = decltype(std::begin(std::declval<T>())),
+    typename = decltype(std::end(std::declval<T>()))>
+constexpr auto Enumerate(T &&iterable) {
+    struct iterator {
+        size_t i;
+        TIter iter;
+        bool operator!=(const iterator &rhs) const { return iter != rhs.iter; }
+        void operator++() { ++i; ++iter; }
+        auto operator*() const { return std::tie(i, *iter); }
+    };
+    struct iterable_wrapper {
+        T iterable;
+        auto begin() { return iterator{0, std::begin(iterable)}; }
+        auto end() { return iterator{0, std::end(iterable)}; }
+    };
+    return iterable_wrapper{std::forward<T>(iterable)};
+}
 }

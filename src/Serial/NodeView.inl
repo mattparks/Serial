@@ -4,22 +4,22 @@
 
 namespace serial {
 template<typename T>
-void NodeView::Set(const T &value) {
-	get()->Set<T>(value);
+void NodeView::set(const T &value) {
+    object()->set<T>(value);
 }
 
 template<typename T>
-void NodeView::Set(T &&value) {
-	get()->Set<std::remove_reference_t<T>>(std::move(value));
+void NodeView::set(T &&value) {
+    object()->set<std::remove_reference_t<T>>(std::move(value));
 }
 
 template<typename T>
 Node &NodeView::operator=(const T &rhs) {
-	return *get() = rhs;
+    return *object() = rhs;
 }
 
 template<typename T>
 Node &NodeView::operator=(T &&rhs) {
-	return *get() = std::move(rhs);
+    return *object() = std::move(rhs);
 }
 }
