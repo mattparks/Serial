@@ -22,7 +22,7 @@ public:
 
     template<typename T, typename _Elem = char, typename = std::enable_if_t<
         std::is_convertible_v<T *, NodeFormat *>
-#ifndef _MSC_VER
+#if !defined(_MSC_VER) && !defined(__EMSCRIPTEN__)
         // Cannot dynamicly parse wide streams on GCC or Clang
         && std::is_same_v<_Elem, char>
 #endif

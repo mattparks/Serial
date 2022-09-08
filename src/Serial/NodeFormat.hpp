@@ -96,15 +96,17 @@ public:
 
     // TODO: Duplicate parseStream/writeString templates from Node.
     template<typename _Elem = char
-#ifndef _MSC_VER
+#if !defined(_MSC_VER) && !defined(__EMSCRIPTEN__)
         // Cannot dynamicly parse wide streams on GCC or Clang
         , typename = std::enable_if_t<std::is_same_v<_Elem, char>>
 #endif
     >
     void parseStream(Node &node, std::basic_istream<_Elem> &stream) {
+#if !defined(_MSC_VER) && !defined(__EMSCRIPTEN__)
         // We must read as UTF8 chars.
         if constexpr (!std::is_same_v<_Elem, char>)
             stream.imbue(std::locale(stream.getloc(), new std::codecvt_utf8<char>));
+#endif
 
         // Reading into a string before iterating is much faster.
         std::string s(std::istreambuf_iterator<_Elem>(stream), {});
