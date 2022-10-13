@@ -17,4 +17,4 @@ target_compile_options(serial PUBLIC
 target_include_directories(serial PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
         )
-source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" PREFIX "" FILES ${_serial_sources})
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX "" FILES ${_serial_sources})

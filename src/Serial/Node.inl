@@ -33,7 +33,7 @@ void Node::writeStream(std::ostream &stream, NodeFormat::Format format) const {
 // TODO: Duplicate parseStream/writeString templates from NodeFormat.
 template<typename T, typename _Elem, typename>
 void Node::parseStream(std::basic_istream<_Elem> &stream) {
-#if !defined(_MSC_VER) && !defined(__EMSCRIPTEN__)
+#if !defined(_MSC_VER) && !defined(__EMSCRIPTEN__) && !defined(ANDROID)
     // We must read as UTF8 chars.
     if constexpr (!std::is_same_v<_Elem, char>)
         stream.imbue(std::locale(stream.getloc(), new std::codecvt_utf8<char>));
