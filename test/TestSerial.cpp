@@ -1,20 +1,32 @@
-#include <fstream>
-
-#include "gtest/gtest.h"
+#include "benchmark/benchmark.h"
 #include "Serial/Json.hpp"
 #include "MemoryData.hpp"
 
-static struct SerialData {
+struct SerialData {
+    explicit SerialData(const MemoryData &data) {
+        _canada.parseString<serial::Json>(
+            std::string_view(data._canada.data(), data._canada.size())
+        );
+        _catalog.parseString<serial::Json>(
+            std::string_view(data._catalog.data(), data._catalog.size())
+        );
+        _twitter.parseString<serial::Json>(
+            std::string_view(data._twitter.data(), data._twitter.size())
+        );
+    }
+
     serial::Node _canada;
     serial::Node _catalog;
     serial::Node _twitter;
-} SerialData;
+};
 
-TEST(Serial, ParseInMemory) {
-    SerialData._canada.parseString<serial::Json>(MemoryData::_canadaString);
-    SerialData._catalog.parseString<serial::Json>(MemoryData::_catalogString);
-    SerialData._twitter.parseString<serial::Json>(MemoryData::_twitterString);
+static void Serial_ParseInMemory(benchmark::State& state) {
+    MemoryData data;
+    for (auto _ : state) {
+        SerialData serial(data);
+    }
 }
+BENCHMARK(Serial_ParseInMemory);
 
 inline const serial::Node &operator>>(const serial::Node &node, Status &status) {
     node["id"].get(status._id);
@@ -39,27 +51,47 @@ inline const serial::Node &operator>>(const serial::Node &node, Status::User &us
     return node;
 }
 
-TEST(Serial, GetTwitterData) {
-    auto statuses = SerialData._twitter["statuses"].get<std::vector<Status>>();
+static void Serial_GetTwitterData(benchmark::State& state) {
+    MemoryData data;
+    SerialData serial(data);
+    for (auto _ : state) {
+        auto statuses = serial._twitter["statuses"].get<std::vector<Status>>();
+    }
 }
+BENCHMARK(Serial_GetTwitterData);
 
-TEST(Serial, Stringify) {
-    auto canadaString = SerialData._canada.writeString<serial::Json>();
-    auto catalogString = SerialData._catalog.writeString<serial::Json>();
-    auto twitterString = SerialData._twitter.writeString<serial::Json>();
+static void Serial_Stringify(benchmark::State& state) {
+    MemoryData data;
+    SerialData serial(data);
+    for (auto _ : state) {
+        auto canadaString = serial._canada.writeString<serial::Json>();
+        auto catalogString = serial._catalog.writeString<serial::Json>();
+        auto twitterString = serial._twitter.writeString<serial::Json>();
+    }
 }
+BENCHMARK(Serial_Stringify);
 
-TEST(Serial, Prettify) {
-    auto canadaString = SerialData._canada.writeString<serial::Json>(serial::NodeFormat::Beautified);
-    auto catalogString = SerialData._catalog.writeString<serial::Json>(serial::NodeFormat::Beautified);
-    auto twitterString = SerialData._twitter.writeString<serial::Json>(serial::NodeFormat::Beautified);
+static void Serial_Prettify(benchmark::State& state) {
+    MemoryData data;
+    SerialData serial(data);
+    for (auto _ : state) {
+        auto canadaString = serial._canada.writeString<serial::Json>(serial::NodeFormat::Beautified);
+        auto catalogString = serial._catalog.writeString<serial::Json>(serial::NodeFormat::Beautified);
+        auto twitterString = serial._twitter.writeString<serial::Json>(serial::NodeFormat::Beautified);
+    }
 }
+BENCHMARK(Serial_Prettify);
 
-TEST(Serial, WriteToFiles) {
-    std::ofstream canadaFile("Tests/canada.serial.json", std::ios_base::binary | std::ios_base::out);
-    SerialData._canada.writeStream<serial::Json>(canadaFile);
-    std::ofstream catalogFile("Tests/citm_catalog.serial.json", std::ios_base::binary | std::ios_base::out);
-    SerialData._catalog.writeStream<serial::Json>(catalogFile, serial::NodeFormat::Beautified);
-    std::ofstream twitterFile("Tests/twitter.serial.json", std::ios_base::binary | std::ios_base::out);
-    SerialData._twitter.writeStream<serial::Json>(twitterFile, serial::NodeFormat::Beautified);
+static void Serial_WriteToFiles(benchmark::State& state) {
+    MemoryData data;
+    SerialData serial(data);
+    for (auto _ : state) {
+        std::ofstream canadaFile("Tests/canada.serial.json", std::ios_base::binary | std::ios_base::out);
+        serial._canada.writeStream<serial::Json>(canadaFile);
+        std::ofstream catalogFile("Tests/citm_catalog.serial.json", std::ios_base::binary | std::ios_base::out);
+        serial._catalog.writeStream<serial::Json>(catalogFile, serial::NodeFormat::Beautified);
+        std::ofstream twitterFile("Tests/twitter.serial.json", std::ios_base::binary | std::ios_base::out);
+        serial._twitter.writeStream<serial::Json>(twitterFile, serial::NodeFormat::Beautified);
+    }
 }
+BENCHMARK(Serial_WriteToFiles);

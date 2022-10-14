@@ -32,6 +32,10 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
 endif()
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED YES)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 add_subdirectory(src)
 
 if(SERIAL_BUILD_EXAMPLES)
@@ -45,17 +49,18 @@ endif()
 if(SERIAL_BUILD_TESTS)
     include(FetchContent)
     FetchContent_Declare(
-            googletest
-            GIT_REPOSITORY https://github.com/google/googletest.git
-            GIT_TAG release-1.8.1
+        benchmark
+            GIT_REPOSITORY https://github.com/google/benchmark.git
+            GIT_TAG v1.7.0
             )
 
-    FetchContent_GetProperties(googletest)
+    FetchContent_GetProperties(benchmark)
 
-    if(NOT googletest_POPULATED)
-        FetchContent_Populate(googletest)
-        set(gtest_force_shared_crt ON CACHE BOOL "Use shared (DLL) run-time lib even when Google Test is built as static lib.")
-        add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR})
+    if(NOT benchmark_POPULATED)
+        FetchContent_Populate(benchmark)
+        #set(gtest_force_shared_crt ON CACHE BOOL "Use shared (DLL) run-time lib even when Google Test is built as static lib.")
+        set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "Enable testing of the benchmark library.")
+        add_subdirectory(${benchmark_SOURCE_DIR} ${benchmark_BINARY_DIR})
     endif()
 
     file(GLOB_RECURSE _serial_test_sources
@@ -69,14 +74,14 @@ if(SERIAL_BUILD_TESTS)
             )
     add_executable(serial_test ${SERIAL_TEST_SOURCES})
     target_include_directories(serial_test PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/test>)
-    target_link_libraries(serial_test PUBLIC serial gtest_main)
+    target_link_libraries(serial_test PUBLIC serial benchmark::benchmark)
 
     # Allows automation of "BUILD_TESTING"
-    include(CTest)
-    enable_testing()
-    add_test(NAME unit
-            COMMAND ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/serial_test
-            )
+    #include(CTest)
+    #enable_testing()
+    #add_test(NAME unit
+    #        COMMAND ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/serial_test
+    #        )
     add_custom_command(TARGET serial_test POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/data ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/data 
             )    

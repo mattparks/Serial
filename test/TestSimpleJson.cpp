@@ -1,33 +1,53 @@
-#include <fstream>
-
-#include "gtest/gtest.h"
+#include "benchmark/benchmark.h"
 #include "SimpleJSON/JSON.h"
 #include "MemoryData.hpp"
 
-static class SimpleJSONData {
-public:
+struct SimpleJSONData {
+    explicit SimpleJSONData(const MemoryData &data) {
+        canada = JSON::Parse(data._canada.data());
+        catalog = JSON::Parse(data._catalog.data());
+        twitter = JSON::Parse(data._twitter.data());
+    }
+    ~SimpleJSONData() {
+        delete twitter;
+        delete catalog;
+        delete canada;
+    }
+
     JSONValue* canada;
     JSONValue* catalog;
     JSONValue* twitter;
-} simplejsonData;
+};
 
-TEST(simplejson, parseInMemory) {
-    simplejsonData.canada = JSON::Parse(MemoryData::_canadaString.c_str());
-    simplejsonData.catalog = JSON::Parse(MemoryData::_catalogString.c_str());
-    simplejsonData.twitter = JSON::Parse(MemoryData::_twitterString.c_str());
+static void SimpleJSON_ParseInMemory(benchmark::State& state) {
+    MemoryData data;
+    for (auto _ : state) {
+        SimpleJSONData simplejson(data);
+    }
 }
+BENCHMARK(SimpleJSON_ParseInMemory);
 
-TEST(simplejson, stringify) {
-    auto canadaString = JSON::Stringify(simplejsonData.canada);
-    auto catalogString = JSON::Stringify(simplejsonData.catalog);
-    auto twitterString = JSON::Stringify(simplejsonData.twitter);
+static void SimpleJSON_Stringify(benchmark::State& state) {
+    MemoryData data;
+    SimpleJSONData simplejson(data);
+    for (auto _ : state) {
+        auto canadaString = JSON::Stringify(simplejson.canada);
+        auto catalogString = JSON::Stringify(simplejson.catalog);
+        auto twitterString = JSON::Stringify(simplejson.twitter);
+    }
 }
+BENCHMARK(SimpleJSON_Stringify);
 
-TEST(simplejson, writeToFiles) {
-    std::wofstream canadaStream("Tests/canada.simplejson.json", std::ios_base::binary | std::ios_base::out);
-    canadaStream << JSON::Stringify(simplejsonData.canada);
-    std::wofstream catalogStream("Tests/citm_catalog.simplejson.json", std::ios_base::binary | std::ios_base::out);
-    catalogStream << JSON::Stringify(simplejsonData.catalog);
-    std::wofstream twitterStream("Tests/twitter.simplejson.json", std::ios_base::binary | std::ios_base::out);
-    twitterStream << JSON::Stringify(simplejsonData.twitter);
+static void SimpleJSON_WriteToFiles(benchmark::State& state) {
+    MemoryData data;
+    SimpleJSONData simplejson(data);
+    for (auto _ : state) {
+        std::wofstream canadaStream("Tests/canada.simplejson.json", std::ios_base::binary | std::ios_base::out);
+        canadaStream << JSON::Stringify(simplejson.canada);
+        std::wofstream catalogStream("Tests/citm_catalog.simplejson.json", std::ios_base::binary | std::ios_base::out);
+        catalogStream << JSON::Stringify(simplejson.catalog);
+        std::wofstream twitterStream("Tests/twitter.simplejson.json", std::ios_base::binary | std::ios_base::out);
+        twitterStream << JSON::Stringify(simplejson.twitter);
+    }
 }
+BENCHMARK(SimpleJSON_WriteToFiles);

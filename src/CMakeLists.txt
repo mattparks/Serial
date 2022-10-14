@@ -8,7 +8,7 @@ add_library(serial STATIC
         )
 target_compile_features(serial PUBLIC cxx_std_17)
 target_compile_definitions(serial PUBLIC
-        $<$<PLATFORM_ID:Windows>:UNICODE _CRT_SECURE_NO_WARNINGS _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING>
+        $<$<PLATFORM_ID:Windows>:WIN32_LEAN_AND_MEAN NOMINMAX UNICODE _CRT_SECURE_NO_WARNINGS _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING>
         $<$<CXX_COMPILER_ID:GNU>:__USE_MINGW_ANSI_STDIO=0>
         )
 target_compile_options(serial PUBLIC
@@ -16,5 +16,6 @@ target_compile_options(serial PUBLIC
         )
 target_include_directories(serial PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../lib/mio>
         )
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX "" FILES ${_serial_sources})
