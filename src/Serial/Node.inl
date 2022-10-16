@@ -107,13 +107,13 @@ bool Node::getWithFallback(T &&dest, const K &fallback) const {
 }
 
 template<typename T>
-void Node::set(const T &value) {
-    *this << value;
+Node &Node::set(const T &value) {
+    return *this << value;
 }
 
 template<typename T>
-void Node::set(T &&value) {
-    *this << value;
+Node &Node::set(T &&value) {
+    return *this << value;
 }
 
 template<typename T>
@@ -126,22 +126,6 @@ template<typename ...Args>
 Node &Node::append(const Args &...args) {
     (append(args), ...);
     return *this;
-}
-
-template<typename T>
-Node &Node::operator=(const T &rhs) {
-    set(rhs);
-    return *this;
-}
-
-inline const Node &operator>>(const Node &node, Node &object) {
-    object = node;
-    return node;
-}
-
-inline Node &operator<<(Node &node, const Node &object) {
-    node = object;
-    return node;
 }
 
 /*const Node &operator>>(const Node &node, std::nullptr_t &object) {
@@ -197,25 +181,25 @@ Node &operator<<(Node &node, const std::shared_ptr<T> &object) {
 }
 
 inline const Node &operator>>(const Node &node, bool &object) {
-    object = utils::From<bool>(node.value());
+    object = utils::FromString<bool>(node.value());
     return node;
 }
 
 inline Node &operator<<(Node &node, bool object) {
-    node.value(utils::To(object));
+    node.value(utils::ToString(object));
     node.type(NodeType::Boolean);
     return node;
 }
 
 template<typename T, std::enable_if_t<std::is_arithmetic_v<T> || std::is_enum_v<T>, int> = 0>
 const Node &operator>>(const Node &node, T &object) {
-    object = utils::From<T>(node.value());
+    object = utils::FromString<T>(node.value());
     return node;
 }
 
 template<typename T, std::enable_if_t<std::is_arithmetic_v<T> || std::is_enum_v<T>, int> = 0>
 Node &operator<<(Node &node, T object) {
-    node.value(utils::To(object));
+    node.value(utils::ToString(object));
     node.type(std::is_floating_point_v<T> ? NodeType::Decimal : NodeType::Integer);
     return node;
 }
@@ -302,15 +286,15 @@ Node &operator<<(Node &node, const std::chrono::time_point<T> &timePoint) {
 
 template<typename T, typename K>
 const Node &operator>>(const Node &node, std::pair<T, K> &pair) {
-    node["first"].get(pair.first);
-    node["second"].get(pair.second);
+    node["first"]->get(pair.first);
+    node["second"]->get(pair.second);
     return node;
 }
 
 template<typename T, typename K>
 Node &operator<<(Node &node, const std::pair<T, K> &pair) {
-    node["first"].set(pair.first);
-    node["second"].set(pair.second);
+    node["first"]->set(pair.first);
+    node["second"]->set(pair.second);
     return node;
 }
 
@@ -517,7 +501,7 @@ const Node &operator>>(const Node &node, std::map<T, K> &map) {
 
     for (const auto &[propertyName, property] : node.properties()) {
         std::pair<T, K> pair;
-        pair.first = utils::From<T>(propertyName);
+        pair.first = utils::FromString<T>(propertyName);
         property >> pair.second;
         where = map.insert(where, std::move(pair));
     }
@@ -528,7 +512,7 @@ const Node &operator>>(const Node &node, std::map<T, K> &map) {
 template<typename T, typename K>
 Node &operator<<(Node &node, const std::map<T, K> &map) {
     for (const auto &pair : map)
-        node.add(utils::To(pair.first)) << pair.second;
+        node.add(utils::ToString(pair.first)) << pair.second;
 
     node.type(NodeType::Object);
     return node;
@@ -541,7 +525,7 @@ const Node &operator>>(const Node &node, std::unordered_map<T, K> &map) {
 
     for (const auto &[propertyName, property] : node.properties()) {
         std::pair<T, K> pair;
-        pair.first = utils::From<T>(propertyName);
+        pair.first = utils::FromString<T>(propertyName);
         property >> pair.second;
         where = map.insert(where, std::move(pair));
     }
@@ -552,7 +536,7 @@ const Node &operator>>(const Node &node, std::unordered_map<T, K> &map) {
 template<typename T, typename K>
 Node &operator<<(Node &node, const std::unordered_map<T, K> &map) {
     for (const auto &pair : map)
-        node.add(utils::To(pair.first)) << pair.second;
+        node.add(utils::ToString(pair.first)) << pair.second;
 
     node.type(NodeType::Object);
     return node;
@@ -565,7 +549,7 @@ const Node &operator>>(const Node &node, std::multimap<T, K> &map) {
 
     for (const auto &[propertyName, property] : node.properties()) {
         std::pair<T, K> pair;
-        pair.first = utils::From<T>(propertyName);
+        pair.first = utils::FromString<T>(propertyName);
         property >> pair.second;
         where = map.insert(where, std::move(pair));
     }
@@ -576,7 +560,7 @@ const Node &operator>>(const Node &node, std::multimap<T, K> &map) {
 template<typename T, typename K>
 Node &operator<<(Node &node, const std::multimap<T, K> &map) {
     for (const auto &pair : map)
-        node.add(utils::To(pair.first)) << pair.second;
+        node.add(utils::ToString(pair.first)) << pair.second;
 
     node.type(NodeType::Object);
     return node;
@@ -589,7 +573,7 @@ const Node &operator>>(const Node &node, std::unordered_multimap<T, K> &map) {
 
     for (const auto &[propertyName, property] : node.properties()) {
         std::pair<T, K> pair;
-        pair.first = utils::From<T>(propertyName);
+        pair.first = utils::FromString<T>(propertyName);
         property >> pair.second;
         where = map.insert(where, std::move(pair));
     }
@@ -600,9 +584,10 @@ const Node &operator>>(const Node &node, std::unordered_multimap<T, K> &map) {
 template<typename T, typename K>
 Node &operator<<(Node &node, const std::unordered_multimap<T, K> &map) {
     for (const auto &pair : map)
-        node.add(utils::To(pair.first)) << pair.second;
+        node.add(utils::ToString(pair.first)) << pair.second;
 
     node.type(NodeType::Object);
     return node;
 }
+
 }

@@ -3,37 +3,6 @@
 #define ATTRIBUTE_TEXT_SUPPORT 1
 
 namespace serial {
-static std::string FixEscapedChars(std::string str) {
-    static const std::vector<std::pair<char, std::string_view>> replaces = {{'\\', "\\\\"}, {'\n', "\\n"}, {'\r', "\\r"}, {'\t', "\\t"}, {'\"', "\\\""}};
-
-    for (const auto &[from, to] : replaces) {
-        auto pos = str.find(from);
-        while (pos != std::string::npos) {
-            str.replace(pos, 1, to);
-            pos = str.find(from, pos + 2);
-        }
-    }
-
-    return str;
-}
-
-static std::string UnfixEscapedChars(std::string str) {
-    static const std::vector<std::pair<std::string_view, char>> replaces = {{"\\n", '\n'}, {"\\r", '\r'}, {"\\t", '\t'}, {"\\\"", '\"'}, {"\\\\", '\\'}};
-
-    for (const auto &[from, to] : replaces) {
-        auto pos = str.find(from);
-        while (pos != std::string::npos) {
-            if (pos != 0 && str[pos - 1] == '\\')
-                str.erase(str.begin() + --pos);
-            else
-                str.replace(pos, from.size(), 1, to);
-            pos = str.find(from, pos + 1);
-        }
-    }
-
-    return str;
-}
-
 void Json::Load(Node &node, std::string_view string) {
     // Tokenizes the string view into small views that are used to build a Node tree.
     std::vector<Token> tokens;
@@ -145,7 +114,7 @@ void Json::Convert(Node &current, const std::vector<Token> &tokens, int32_t &k) 
     } else {
         std::string str(tokens[k]._view);
         if (tokens[k]._type == NodeType::String)
-            str = UnfixEscapedChars(str);
+            str = utils::UnfixEscapedChars(str);
         current.value(str);
         current.type(tokens[k]._type);
         k++;
@@ -158,7 +127,7 @@ void Json::AppendData(const Node &node, std::ostream &stream, Format format, int
     // Only output the value if no properties exist.
     if (node.properties().empty()) {
         if (node.type() == NodeType::String)
-            stream << '\"' << FixEscapedChars(node.value()) << '\"';
+            stream << '\"' << utils::FixEscapedChars(node.value()) << '\"';
         else if (node.type() == NodeType::Null)
             stream << "null";
         else
@@ -211,7 +180,7 @@ void Json::AppendData(const Node &node, std::ostream &stream, Format format, int
         };
 
         // Shorten primitive array output length.
-        if (isArray && format._inlineArrays && !property.properties().empty() && IsPrimitive(property.property(0))) {
+        if (isArray && format._inlineArrays && !property.properties().empty() && IsPrimitive(*property.property(0))) {
             stream << format.indents(indent + 1);
             // New lines are printed a a space, no spaces are ever emitted by primitives.
             AppendData(property, stream, Format(0, '\0', '\0', false), indent);
@@ -235,4 +204,5 @@ void Json::AppendData(const Node &node, std::ostream &stream, Format format, int
         stream << (indent != 0 ? format._newLine : format._space);
     }
 }
+
 }

@@ -5,9 +5,9 @@
 struct Json11Data {
     explicit Json11Data(const MemoryData &data) {
         std::string err;
-        _canada = json11::Json::parse(data._canada.data(), err);
-        _catalog = json11::Json::parse(data._catalog.data(), err);
-        _twitter = json11::Json::parse(data._twitter.data(), err);
+        _canada = json11::Json::parse(data._canada.c_str(), err);
+        _catalog = json11::Json::parse(data._catalog.c_str(), err);
+        _twitter = json11::Json::parse(data._twitter.c_str(), err);
     }
 
     json11::Json _canada;

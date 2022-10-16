@@ -52,8 +52,8 @@ void Xml::Load(Node &node, std::string_view string) {
 void Xml::Write(const Node &node, std::ostream &stream, Format format) {
     if (!node.has("?xml")) {
         Node xmldecl;
-        xmldecl["@version"] = "1.0";
-        xmldecl["@encoding"] = "utf-8";
+        xmldecl.add("@version").set("1.0");
+        xmldecl.add("@encoding").set("utf-8");
         AppendData("?xml", xmldecl, stream, format, 0);
     }
 
@@ -93,12 +93,12 @@ void Xml::Convert(Node &current, const std::vector<Token> &tokens, int32_t &k) {
     k++;
 
     // Create the property that will contain the attributes and children found in the tag.
-    auto &property = Createproperty(current, name);
+    auto &property = CreateProperty(current, name);
 
     while (tokens[k] != Token(NodeType::Token, ">")) {
         // Attributes are added as properties.
         if (tokens[k] == Token(NodeType::Token, "=")) {
-            property.add(AttributePrefix + std::string(tokens[k - 1]._view)) = tokens[k + 1]._view.substr(1, tokens[k + 1]._view.size() - 2);
+            property.add(AttributePrefix + std::string(tokens[k - 1]._view)).set(tokens[k + 1]._view.substr(1, tokens[k + 1]._view.size() - 2));
             k++;
         }
         k++;
@@ -116,7 +116,7 @@ void Xml::Convert(Node &current, const std::vector<Token> &tokens, int32_t &k) {
     // Continue through all children until the end tag is found.
     while (!(tokens[k] == Token(NodeType::Token, "<") && tokens[k + 1] == Token(NodeType::Token, "/") && tokens[k + 2]._view == name)) {
         if (tokens[k]._type == NodeType::String) {
-            property = tokens[k]._view;
+            property.set(tokens[k]._view);
             k++;
         } else {
             // TODO: If the token at k is not a '<' this will cause a infinite loop, or if k + 2 > tokens.size() vector access will be violated.
@@ -126,7 +126,7 @@ void Xml::Convert(Node &current, const std::vector<Token> &tokens, int32_t &k) {
     k += 4;
 }
 
-Node &Xml::Createproperty(Node &current, const std::string &name) {
+Node &Xml::CreateProperty(Node &current, const std::string &name) {
     // Combine duplicate tags.
     if (auto duplicate = current[name]) {
         // If the node is already an array add the new property to it.
@@ -134,7 +134,7 @@ Node &Xml::Createproperty(Node &current, const std::string &name) {
             return duplicate->add();
 
         // Copy the duplicate node so we can add it to the new array.
-        auto original = current.remove(duplicate);
+        auto original = current.remove(*duplicate);
         auto &array = current.add(name);
         array.type(NodeType::Array);
         array.add(std::move(original));
@@ -190,4 +190,5 @@ void Xml::AppendData(const std::string &nodeName, const Node &node, std::ostream
         stream << "/>" << format._newLine;
     }
 }
+
 }

@@ -7,9 +7,9 @@
 
 struct RapidJsonData {
     explicit RapidJsonData(const MemoryData &data) {
-        _canada.Parse(data._canada.data());
-        _catalog.Parse(data._catalog.data());
-        _twitter.Parse(data._twitter.data());
+        _canada.Parse(data._canada.c_str());
+        _catalog.Parse(data._catalog.c_str());
+        _twitter.Parse(data._twitter.c_str());
     }
 
     rapidjson::Document _canada;

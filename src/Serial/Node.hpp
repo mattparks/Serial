@@ -11,8 +11,8 @@ namespace serial {
  */
 class Node final {
 public:
-    Node() {} // = default;
-    Node(const Node &node) = default;
+    Node() noexcept {} // = default;
+    Node(const Node &node) noexcept = default;
     Node(Node &&node) noexcept = default;
 
     template<typename T, typename = std::enable_if_t<std::is_convertible_v<T *, NodeFormat *>>>
@@ -44,9 +44,9 @@ public:
     template<typename T, typename K>
     bool getWithFallback(T &&dest, const K &fallback) const;
     template<typename T>
-    void set(const T &value);
+    Node &set(const T &value);
     template<typename T>
-    void set(T &&value);
+    Node &set(T &&value);
     
     /**
      * Clears all properties from this node.
@@ -93,12 +93,6 @@ public:
 
     Node &operator=(const Node &rhs) = default;
     Node &operator=(Node &&rhs) noexcept = default;
-    Node &operator=(const NodeConstView &rhs);
-    Node &operator=(NodeConstView &&rhs);
-    Node &operator=(NodeView &rhs);
-    Node &operator=(NodeView &&rhs);
-    template<typename T>
-    Node &operator=(const T &rhs);
 
     bool operator==(const Node &rhs) const;
     bool operator!=(const Node &rhs) const;
@@ -118,8 +112,7 @@ protected:
     NodeValue _value;
     NodeType _type = NodeType::Object;
 };
+
 }
 
 #include "Node.inl"
-#include "NodeConstView.inl"
-#include "NodeView.inl"

@@ -7,14 +7,26 @@
 #include <thread>
 #include <string>
 
-#include "mio.hpp"
-
 struct MemoryData {
-    MemoryData()
-        : _canada("data/canada.json")
-        , _catalog("data/citm_catalog.json")
-        , _twitter("data/twitter.json")
-     {
+    MemoryData() {
+        {
+            std::wifstream canadaStream("data/canada.json");
+            canadaStream.imbue(std::locale(std::locale(), new std::codecvt_utf8<char>));
+            _canada = std::string(std::istreambuf_iterator<wchar_t>(canadaStream), {});
+        }
+
+        {
+            std::wifstream catalogStream("data/citm_catalog.json");
+            catalogStream.imbue(std::locale(std::locale(), new std::codecvt_utf8<char>));
+            _catalog = std::string(std::istreambuf_iterator<wchar_t>(catalogStream), {});
+        }
+
+        {
+            std::wifstream twitterStream("data/twitter.json");
+            twitterStream.imbue(std::locale(std::locale(), new std::codecvt_utf8<char>));
+            _twitter = std::string(std::istreambuf_iterator<wchar_t>(twitterStream), {});
+        }
+
         static bool ClearedTests = false;
         if (!ClearedTests) {
             std::filesystem::remove_all("tests");
@@ -26,9 +38,9 @@ struct MemoryData {
         }
     }
 
-    mio::mmap_source _canada;
-    mio::mmap_source _catalog;
-    mio::mmap_source _twitter;
+    std::string _canada;
+    std::string _catalog;
+    std::string _twitter;
 };
 
 struct Status {

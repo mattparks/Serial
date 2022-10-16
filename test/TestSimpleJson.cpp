@@ -4,9 +4,9 @@
 
 struct SimpleJSONData {
     explicit SimpleJSONData(const MemoryData &data) {
-        canada = JSON::Parse(data._canada.data());
-        catalog = JSON::Parse(data._catalog.data());
-        twitter = JSON::Parse(data._twitter.data());
+        canada = JSON::Parse(data._canada.c_str());
+        catalog = JSON::Parse(data._catalog.c_str());
+        twitter = JSON::Parse(data._twitter.c_str());
     }
     ~SimpleJSONData() {
         delete twitter;

@@ -4,15 +4,9 @@
 
 struct SerialData {
     explicit SerialData(const MemoryData &data) {
-        _canada.parseString<serial::Json>(
-            std::string_view(data._canada.data(), data._canada.size())
-        );
-        _catalog.parseString<serial::Json>(
-            std::string_view(data._catalog.data(), data._catalog.size())
-        );
-        _twitter.parseString<serial::Json>(
-            std::string_view(data._twitter.data(), data._twitter.size())
-        );
+        _canada.parseString<serial::Json>(data._canada);
+        _catalog.parseString<serial::Json>(data._catalog);
+        _twitter.parseString<serial::Json>(data._twitter);
     }
 
     serial::Node _canada;
@@ -29,24 +23,24 @@ static void Serial_ParseInMemory(benchmark::State& state) {
 BENCHMARK(Serial_ParseInMemory);
 
 inline const serial::Node &operator>>(const serial::Node &node, Status &status) {
-    node["id"].get(status._id);
-    node["id_str"].get(status._idStr);
-    node["user"].get(status._user);
+    node["id"]->get(status._id);
+    node["id_str"]->get(status._idStr);
+    node["user"]->get(status._user);
     return node;
 }
 
 inline const serial::Node &operator>>(const serial::Node &node, Status::User &user) {
-    node["id"].get(user._id);
-    node["id_str"].get(user._idStr);
+    node["id"]->get(user._id);
+    node["id_str"]->get(user._idStr);
     
-    node["name"].get(user._name);
-    node["screen_name"].get(user._screenName);
-    node["location"].get(user._description);
-    node["followers_count"].get(user._followersCount);
-    node["friends_count"].get(user._friendsCount);
-    node["listed_count"].get(user._listedCount);
-    node["favourites_count"].get(user._favouritesCount);
-    node["statuses_count"].get(user._statusesCount);
+    node["name"]->get(user._name);
+    node["screen_name"]->get(user._screenName);
+    node["location"]->get(user._description);
+    node["followers_count"]->get(user._followersCount);
+    node["friends_count"]->get(user._friendsCount);
+    node["listed_count"]->get(user._listedCount);
+    node["favourites_count"]->get(user._favouritesCount);
+    node["statuses_count"]->get(user._statusesCount);
 
     return node;
 }
@@ -55,7 +49,7 @@ static void Serial_GetTwitterData(benchmark::State& state) {
     MemoryData data;
     SerialData serial(data);
     for (auto _ : state) {
-        auto statuses = serial._twitter["statuses"].get<std::vector<Status>>();
+        auto statuses = serial._twitter["statuses"]->get<std::vector<Status>>();
     }
 }
 BENCHMARK(Serial_GetTwitterData);

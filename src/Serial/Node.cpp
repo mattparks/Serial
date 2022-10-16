@@ -3,7 +3,7 @@
 #include <algorithm>
 
 namespace serial {
-static const NodeProperty NullNode = NodeProperty("", Node() = nullptr);
+static const NodeProperty NullNode = NodeProperty("", Node().set(nullptr));
 
 void Node::clear() {
     _properties.clear();
@@ -177,22 +177,6 @@ NodeView Node::operator[](uint32_t index) {
     return property(index);
 }
 
-Node &Node::operator=(const NodeConstView &rhs) {
-    return operator=(*rhs);
-}
-
-Node &Node::operator=(NodeConstView &&rhs) {
-    return operator=(*rhs);
-}
-
-Node &Node::operator=(NodeView &rhs) {
-    return operator=(*rhs);
-}
-
-Node &Node::operator=(NodeView &&rhs) {
-    return operator=(*rhs);
-}
-
 bool Node::operator==(const Node &rhs) const {
     return _value == rhs._value && _properties.size() == rhs._properties.size() &&
         std::equal(_properties.begin(), _properties.end(), rhs._properties.begin(), [](const auto &left, const auto &right) {
@@ -213,4 +197,5 @@ bool Node::operator<(const Node &rhs) const {
 
     return false;
 }
+
 }

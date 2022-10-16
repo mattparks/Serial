@@ -3,6 +3,30 @@
 #include "Node.hpp"
 
 namespace serial {
+NodeConstView::NodeConstView(const Node *parent, Key key, const Node *object) :
+    _parent(parent),
+    _object(object),
+    _keys{std::move(key)} {
+}
+
+NodeConstView::NodeConstView(const NodeConstView *parent, Key key) :
+    _parent(parent->_parent),
+    _keys(parent->_keys) {
+    _keys.emplace_back(std::move(key));
+}
+
+NodeConstView NodeConstView::operator[](const std::string &key) const {
+    if (!hasObject())
+        return {this, key};
+    return _object->operator[](key);
+}
+
+NodeConstView NodeConstView::operator[](uint32_t index) const {
+    if (!hasObject())
+        return {this, index};
+    return _object->operator[](index);
+}
+
 NodeView::NodeView(Node *parent, Key key, Node *object) :
     NodeConstView(parent, std::move(key), object) {
 }
@@ -32,18 +56,6 @@ Node *NodeView::object() {
     return const_cast<Node *>(_object);
 }
 
-NodeView NodeView::propertyWithBackup(const std::string &key, const std::string &backupKey) {
-    if (!hasObject())
-        return {this, key};
-    return const_cast<Node *>(_object)->propertyWithBackup(key, backupKey);
-}
-
-NodeView NodeView::propertyWithValue(const std::string &key, const NodeValue &propertyValue) {
-    if (!hasObject())
-        return {this, key};
-    return const_cast<Node *>(_object)->propertyWithValue(key, propertyValue);
-}
-
 NodeView NodeView::operator[](const std::string &key) {
     if (!hasObject())
         return {this, key};
@@ -56,9 +68,4 @@ NodeView NodeView::operator[](uint32_t index) {
     return const_cast<Node *>(_object)->operator[](index);
 }
 
-NodeProperties &NodeView::properties() {
-    if (!hasObject())
-        return object()->properties();
-    return const_cast<Node *>(_object)->properties();
-}
 }
