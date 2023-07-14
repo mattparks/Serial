@@ -5,6 +5,7 @@
 #include "Node.hpp"
 
 namespace serial {
+
 class Json : public NodeFormatType<Json> {
 protected:
     friend class Node;

@@ -3,6 +3,8 @@
 #include <codecvt>
 
 namespace serial::utils {
+
+
 std::string ReplaceAll(std::string str, std::string_view token, std::string_view to) {
     auto pos = str.find(token);
     while (pos != std::string::npos) {

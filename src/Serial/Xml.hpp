@@ -5,6 +5,7 @@
 #include "Node.hpp"
 
 namespace serial {
+
 class Xml : public NodeFormatType<Xml> {
 protected:
     friend class Node;

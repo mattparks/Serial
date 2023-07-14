@@ -3,6 +3,7 @@
 #include "Node.hpp"
 
 namespace serial {
+
 /**
  * @brief Class that allows {@link Node::get()} to handle returning XML container types (std::vector, std::array)
  * where the XML array may contain 1 or n objects.

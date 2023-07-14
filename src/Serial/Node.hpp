@@ -6,6 +6,7 @@
 #include "NodeView.hpp"
 
 namespace serial {
+
 /**
  * @brief Class that is used to represent a tree of UFT-8 values, used in serialization.
  */
@@ -68,22 +69,26 @@ public:
 
     bool has(const std::string &name) const;
     bool has(uint32_t index) const;
+
     NodeConstView property(const std::string &name) const;
     NodeConstView property(uint32_t index) const;
     NodeView property(const std::string &name);
     NodeView property(uint32_t index);
+
     Node &add(const Node &node);
     Node &add(Node &&node = {});
     Node &add(const std::string &name, const Node &node);
     Node &add(const std::string &name, Node &&node = {});
     Node &add(uint32_t index, const Node &node);
     Node &add(uint32_t index, Node &&node = {});
+
     Node remove(const std::string &name);
     Node remove(const Node &node);
 
     NodeConstView propertyWithBackup(const std::string &name, const std::string &backupName) const;
-    NodeConstView propertyWithValue(const std::string &name, const NodeValue &propertyValue) const;
     NodeView propertyWithBackup(const std::string &name, const std::string &backupName);
+
+    NodeConstView propertyWithValue(const std::string &name, const NodeValue &propertyValue) const;
     NodeView propertyWithValue(const std::string &name, const NodeValue &propertyValue);
 
     NodeConstView operator[](const std::string &name) const;

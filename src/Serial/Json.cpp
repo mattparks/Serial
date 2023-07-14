@@ -3,6 +3,7 @@
 #define ATTRIBUTE_TEXT_SUPPORT 1
 
 namespace serial {
+
 void Json::Load(Node &node, std::string_view string) {
     // Tokenizes the string view into small views that are used to build a Node tree.
     std::vector<Token> tokens;

@@ -3,6 +3,7 @@
 #include <algorithm>
 
 namespace serial {
+
 static const NodeProperty NullNode = NodeProperty("", Node().set(nullptr));
 
 void Node::clear() {
@@ -131,21 +132,21 @@ NodeConstView Node::propertyWithBackup(const std::string &name, const std::strin
     return {this, name, nullptr};
 }
 
-NodeConstView Node::propertyWithValue(const std::string &name, const NodeValue &propertyValue) const {
-    for (const auto &[propertyName, property] : _properties) {
-        if (auto property1 = property.property(name); property1->value() == propertyValue)
-            return {this, name, &property};
-    }
-
-    return {this, name, nullptr};
-}
-
 // TODO: Duplicate
 NodeView Node::propertyWithBackup(const std::string &name, const std::string &backupName) {
     if (auto p1 = property(name))
         return p1;
     if (auto p2 = property(backupName))
         return p2;
+    return {this, name, nullptr};
+}
+
+NodeConstView Node::propertyWithValue(const std::string &name, const NodeValue &propertyValue) const {
+    for (const auto &[propertyName, property] : _properties) {
+        if (auto property1 = property.property(name); property1->value() == propertyValue)
+            return {this, name, &property};
+    }
+
     return {this, name, nullptr};
 }
 

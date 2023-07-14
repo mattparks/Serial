@@ -1,6 +1,7 @@
 #include "Xml.hpp"
 
 namespace serial {
+
 void Xml::Load(Node &node, std::string_view string) {
     // Tokenizes the string view into small views that are used to build a Node tree.
     std::vector<Token> tokens;

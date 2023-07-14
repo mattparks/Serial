@@ -16,10 +16,14 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#if !defined(_MSC_VER) && !defined(__EMSCRIPTEN__) && !defined(ANDROID)
+#include <codecvt>
+#endif
 
 #include "Utils.hpp"
 
 namespace serial {
+
 template<typename T, typename>
 void Node::parseString(std::string_view string) {
     T::Load(*this, string);

@@ -6,6 +6,7 @@
 #include <vector>
 
 namespace serial {
+
 class Node;
 
 enum class NodeType : uint8_t {

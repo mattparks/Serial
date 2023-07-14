@@ -3,6 +3,7 @@
 #include "Node.hpp"
 
 namespace serial {
+
 NodeConstView::NodeConstView(const Node *parent, Key key, const Node *object) :
     _parent(parent),
     _object(object),

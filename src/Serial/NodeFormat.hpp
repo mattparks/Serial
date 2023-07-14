@@ -1,11 +1,11 @@
 #pragma once
 
-#include <codecvt>
 #include <sstream>
 
 #include "NodeView.hpp"
 
 namespace serial {
+
 /**
  * @brief Class that represents an abstract node format parser and writer.
  */
