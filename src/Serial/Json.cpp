@@ -93,6 +93,8 @@ void Json::Convert(Node &current, const std::vector<Token> &tokens, int32_t &k) 
             else
 #endif
                 Convert(current.add(std::string(key)), tokens, k);
+            if (k >= tokens.size())
+                throw std::runtime_error("Missing comma between elements");
             if (tokens[k]._view == ",")
                 k++;
         }
@@ -106,6 +108,8 @@ void Json::Convert(Node &current, const std::vector<Token> &tokens, int32_t &k) 
             if (k >= tokens.size())
                 throw std::runtime_error("Missing end of [] object");
             Convert(current.add(), tokens, k);
+            if (k >= tokens.size())
+                throw std::runtime_error("Missing comma between elements");
             if (tokens[k]._view == ",")
                 k++;
         }
